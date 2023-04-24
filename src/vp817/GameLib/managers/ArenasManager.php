@@ -38,9 +38,12 @@ final class ArenasManager
 	/** @var Arena[] $loadedArenas */
 	private array $loadedArenas = [];
 
-	public function signAsLoaded(string $arenaID, Arena $arena, ?callable $onSuccess = null): void
+	public function signAsLoaded(string $arenaID, Arena $arena, ?callable $onSuccess = null, ?callable $onFail = null): void
 	{
 		if (array_key_exists($arenaID, $this->loadedArenas)) {
+			if ($onFail !== null) {
+				$onFail($arenaID);
+			}
 			return;
 		}
 
