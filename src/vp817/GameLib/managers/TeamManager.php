@@ -125,7 +125,7 @@ final class TeamManager
 		$availableTeams = array_filter($this->list, function ($value) use ($maxPlayersPerTeam) {
 			return count($value->getPlayers()) < $maxPlayersPerTeam + 1;
 		});
-		if (count($availableTeams) < 2) {
+		if (count($availableTeams) < 2 && count($availableTeams) > 0) {
 			$team = array_shift($availableTeams);
 			$team->addPlayer($player);
 		} else if ($availableTeams > 1) {
