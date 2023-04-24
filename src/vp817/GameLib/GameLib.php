@@ -40,6 +40,8 @@ use vp817\GameLib\arena\Arena;
 use vp817\GameLib\arena\ArenaDataParser;
 use vp817\GameLib\arena\message\ArenaMessages;
 use vp817\GameLib\arena\message\DefaultArenaMessages;
+use vp817\GameLib\arena\modes\ArenaModes;
+use vp817\GameLib\managers\ArenasManager;
 use vp817\GameLib\player\PlayerTeam;
 use vp817\GameLib\utilities\SqlQueries;
 use vp817\GameLib\utilities\Utils;
@@ -51,12 +53,12 @@ final class GameLib
 	private static ?PluginBase $plugin = null;
 	/** @var ?DataConnector $plugin */
 	private static ?DataConnector $database = null;
+	/** @var ArenasManager $arenasManager */
+	private ArenasManager $arenasManager;
 	/** @var ArenaMessages $arenaMessages */
 	private ArenaMessages $arenaMessages;
 	/** @var string $arenasBackupPath */
 	private string $arenasBackupPath;
-	/** @var Arena[] $loadedArenas */
-	private array $loadedArenas = []; // turn to arenas manager
 	/** @var PlayerTeam[] $teams */
 	private array $teams = [];
 
@@ -90,22 +92,11 @@ final class GameLib
 	{
 		self::$plugin = $plugin;
 
-		// $sqlMapPath = $plugin->getDataFolder() . "sqlMap";
-		// if (!is_dir($sqlMapPath)) {
-		// 	@mkdir($sqlMapPath);
-		// }
-
 		foreach (glob(Path::join($this->getResourcesPath(), "*.sql")) as $resource) {
 			$filename = basename($resource);
-			// Utils::saveResourceToPlugin($plugin, $this->getResourcesPath() . DIRECTORY_SEPARATOR, $filename, $sqlMapPath);
 			Utils::saveResourceToPluginResources($plugin, $this->getResourcesPath() . DIRECTORY_SEPARATOR, $filename);
 		}
 
-		// --		:arenaID string
-		// --		:worldName string
-		// --		:waitingLobbyWorldName string
-		// --		:mode string
-		// --		:maxPlayersPerTeam int
 		self::$database = libasynql::create($plugin, $database,
 		[
 			"sqlite" => "sqlite.sql",
@@ -115,31 +106,8 @@ final class GameLib
 			$plugin->getLogger()->error($error->getMessage());
 		});
 		self::$database->waitAll();
-		// self::$database->executeInsert(SqlQueries::ADD_ARENA, [
-		// 	"arenaID" => "arenaid1",
-		// 	"worldName" => "test1",
-		// 	"waitingLobbyWorldName" => "test2",
-		// 	"mode" => "solo",
-		// 	"maxPlayersPerTeam" => 1
-		// ]);
 
-		// self::$database->executeChange(SqlQueries::SET_ARENA_SPAWNS, [
-		// 	"arenaID" => "arenaid1",
-		// 	"spawns" => json_encode([
-		// 		"spawn1" => ["x" => 10, "y" => 15, "z", 13],
-		// 		"spawn2" => ["x" => 16, "y" => 15, "z", 14]
-		// 		])
-		// 	]
-		// );
-
-		// self::$database->executeSelect(SqlQueries::GET_ARENA_DATA, ["arenaID" => "arenaid1"], function ($rows) {
-		// 	if (!isset($rows[0])) {
-		// 		return;
-		// 	}
-		// 	var_dump($rows[0]);
-		// });
-		$this->createArena("arena1", "arenaworld", "solo", 1);
-
+		$this->arenasManager = new ArenasManager();
 		$this->arenaMessages = new DefaultArenaMessages();
 	}
 
@@ -190,6 +158,14 @@ final class GameLib
 	}
 
 	/**
+	 * @return ArenasManager
+	 */
+	public function getArenasManager(): ArenasManager
+	{
+		return $this->arenasManager;
+	}
+
+	/**
 	 * @return string
 	 */
 	public function getArenasBackupPath(): string
@@ -206,64 +182,93 @@ final class GameLib
 	}
 
 	/**
+	 * @param \Closure $onSuccess
+	 * @param \Closure $onFail
 	 * @return void
 	 */
-	public function loadArenas(): void
+	public function loadArenas(?callable $onSuccess = null, ?callable $onFail = null): void
 	{
-		// foreach (glob(Path::join($this->arenasPath . "*", "*.json")) as $arenaFilePath) {
-		// 	$parser = new ArenaDataParser(json_decode(Filesystem::fileGetContents($arenaFilePath))); // temp
-		// 	$arenaID = $parser->parse("arenaID");
-		// 	if (array_key_exists($arenaID, $this->loadedArenas)) {
-		// 		continue;
-		// 	}
-		// 	$this->loadedArenas[$arenaID] = new Arena($this, $parser, true);
-		// }
+		self::$database->executeSelect(SqlQueries::GET_ALL_ARENAS, [], function ($rows) use ($onSuccess, $onFail): void {
+			if (count($rows) < 1) {
+				return;
+			}
+			foreach ($rows as $arenasData) {
+				$arenaID = $arenasData["arenaID"];
+				$worldName = $arenasData["worldName"];
+				$this->arenaExistsInDB($arenaID, $worldName, function (bool $arenaExists) use ($arenaID, $arenasData, $onSuccess, $onFail): void {
+					if ($arenaExists || $this->getArenasManager()->has($arenaID)) {
+						if (!is_null($onFail)) {
+							$onFail($arenaID, "Arena already exists");
+						}
+						return;
+					}
+
+					$arena = new Arena($this, new ArenaDataParser($arenasData));
+					$this->getArenasManager()->signAsLoaded($arenaID, $arena);
+					if (!is_null($onSuccess)) {
+						$onSuccess($arenaID, $arena);
+					}
+				});
+			}
+		});
 	}
 
 	/**
 	 * @param string $arenaID
 	 * @param string $worldName
+	 * @param string $waitingLobbyWorldName
 	 * @param string $mode
+	 * @param null|int $maxPlayersPerTeam
+	 * @param \Closure $onSuccess
+	 * @param \Closure $onFail
 	 * @return void
+	 * @throws \RuntimeException
 	 */
-	public function createArena(string $arenaID, string $worldName, string $mode, int $maxPlayersPerTeam): void
+	public function createArena(string $arenaID, string $worldName, string $waitingLobbyWorldName, string $mode, ?int $maxPlayersPerTeam = null, ?callable $onSuccess = null, ?callable $onFail = null): void
 	{
-		if (array_key_exists($arenaID, $this->loadedArenas)) {
-			throw new \RuntimeException("Arena is already registered");
+		if ($this->arenasManager->has($arenaID)) {
+			throw new \RuntimeException("Arena is already loaded");
 		}
-		//todo
-		// $arenasManager = $this->arenasManager;
-		// $this->arenaExistsInDB($arenaID, $worldName, function (bool $arenaExists) use ($arenaID, $worldName, $mode, $maxPlayersPerTeam, &$loadedArenas, $this_): void {
-		// 	if ($arenaExists) {
-		// 		return;
-		// 	}
+		$mode = strtolower($mode);
+		if (is_null($maxPlayersPerTeam)) {
+			$arenaMode = ArenaModes::fromString($mode);
+			if (!is_null($arenaMode)) {
+				$maxPlayersPerTeam = $arenaMode->getMaxPlayersPerTeam();
+			} else {
+				throw new \RuntimeException("You need to set the arena max players per team if you are using custom arena modes");
+			}
+		}
+		$this->arenaExistsInDB($arenaID, $worldName, function (bool $arenaExists) use ($arenaID, $worldName, $waitingLobbyWorldName, $mode, $maxPlayersPerTeam, $onSuccess, $onFail): void {
+			if ($arenaExists) {
+				if (!is_null($onFail)) {
+					$onFail($arenaID, "Arena already exists");
+				}
+				return;
+			}
 
-		// 	$data = [
-		// 		"arenaID" => $arenaID,
-		// 		"worldName" => $worldName,
-		// 		"mode" => $mode,
-		// 		"maxPlayersPerTeam" => $maxPlayersPerTeam,
-		// 		"spawns" => []
-		// 	];
+			$data = [
+				"arenaID" => $arenaID,
+				"worldName" => $worldName,
+				"waitingLobbyWorldName" => $waitingLobbyWorldName,
+				"mode" => $mode,
+				"maxPlayersPerTeam" => $maxPlayersPerTeam
+			];
 
-		// 	$loadedArenas[$arenaID] = new Arena($this_, new ArenaDataParser($data));
-		// });
-		// $arenaDirPath = Path::join($this->arenasPath . $arenaID);
-		// if (!is_dir($arenaDirPath)) {
-		// 	@mkdir($arenaDirPath);
-		// }
-		// $arenaFilePath = Path::join($arenaDirPath, $arenaID . ".json"); // temp
-		// $file = fopen($arenaFilePath, "w+");
-		// fwrite($file, json_encode($data, JSON_PRETTY_PRINT));
-		// fclose($file);
-		// archive
+			self::$database->executeInsert(SqlQueries::ADD_ARENA, $data);
 
-		// $this->loadedArenas[$arenaID] = new Arena($this, new ArenaDataParser($data));
+			$data["spawns"] = json_encode([]);
+
+			$arena = new Arena($this, new ArenaDataParser($data));
+			$this->getArenasManager()->signAsLoaded($arenaID, $arena);
+			if (!is_null($onSuccess)) {
+				$onSuccess($arenaID, $arena);
+			}
+		});
 	}
 
 	public function removeArena(string $arenaID, bool $alertConsole = true): void
 	{
-		if (!array_key_exists($arenaID, $this->loadedArenas)) {
+		if (!$this->arenasManager->has($arenaID)) {
 			throw new \RuntimeException("Arena is already registered");
 		}
 		// $arenaDirPath = Path::join($this->arenasPath . $arenaID);
@@ -293,13 +298,17 @@ final class GameLib
 
 		self::$database->executeSelect(SqlQueries::GET_ALL_ARENAS, [], function ($rows) use ($valueCallback, $arenaID, $worldName): void {
 			if (count($rows) > 0) {
-				foreach ($rows as $arenas) {
-					if ($arenas["arenaID"] === $arenaID) {
+				foreach ($rows as $arenasData) {
+					$arenaExistsCheck1 = strtolower($arenasData["arenaID"]) === strtolower($arenaID);
+					if ($arenaExistsCheck1) {
 						$valueCallback(true);
-					} else if ($arenaID["arenaID"] !== $arenaID && $arenas["worldName"] === $worldName) {
+					} else if ($arenaExistsCheck1 && strtolower($arenasData["worldName"]) === strtolower($worldName)) {
 						$valueCallback(true);
+					} else {
+						$valueCallback(false);
 					}
-				}	
+				}
+				return;
 			}
 			$valueCallback(false);
 		});

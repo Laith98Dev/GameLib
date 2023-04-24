@@ -31,31 +31,33 @@ declare(strict_types=1);
 
 namespace vp817\GameLib\arena\message;
 
+use pocketmine\utils\TextFormat;
+
 class DefaultArenaMessages extends ArenaMessages
 {
 
 	public function NoArenasFound(): string
 	{
-		return "No arenas found";
+		return TextFormat::RED . "No arenas found";
 	}
 
 	public function NoTeamsFound(): string
 	{
-		return "No teams found";
+		return TextFormat::RED . "No teams found";
 	}
 
 	public function PlayerAlreadyInsideAnArena(): string
 	{
-		return "You are already inside an arena";
+		return TextFormat::RED . "You are already inside an arena";
 	}
 
 	public function ArenaIsFull(): string
 	{
-		return "Arena is full";
+		return TextFormat::RED . "Arena is full";
 	}
 
 	public function CantLeaveDueToState(): string
 	{
-		return "Cant leave arena due to its state";
+		return TextFormat::RED . "Cant leave arena due to its state";
 	}
 }

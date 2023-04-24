@@ -37,12 +37,17 @@ abstract class ArenaMode
 {
 
 	/**
-	 * @return void
+	 * @return string
 	 */
 	public function name(): string
 	{
 		return str_replace("mode", "", basename(strtolower(static::class), ";"));
 	}
+
+	/**
+	 * @return int
+	 */
+	abstract public function getMaxPlayersPerTeam(): int;
 
 	/**
 	 * @param Player $player

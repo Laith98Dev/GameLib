@@ -37,6 +37,11 @@ use vp817\GameLib\arena\modes\ArenaMode;
 class DuoMode extends ArenaMode
 {
 
+	public function getMaxPlayersPerTeam(): int
+	{
+		return 2;
+	}
+
 	public function onJoin(Player $player): void
 	{
 	}

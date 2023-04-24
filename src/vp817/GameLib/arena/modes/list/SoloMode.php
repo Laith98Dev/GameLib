@@ -37,6 +37,11 @@ use vp817\GameLib\arena\modes\ArenaMode;
 class SoloMode extends ArenaMode
 {
 
+	public function getMaxPlayersPerTeam(): int
+	{
+		return 1;
+	}
+
 	public function onJoin(Player $player): void
 	{
 	}

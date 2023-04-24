@@ -40,6 +40,7 @@ final class ArenaDataParser
 	private array $imitatedData = [
 		"arenaID" => "",
 		"worldName" => "",
+		"waitingLobbyWorldName" => "",
 		"mode" => "",
 		"maxPlayersPerTeam" => -1,
 		"spawns" => "{}"
