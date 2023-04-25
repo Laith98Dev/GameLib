@@ -58,7 +58,7 @@ class Arena
 	 */
 	public function __construct(GameLib $gamelib, ArenaDataParser $dataParser)
 	{
-		var_dump($gamelib);
+		// var_dump($gamelib);
 		$this->lib = $gamelib;
 		$this->arenaID = $dataParser->parse("arenaID");
 		$this->dataParser = $dataParser;

@@ -35,6 +35,7 @@ use vp817\GameLib\arena\Arena;
 
 final class ArenasManager
 {
+
 	/** @var Arena[] $loadedArenas */
 	private array $loadedArenas = [];
 
@@ -90,7 +91,7 @@ final class ArenasManager
 	public function getLoadedArena(string $arenaID, callable $onSuccess, ?callable $onFail = null): void
 	{
 		if (!$this->has($arenaID)) {
-			if ($onFail !== null) {
+			if (!is_null($onFail)) {
 				$onFail($arenaID);
 			}
 			return;

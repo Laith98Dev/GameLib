@@ -31,6 +31,7 @@ declare(strict_types=1);
 
 namespace vp817\GameLib;
 
+use pocketmine\player\Player;
 use pocketmine\plugin\PluginBase;
 use poggit\libasynql\DataConnector;
 use poggit\libasynql\libasynql;
@@ -42,6 +43,7 @@ use vp817\GameLib\arena\message\ArenaMessages;
 use vp817\GameLib\arena\message\DefaultArenaMessages;
 use vp817\GameLib\arena\modes\ArenaModes;
 use vp817\GameLib\managers\ArenasManager;
+use vp817\GameLib\managers\SetupManager;
 use vp817\GameLib\player\PlayerTeam;
 use vp817\GameLib\utilities\SqlQueries;
 use vp817\GameLib\utilities\Utils;
@@ -61,6 +63,8 @@ final class GameLib
 	private string $arenasBackupPath;
 	/** @var PlayerTeam[] $teams */
 	private array $teams = [];
+	/** @var SetupManager $setupManager */
+	private SetupManager $setupManager;
 
 	/**
 	 * initialize a new gamelib
@@ -109,6 +113,7 @@ final class GameLib
 
 		$this->arenasManager = new ArenasManager();
 		$this->arenaMessages = new DefaultArenaMessages();
+		$this->setupManager = new SetupManager();
 	}
 
 	/**
@@ -182,6 +187,14 @@ final class GameLib
 	}
 
 	/**
+	 * @return SetupManager
+	 */
+	public function getSetupManager(): SetupManager
+	{
+		return $this->setupManager;
+	}
+
+	/**
 	 * @param \Closure $onSuccess
 	 * @param \Closure $onFail
 	 * @return void
@@ -194,9 +207,8 @@ final class GameLib
 			}
 			foreach ($rows as $arenasData) {
 				$arenaID = $arenasData["arenaID"];
-				$worldName = $arenasData["worldName"];
-				$this->arenaExistsInDB($arenaID, $worldName, function (bool $arenaExists) use ($arenaID, $arenasData, $onSuccess, $onFail): void {
-					if ($arenaExists || $this->getArenasManager()->has($arenaID)) {
+				$this->arenaExistsInDB($arenaID, function (bool $arenaExists) use ($arenaID, $arenasData, $onSuccess, $onFail): void {
+					if (!$arenaExists && $this->getArenasManager()->has($arenaID)) {
 						if (!is_null($onFail)) {
 							$onFail($arenaID, "Arena already exists");
 						}
@@ -226,9 +238,15 @@ final class GameLib
 	 */
 	public function createArena(string $arenaID, string $worldName, string $waitingLobbyWorldName, string $mode, ?int $maxPlayersPerTeam = null, ?callable $onSuccess = null, ?callable $onFail = null): void
 	{
-		if ($this->arenasManager->has($arenaID)) {
-			throw new \RuntimeException("Arena is already loaded");
+		if ($this->getArenasManager()->has($arenaID)) {
+			$reason = "Arena is already loaded";
+			if (!is_null($onFail)) {
+				$onFail($arenaID, $reason);
+				return;
+			}
+			throw new \RuntimeException($reason);
 		}
+
 		$mode = strtolower($mode);
 		if (is_null($maxPlayersPerTeam)) {
 			$arenaMode = ArenaModes::fromString($mode);
@@ -238,7 +256,8 @@ final class GameLib
 				throw new \RuntimeException("You need to set the arena max players per team if you are using custom arena modes");
 			}
 		}
-		$this->arenaExistsInDB($arenaID, $worldName, function (bool $arenaExists) use ($arenaID, $worldName, $waitingLobbyWorldName, $mode, $maxPlayersPerTeam, $onSuccess, $onFail): void {
+
+		$this->arenaExistsInDB($arenaID, function (bool $arenaExists) use ($arenaID, $worldName, $waitingLobbyWorldName, $mode, $maxPlayersPerTeam, $onSuccess, $onFail): void {
 			if ($arenaExists) {
 				if (!is_null($onFail)) {
 					$onFail($arenaID, "Arena already exists");
@@ -258,59 +277,92 @@ final class GameLib
 
 			$data["spawns"] = json_encode([]);
 
-			$arena = new Arena($this, new ArenaDataParser($data));
-			$this->getArenasManager()->signAsLoaded($arenaID, $arena);
-			if (!is_null($onSuccess)) {
-				$onSuccess($arenaID, $arena);
-			}
+			$this->getArenasManager()->signAsLoaded($arenaID, new Arena($this, new ArenaDataParser($data)), function ($arenaID, $arena) use ($onSuccess): void {
+				if (!is_null($onSuccess)) {
+					$onSuccess($arenaID, $arena);
+				}
+			});
 		});
 	}
 
-	public function removeArena(string $arenaID, bool $alertConsole = true): void
+	/**
+	 * @param string $arenaID
+	 * @param \Closure $onSuccess
+	 * @param \Closure $onFail
+	 * @param bool $alertConsole
+	 * @return void
+	 */
+	public function removeArena(string $arenaID, ?callable $onSuccess = null, ?callable $onFail = null, bool $alertConsole = true): void
 	{
-		if (!$this->arenasManager->has($arenaID)) {
-			throw new \RuntimeException("Arena is already registered");
-		}
-		// $arenaDirPath = Path::join($this->arenasPath . $arenaID);
-		// $arenaFilePath = Path::join($arenaDirPath, $arenaID . ".json");
-		// $absBackupPath = $arenaID . DIRECTORY_SEPARATOR . $arenaID . ".zip";
-		// $backupFilePath = $this->arenasBackupPath;
-		// if (str_contains($backupFilePath, "%arena%")) {
-		// 	$backupFilePath = str_replace("%arena%", $absBackupPath, $backupFilePath);
-		// } else {
-		// 	$backupFilePath .= $absBackupPath;
-		// }
-		// unlink($backupFilePath);
-		// unlink($arenaFilePath);
-		// rmdir($arenaDirPath);
-		if ($alertConsole) {
-			self::$plugin->getLogger()->alert("Arena: $arenaID has been successfully removed");
-		}
+		$this->arenaExistsInDB($arenaID, function($arenaExists) use ($arenaID, $onSuccess, $onFail, $alertConsole): void {
+			if (!$arenaExists && !$this->getArenasManager()->has($arenaID)) {
+				$reason = "Arena doesnt exists";
+				if (!is_null($onFail)) {
+					$onFail($arenaID, $reason);
+				}
+				return;
+			}
+
+			self::$database->executeChange(SqlQueries::REMOVE_ARENA, ["arenaID" => $arenaID], function ($rows) use ($arenaID, $onSuccess, $alertConsole): void {
+				$this->getArenasManager()->unsignFromBeingLoaded($arenaID, function ($iArenaID) use ($onSuccess): void {
+					if (!is_null($onSuccess)) {
+						$onSuccess($iArenaID);
+					}
+				});
+
+				if ($alertConsole) {
+					self::$plugin->getLogger()->alert("Arena: $arenaID has been successfully removed");
+				}
+			});
+		});
 	}
 
 	/**
 	 * @param string $arenaID
 	 * @return void
 	 */
-	public function arenaExistsInDB(string $arenaID, string $worldName, callable $valueCallback): void
+	public function arenaExistsInDB(string $arenaID, callable $valueCallback): void
 	{
 		// BUtils::validateCallableSignature($valueCallback, function (bool $exists): void {});
 
-		self::$database->executeSelect(SqlQueries::GET_ALL_ARENAS, [], function ($rows) use ($valueCallback, $arenaID, $worldName): void {
+		self::$database->executeSelect(SqlQueries::GET_ALL_ARENAS, [], function ($rows) use ($valueCallback, $arenaID): void {
 			if (count($rows) > 0) {
 				foreach ($rows as $arenasData) {
-					$arenaExistsCheck1 = strtolower($arenasData["arenaID"]) === strtolower($arenaID);
-					if ($arenaExistsCheck1) {
+					if (strtolower($arenasData["arenaID"]) === strtolower($arenaID)) {
 						$valueCallback(true);
-					} else if ($arenaExistsCheck1 && strtolower($arenasData["worldName"]) === strtolower($worldName)) {
-						$valueCallback(true);
-					} else {
-						$valueCallback(false);
+						return;
 					}
 				}
-				return;
 			}
 			$valueCallback(false);
+		});
+	}
+
+	/**
+	 * @param Player $player
+	 * @param string $arenaID
+	 * @param \Closure $onSuccess
+	 * @param \Closure $onFail
+	 * @return void
+	 */
+	public function setupSpawnsForArena(Player $player, string $arenaID, ?callable $onSuccess = null, ?callable $onFail = null): void
+	{
+		if (!$this->getArenasManager()->has($arenaID)) {
+			if (!is_null($onFail)) {
+				$onFail($arenaID, "Arena does not exists");
+			}
+			return;
+		}
+
+
+		$this->getSetupManager()->addToSetupPlayers($player, function() use ($onSuccess): void {
+			if (!is_null($onSuccess)) {
+				$onSuccess();
+			}
+		}, function() use ($arenaID, $onFail): void {
+			if (!is_null($onFail)) {
+				$onFail($arenaID, "You are already inside the setup");
+			}
 		});
 	}
 }
