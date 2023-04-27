@@ -73,6 +73,7 @@ final class PlayerTeam
 
 	/**
 	 * @param Player $player
+	 * @return void
 	 */
 	public function addPlayer(Player $player): void
 	{
@@ -85,6 +86,7 @@ final class PlayerTeam
 
 	/**
 	 * @param string $bytes
+	 * @return void
 	 */
 	public function removePlayer(string $bytes): void
 	{
@@ -108,6 +110,7 @@ final class PlayerTeam
 
 	/**
 	 * @param string $bytes
+	 * @return bool
 	 */
 	public function hasPlayer(string $bytes): bool
 	{

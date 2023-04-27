@@ -31,6 +31,7 @@ declare(strict_types=1);
 
 namespace vp817\GameLib\managers;
 
+use Closure;
 use vp817\GameLib\arena\Arena;
 
 final class ArenasManager
@@ -42,8 +43,8 @@ final class ArenasManager
 	/**
 	 * @param string $arenaID
 	 * @param Arena $arena
-	 * @param \Closure $onSuccess
-	 * @param \Closure $onFail
+	 * @param Closure $onSuccess
+	 * @param Closure $onFail
 	 * @return void
 	 */
 	public function signAsLoaded(string $arenaID, Arena $arena, ?callable $onSuccess = null, ?callable $onFail = null): void
@@ -63,8 +64,8 @@ final class ArenasManager
 
 	/**
 	 * @param string $arenaID
-	 * @param \Closure $onSuccess
-	 * @param \Closure $onFail
+	 * @param Closure $onSuccess
+	 * @param Closure $onFail
 	 * @return void
 	 */
 	public function unsignFromBeingLoaded(string $arenaID, ?callable $onSuccess = null, ?callable $onFail = null): void
@@ -84,8 +85,8 @@ final class ArenasManager
 
 	/**
 	 * @param string $arenaID
-	 * @param \Closure $onSuccess
-	 * @param \Closure $onFail
+	 * @param Closure $onSuccess
+	 * @param Closure $onFail
 	 * @return void
 	 */
 	public function getLoadedArena(string $arenaID, callable $onSuccess, ?callable $onFail = null): void

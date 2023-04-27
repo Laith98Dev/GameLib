@@ -37,16 +37,27 @@ use vp817\GameLib\arena\modes\ArenaMode;
 class TrioMode extends ArenaMode
 {
 
+	/**
+	 * @return int
+	 */
 	public function getMaxPlayersPerTeam(): int
 	{
 		return 3;
 	}
 
+	/**
+	 * @param Player $player
+	 * @return void
+	 */
 	public function onJoin(Player $player): void
 	{
 		
 	}
 
+	/**
+	 * @param Player $player
+	 * @return void
+	 */
 	public function onQuit(Player $player): void
 	{
 	}

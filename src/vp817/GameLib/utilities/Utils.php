@@ -46,7 +46,30 @@ use poggit\libasynql\mysqli\MysqlCredentials;
 use poggit\libasynql\mysqli\MysqliThread;
 use poggit\libasynql\SqlError;
 use poggit\libasynql\sqlite3\Sqlite3Thread;
+use ReflectionProperty;
 use Symfony\Component\Filesystem\Path;
+use function array_key_exists;
+use function rtrim;
+use function str_replace;
+use function file_exists;
+use function fopen;
+use function trim;
+use function mkdir;
+use function dirname;
+use function stream_copy_to_stream;
+use function fclose;
+use function substr;
+use function strlen;
+use function is_dir;
+use function is_array;
+use function count;
+use function extension_loaded;
+use function implode;
+use function array_keys;
+use function usleep;
+use function is_string;
+use function realpath;
+use function basename;
 
 final class Utils
 {
@@ -66,7 +89,10 @@ final class Utils
 	}
 
 	/**
-	 * 
+	 * @param string $path
+	 * @param string $filename
+	 * @return resource|null
+	 * @throws AssumptionFailedError
 	 */
 	private static function getResource(string $path, string $filename)
 	{
@@ -126,18 +152,17 @@ final class Utils
 	 */
 	public static function saveResourceToPluginResources(PluginBase $plugin, string $fromPath, string $filename): bool
 	{
-		$property = new \ReflectionProperty(PluginBase::class, "resourceProvider");
+		$property = new ReflectionProperty(PluginBase::class, "resourceProvider");
 		$property->setAccessible(true);
 		/** @var ResourceProvider $resourceProvider */
 		$resourceProvider = $property->getValue($plugin);
-		$property2 = new \ReflectionProperty($resourceProvider, "file");
+		$property2 = new ReflectionProperty($resourceProvider, "file");
 		$property2->setAccessible(true);
 		$resourcePath = $property2->getValue($resourceProvider);
 		$resourcePathNoSl = substr($resourcePath, 0, strlen($resourcePath) - 1);
 		if (!is_dir($resourcePathNoSl)) {
 			@mkdir($resourcePathNoSl);
 		}
-		// var_dump($resourcePathNoSl);
 		return self::saveResourceToPlugin($plugin, $fromPath, $filename, $resourcePath);
 	}
 

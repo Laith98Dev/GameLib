@@ -32,6 +32,8 @@ declare(strict_types=1);
 namespace vp817\GameLib\arena;
 
 use vp817\GameLib\utilities\Utils;
+use function array_keys;
+use function json_encode;
 
 final class ArenaDataParser
 {

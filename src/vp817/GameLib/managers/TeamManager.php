@@ -35,6 +35,12 @@ use pocketmine\player\Player;
 use pocketmine\utils\TextFormat;
 use vp817\GameLib\arena\Arena;
 use vp817\GameLib\player\PlayerTeam;
+use function strtolower;
+use function array_key_exists;
+use function array_filter;
+use function count;
+use function array_shift;
+use function array_rand;
 
 final class TeamManager
 {
@@ -66,6 +72,7 @@ final class TeamManager
 
 	/**
 	 * @param string $name
+	 * @return void
 	 */
 	public function removeTeam(string $name): void
 	{

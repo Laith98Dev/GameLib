@@ -37,15 +37,26 @@ use vp817\GameLib\arena\modes\ArenaMode;
 class SquadMode extends ArenaMode
 {
 
+	/**
+	 * @return int
+	 */
 	public function getMaxPlayersPerTeam(): int
 	{
 		return 4;
 	}
 
+	/**
+	 * @param Player $player
+	 * @return void
+	 */
 	public function onJoin(Player $player): void
 	{
 	}
 
+	/**
+	 * @param Player $player
+	 * @return void
+	 */
 	public function onQuit(Player $player): void
 	{
 	}

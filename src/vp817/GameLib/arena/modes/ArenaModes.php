@@ -49,6 +49,7 @@ final class ArenaModes
 
 	/**
 	 * @return void
+	 * @throws \InvalidArgumentException
 	 */
 	public static function setup(): void
 	{

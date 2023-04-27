@@ -31,10 +31,12 @@ declare(strict_types=1);
 
 namespace vp817\GameLib;
 
+use Closure;
 use pocketmine\player\Player;
 use pocketmine\plugin\PluginBase;
 use poggit\libasynql\DataConnector;
 use poggit\libasynql\SqlError;
+use RuntimeException;
 use Symfony\Component\Filesystem\Path;
 use vp817\GameLib\arena\Arena;
 use vp817\GameLib\arena\ArenaDataParser;
@@ -46,6 +48,13 @@ use vp817\GameLib\managers\SetupManager;
 use vp817\GameLib\player\PlayerTeam;
 use vp817\GameLib\utilities\SqlQueries;
 use vp817\GameLib\utilities\Utils;
+use function is_dir;
+use function mkdir;
+use function count;
+use function is_null;
+use function basename;
+use function strtolower;
+use function json_encode;
 
 final class GameLib
 {
@@ -71,12 +80,12 @@ final class GameLib
 	 * @param PluginBase $plugin
 	 * @param array $database
 	 * @return GameLib
-	 * @throws \RuntimeException
+	 * @throws RuntimeException
 	 */
 	public static function init(PluginBase $plugin, array $database): GameLib
 	{
 		if (self::$plugin !== null) {
-			throw new \RuntimeException("GameLib is already initialized");
+			throw new RuntimeException("GameLib is already initialized");
 		}
 		return new GameLib($plugin, $database);
 	}
@@ -200,8 +209,8 @@ final class GameLib
 	}
 
 	/**
-	 * @param \Closure $onSuccess
-	 * @param \Closure $onFail
+	 * @param Closure $onSuccess
+	 * @param Closure $onFail
 	 * @return void
 	 */
 	public function loadArenas(?callable $onSuccess = null, ?callable $onFail = null): void
@@ -213,18 +222,18 @@ final class GameLib
 			foreach ($rows as $arenasData) {
 				$arenaID = $arenasData["arenaID"];
 				$this->arenaExistsInDB($arenaID, function (bool $arenaExists) use ($arenaID, $arenasData, $onSuccess, $onFail): void {
-					if (!$arenaExists && $this->getArenasManager()->has($arenaID)) {
+					if (!$arenaExists || $this->getArenasManager()->has($arenaID)) {
 						if (!is_null($onFail)) {
 							$onFail($arenaID, "Arena already exists");
 						}
 						return;
 					}
 
-					$arena = new Arena($this, new ArenaDataParser($arenasData));
-					$this->getArenasManager()->signAsLoaded($arenaID, $arena);
-					if (!is_null($onSuccess)) {
-						$onSuccess($arenaID, $arena);
-					}
+					$this->getArenasManager()->signAsLoaded($arenaID, new Arena($this, new ArenaDataParser($arenasData)), function ($arenaID, $arena) use ($onSuccess): void {
+						if (!is_null($onSuccess)) {
+							$onSuccess($arenaID, $arena);
+						}
+					});
 				});
 			}
 		});
@@ -236,10 +245,10 @@ final class GameLib
 	 * @param string $waitingLobbyWorldName
 	 * @param string $mode
 	 * @param null|int $maxPlayersPerTeam
-	 * @param \Closure $onSuccess
-	 * @param \Closure $onFail
+	 * @param Closure $onSuccess
+	 * @param Closure $onFail
 	 * @return void
-	 * @throws \RuntimeException
+	 * @throws RuntimeException
 	 */
 	public function createArena(string $arenaID, string $worldName, string $waitingLobbyWorldName, string $mode, ?int $maxPlayersPerTeam = null, ?callable $onSuccess = null, ?callable $onFail = null): void
 	{
@@ -249,7 +258,7 @@ final class GameLib
 				$onFail($arenaID, $reason);
 				return;
 			}
-			throw new \RuntimeException($reason);
+			throw new RuntimeException($reason);
 		}
 
 		$mode = strtolower($mode);
@@ -258,7 +267,7 @@ final class GameLib
 			if (!is_null($arenaMode)) {
 				$maxPlayersPerTeam = $arenaMode->getMaxPlayersPerTeam();
 			} else {
-				throw new \RuntimeException("You need to set the arena max players per team if you are using custom arena modes");
+				throw new RuntimeException("You need to set the arena max players per team if you are using custom arena modes");
 			}
 		}
 
@@ -292,8 +301,8 @@ final class GameLib
 
 	/**
 	 * @param string $arenaID
-	 * @param \Closure $onSuccess
-	 * @param \Closure $onFail
+	 * @param Closure $onSuccess
+	 * @param Closure $onFail
 	 * @param bool $alertConsole
 	 * @return void
 	 */
@@ -346,11 +355,11 @@ final class GameLib
 	/**
 	 * @param Player $player
 	 * @param string $arenaID
-	 * @param \Closure $onSuccess
-	 * @param \Closure $onFail
+	 * @param Closure $onSuccess
+	 * @param Closure $onFail
 	 * @return void
 	 */
-	public function addPlayerToSetupOfArena(Player $player, string $arenaID, ?callable $onSuccess = null, ?callable $onFail = null): void
+	public function addPlayerToSetupArena(Player $player, string $arenaID, ?callable $onSuccess = null, ?callable $onFail = null): void
 	{
 		if (!$this->getArenasManager()->has($arenaID)) {
 			if (!is_null($onFail)) {
@@ -370,8 +379,14 @@ final class GameLib
 		});
 	}
 
-	public function removePlayerFromSetupOfArena(Player $player, ?callable $onSuccess = null, ?callable $onFail = null): void
-	{
-		// $this->getSetupManager()->;
-	}
+	// /**
+	//  * @param Player $player
+	//  * @param Closure $onSuccess
+	//  * @param Closure $onFail
+	//  * @return void
+	//  */
+	// public function removePlayerFromArenaSetupping(Player $player, ?callable $onSuccess = null, ?callable $onFail = null): void
+	// {
+	// 	$this->getSetupManager()->removeFromSetupPlayers($player, $onSuccess, $onFail);
+	// }
 }

@@ -46,6 +46,7 @@ final class ArenaStates
 
 	/**
 	 * @return void
+	 * @throws \InvalidArgumentException
 	 */
 	public static function setup(): void
 	{
