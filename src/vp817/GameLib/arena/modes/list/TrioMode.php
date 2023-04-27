@@ -44,6 +44,7 @@ class TrioMode extends ArenaMode
 
 	public function onJoin(Player $player): void
 	{
+		
 	}
 
 	public function onQuit(Player $player): void

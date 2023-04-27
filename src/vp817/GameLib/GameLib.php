@@ -34,7 +34,6 @@ namespace vp817\GameLib;
 use pocketmine\player\Player;
 use pocketmine\plugin\PluginBase;
 use poggit\libasynql\DataConnector;
-use poggit\libasynql\libasynql;
 use poggit\libasynql\SqlError;
 use Symfony\Component\Filesystem\Path;
 use vp817\GameLib\arena\Arena;
@@ -96,19 +95,25 @@ final class GameLib
 	{
 		self::$plugin = $plugin;
 
-		foreach (glob(Path::join($this->getResourcesPath(), "*.sql")) as $resource) {
-			$filename = basename($resource);
-			Utils::saveResourceToPluginResources($plugin, $this->getResourcesPath() . DIRECTORY_SEPARATOR, $filename);
+		$sqlMapPath = $plugin->getDataFolder() . "SqlMap";
+		if (!is_dir($sqlMapPath)) {
+			@mkdir($sqlMapPath);
 		}
 
-		self::$database = libasynql::create($plugin, $database,
-		[
-			"sqlite" => "sqlite.sql",
-			"mysql" => "mysql.sql"
+		foreach (glob(Path::join($this->getResourcesPath(), "*.sql")) as $resource) {
+			$filename = basename($resource);
+			Utils::saveResourceToPlugin($plugin, $this->getResourcesPath(), $filename, $sqlMapPath);
+		}
+
+		self::$database = Utils::libasynqlCreateForVirion($plugin, $database, [
+			"sqlite" => Path::join($sqlMapPath, "sqlite.sql"),
+			"mysql" => Path::join($sqlMapPath, "mysql.sql")
 		]);
+
 		self::$database->executeGeneric(SqlQueries::INIT, [], null, static function (SqlError $error) use ($plugin): void {
 			$plugin->getLogger()->error($error->getMessage());
 		});
+	
 		self::$database->waitAll();
 
 		$this->arenasManager = new ArenasManager();
@@ -121,7 +126,7 @@ final class GameLib
 	 */
 	public function getResourcesPath(): string
 	{
-		return __DIR__ . "/../../../resources";
+		return __DIR__ . "/../../../resources/";
 	}
 
 	/**
@@ -323,15 +328,15 @@ final class GameLib
 	 */
 	public function arenaExistsInDB(string $arenaID, callable $valueCallback): void
 	{
-		// BUtils::validateCallableSignature($valueCallback, function (bool $exists): void {});
-
 		self::$database->executeSelect(SqlQueries::GET_ALL_ARENAS, [], function ($rows) use ($valueCallback, $arenaID): void {
 			if (count($rows) > 0) {
-				foreach ($rows as $arenasData) {
-					if (strtolower($arenasData["arenaID"]) === strtolower($arenaID)) {
-						$valueCallback(true);
-						return;
-					}
+				$valueCallback(false);
+				return;
+			}
+			foreach ($rows as $arenasData) {
+				if (strtolower($arenasData["arenaID"]) === strtolower($arenaID)) {
+					$valueCallback(true);
+					return;
 				}
 			}
 			$valueCallback(false);
@@ -345,7 +350,7 @@ final class GameLib
 	 * @param \Closure $onFail
 	 * @return void
 	 */
-	public function setupSpawnsForArena(Player $player, string $arenaID, ?callable $onSuccess = null, ?callable $onFail = null): void
+	public function addPlayerToSetupOfArena(Player $player, string $arenaID, ?callable $onSuccess = null, ?callable $onFail = null): void
 	{
 		if (!$this->getArenasManager()->has($arenaID)) {
 			if (!is_null($onFail)) {
@@ -353,7 +358,6 @@ final class GameLib
 			}
 			return;
 		}
-
 
 		$this->getSetupManager()->addToSetupPlayers($player, function() use ($onSuccess): void {
 			if (!is_null($onSuccess)) {
@@ -364,5 +368,10 @@ final class GameLib
 				$onFail($arenaID, "You are already inside the setup");
 			}
 		});
+	}
+
+	public function removePlayerFromSetupOfArena(Player $player, ?callable $onSuccess = null, ?callable $onFail = null): void
+	{
+		// $this->getSetupManager()->;
 	}
 }

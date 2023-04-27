@@ -54,6 +54,11 @@ final class SetupManager
 		}
 	}
 
+	public function removeFromSetupPlayers(Player $player, )
+	{
+		
+	}
+
 	public function hasSetupPlayer(string $bytes): bool
 	{
 		return array_key_exists($bytes, $this->setupPlayers);
