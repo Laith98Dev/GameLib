@@ -33,6 +33,8 @@ namespace vp817\GameLib\managers;
 
 use Closure;
 use vp817\GameLib\arena\Arena;
+use function is_null;
+use function array_key_exists;
 
 final class ArenasManager
 {

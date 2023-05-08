@@ -29,71 +29,46 @@
 
 declare(strict_types=1);
 
-namespace vp817\GameLib\managers;
+namespace vp817\GameLib\form\list\normal;
 
 use Closure;
-use pocketmine\player\Player;
-use vp817\GameLib\player\SetupPlayer;
-
+use vp817\GameLib\form\FormInterface;
 use function is_null;
-use function array_key_exists;
 
-final class SetupManager
+final class NormalForm extends FormInterface
 {
-	/** @var Player[] $setupPlayers */
-	private array $setupPlayers = [];
 
 	/**
-	 * @param Player $player
-	 * @param Closure $onSuccess
-	 * @param Closure $onFail
-	 * @return void
+	 * @param string $title
+	 * @param string $contents
+	 * @param Closure $xButtonCallback
 	 */
-	public function addToSetupPlayers(Player $player, ?callable $onSuccess = null, ?callable $onFail = null): void
+	public function __construct(string $title, string $contents, ?callable $xButtonCallback = null)
 	{
-		$bytes = $player->getUniqueId()->getBytes();
-		if ($this->hasSetupPlayer($bytes)) {
-			if (!is_null($onFail)) {
-				$onFail();
-			}
-			return;
-		}
-
-		$setupPlayer = new SetupPlayer($player);
-		$this->setupPlayers[$bytes] = $setupPlayer;
-		if (!is_null($onSuccess)) {
-			$onSuccess($setupPlayer);
-		}
+		parent::__construct($xButtonCallback);
+		$this->data = [
+			"type" => "form",
+			"title" => $title,
+			"contents" => $contents,
+			"buttons" => []
+		];
 	}
 
 	/**
-	 * @param Player $player
-	 * @param Closure $onSuccess
-	 * @param Closure $onFail
+	 * @param string $text
+	 * @param Closure $onUse
+	 * @param null|FormButtonImageType $imageType
+	 * @param string $imageDataPath
 	 * @return void
 	 */
-	public function removeFromSetupPlayers(Player $player, ?callable $onSuccess, ?callable $onFail = null): void
+	public function pushButton(string $text, ?callable $onUse = null, ?FormButtonImageType $imageType = null, string $imageDataPath = ""): void
 	{
-		$bytes = $player->getUniqueId()->getBytes();
-		if (!$this->hasSetupPlayer($bytes)) {
-			if (!is_null($onFail)) {
-				$onFail();
-			}
-			return;
+		$button = ["text" => $text];
+		if (!is_null($imageType)) {
+			$button["image"]["type"] = $imageType->name();
+			$button["image"]["data"] = $imageDataPath;
 		}
-
-		unset($this->setupPlayers[$bytes]);
-		if (!is_null($onSuccess)) {
-			$onSuccess();
-		}
-	}
-
-	/**
-	 * @param string $bytes
-	 * @return bool
-	 */
-	public function hasSetupPlayer(string $bytes): bool
-	{
-		return array_key_exists($bytes, $this->setupPlayers);
+		$this->data["buttons"][] = $button;
+		$this->onUse = $onUse;
 	}
 }

@@ -46,6 +46,7 @@ use vp817\GameLib\arena\modes\ArenaModes;
 use vp817\GameLib\managers\ArenasManager;
 use vp817\GameLib\managers\SetupManager;
 use vp817\GameLib\player\PlayerTeam;
+use vp817\GameLib\player\SetupPlayer;
 use vp817\GameLib\utilities\SqlQueries;
 use vp817\GameLib\utilities\Utils;
 use function is_dir;
@@ -279,12 +280,18 @@ final class GameLib
 				return;
 			}
 
+			$waitingLobbyWorldSpawn = self::$plugin->getServer()->getWorldManager()->getWorldByName($waitingLobbyWorldName)->getSpawnLocation();
+			$lobbySpawn = [
+				"x" => round($waitingLobbyWorldSpawn->getX()),
+				"y" => round($waitingLobbyWorldSpawn->getY()),
+				"z" => round($waitingLobbyWorldSpawn->getZ())
+			];
 			$data = [
 				"arenaID" => $arenaID,
 				"worldName" => $worldName,
-				"waitingLobbyWorldName" => $waitingLobbyWorldName,
 				"mode" => $mode,
-				"maxPlayersPerTeam" => $maxPlayersPerTeam
+				"maxPlayersPerTeam" => $maxPlayersPerTeam,
+				"waitingLobbySettings" => json_encode(["worldName" => $waitingLobbyWorldName, "spawn" => json_encode($lobbySpawn)])
 			];
 
 			self::$database->executeInsert(SqlQueries::ADD_ARENA, $data);
@@ -368,9 +375,9 @@ final class GameLib
 			return;
 		}
 
-		$this->getSetupManager()->addToSetupPlayers($player, function() use ($onSuccess): void {
+		$this->getSetupManager()->addToSetupPlayers($player, function(SetupPlayer $player) use ($onSuccess): void {
 			if (!is_null($onSuccess)) {
-				$onSuccess();
+				$onSuccess($player);
 			}
 		}, function() use ($arenaID, $onFail): void {
 			if (!is_null($onFail)) {

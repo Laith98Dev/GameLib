@@ -61,15 +61,10 @@ final class ArenaModes
 
 	/**
 	 * @param string $value
-	 * @return ArenaMode
+	 * @return null|ArenaMode
 	 */
-	public static function fromString(string $value): ArenaMode
+	public static function fromString(string $value): ?ArenaMode
 	{
-		return match ($value) {
-			"solo"   => static::SOLO(),
-			"duo"    => static::DUO(),
-			"trio"   => static::TRIO(),
-			"squand" => static::SQUAD()
-		};
+		return self::_registryFromString($value) ?? null;
 	}
 }

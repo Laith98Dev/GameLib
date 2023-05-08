@@ -29,71 +29,52 @@
 
 declare(strict_types=1);
 
-namespace vp817\GameLib\managers;
+namespace vp817\GameLib\form;
 
 use Closure;
+use pocketmine\form\Form;
 use pocketmine\player\Player;
-use vp817\GameLib\player\SetupPlayer;
-
 use function is_null;
-use function array_key_exists;
 
-final class SetupManager
+class FormInterface implements Form
 {
-	/** @var Player[] $setupPlayers */
-	private array $setupPlayers = [];
+
+	/** @var array $data */
+	protected array $data = [];
+	/** @var Closure $xButtonCallback */
+	private ?Closure $xButtonCallback = null;
+	/** @var null|Closure $onUse */
+	protected ?Closure $onUse = null;
 
 	/**
-	 * @param Player $player
-	 * @param Closure $onSuccess
-	 * @param Closure $onFail
-	 * @return void
+	 * @param null|Closure $xButtonCallback
 	 */
-	public function addToSetupPlayers(Player $player, ?callable $onSuccess = null, ?callable $onFail = null): void
+	public function __construct(?callable $xButtonCallback = null)
 	{
-		$bytes = $player->getUniqueId()->getBytes();
-		if ($this->hasSetupPlayer($bytes)) {
-			if (!is_null($onFail)) {
-				$onFail();
-			}
-			return;
-		}
-
-		$setupPlayer = new SetupPlayer($player);
-		$this->setupPlayers[$bytes] = $setupPlayer;
-		if (!is_null($onSuccess)) {
-			$onSuccess($setupPlayer);
-		}
+		$this->xButtonCallback = $xButtonCallback;
 	}
 
 	/**
 	 * @param Player $player
-	 * @param Closure $onSuccess
-	 * @param Closure $onFail
-	 * @return void
+	 * @param mixed $data
+	 * @param 
 	 */
-	public function removeFromSetupPlayers(Player $player, ?callable $onSuccess, ?callable $onFail = null): void
+	public function handleResponse(Player $player, $data): void
 	{
-		$bytes = $player->getUniqueId()->getBytes();
-		if (!$this->hasSetupPlayer($bytes)) {
-			if (!is_null($onFail)) {
-				$onFail();
-			}
+		if ($data === null && !is_null($this->xButtonCallback)) {
+			($this->xButtonCallback)($player);
 			return;
 		}
-
-		unset($this->setupPlayers[$bytes]);
-		if (!is_null($onSuccess)) {
-			$onSuccess();
+		if (!is_null($this->onUse)) {
+			($this->onUse)($player, $data);
 		}
 	}
 
 	/**
-	 * @param string $bytes
-	 * @return bool
+	 * @return array
 	 */
-	public function hasSetupPlayer(string $bytes): bool
+	public function jsonSerialize(): array
 	{
-		return array_key_exists($bytes, $this->setupPlayers);
+		return $this->data;
 	}
 }

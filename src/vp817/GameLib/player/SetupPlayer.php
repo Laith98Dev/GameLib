@@ -29,71 +29,38 @@
 
 declare(strict_types=1);
 
-namespace vp817\GameLib\managers;
+namespace vp817\GameLib\player;
 
-use Closure;
 use pocketmine\player\Player;
-use vp817\GameLib\player\SetupPlayer;
 
-use function is_null;
-use function array_key_exists;
-
-final class SetupManager
+final class SetupPlayer
 {
-	/** @var Player[] $setupPlayers */
-	private array $setupPlayers = [];
+
+	public const STEPS = [
+		"SPAWNS" => 0,
+		"SPAWNS" => 0,
+		"SPAWNS" => 0,
+	];
+
+	private int $step = 0;
 
 	/**
 	 * @param Player $player
-	 * @param Closure $onSuccess
-	 * @param Closure $onFail
-	 * @return void
 	 */
-	public function addToSetupPlayers(Player $player, ?callable $onSuccess = null, ?callable $onFail = null): void
+	public function __construct(private Player $player)
 	{
-		$bytes = $player->getUniqueId()->getBytes();
-		if ($this->hasSetupPlayer($bytes)) {
-			if (!is_null($onFail)) {
-				$onFail();
-			}
-			return;
-		}
-
-		$setupPlayer = new SetupPlayer($player);
-		$this->setupPlayers[$bytes] = $setupPlayer;
-		if (!is_null($onSuccess)) {
-			$onSuccess($setupPlayer);
-		}
 	}
 
 	/**
-	 * @param Player $player
-	 * @param Closure $onSuccess
-	 * @param Closure $onFail
-	 * @return void
+	 * @return Player
 	 */
-	public function removeFromSetupPlayers(Player $player, ?callable $onSuccess, ?callable $onFail = null): void
+	public function getPlayerCells(): Player
 	{
-		$bytes = $player->getUniqueId()->getBytes();
-		if (!$this->hasSetupPlayer($bytes)) {
-			if (!is_null($onFail)) {
-				$onFail();
-			}
-			return;
-		}
-
-		unset($this->setupPlayers[$bytes]);
-		if (!is_null($onSuccess)) {
-			$onSuccess();
-		}
+		return $this->player;
 	}
 
-	/**
-	 * @param string $bytes
-	 * @return bool
-	 */
-	public function hasSetupPlayer(string $bytes): bool
+	public function turnToNextStep()
 	{
-		return array_key_exists($bytes, $this->setupPlayers);
+		
 	}
 }

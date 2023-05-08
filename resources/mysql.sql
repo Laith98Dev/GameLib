@@ -4,19 +4,18 @@
 CREATE TABLE IF NOT EXISTS arenas(
 	arenaID VARCHAR(65535) NOT NULL PRIMARY KEY,
 	worldName VARCHAR(65535) NOT NULL,
-	waitingLobbyWorldName VARCHAR(65535) NOT NULL,
 	mode VARCHAR(65535) NOT NULL,
 	maxPlayersPerTeam INTEGER NOT NULL,
+	waitingLobbySettings VARCHAR(65535),
 	spawns VARCHAR(65535)
 );
 -- # }
 -- # { add-arena
 -- # 	:arenaID string
 -- # 	:worldName string
--- # 	:waitingLobbyWorldName string
 -- # 	:mode string
 -- # 	:maxPlayersPerTeam int
-INSERT INTO arenas(arenaID, worldName, waitingLobbyWorldName, mode, maxPlayersPerTeam) VALUES (:arenaID, :worldName, :waitingLobbyWorldName, :mode, :maxPlayersPerTeam);
+INSERT INTO arenas(arenaID, worldName, mode, maxPlayersPerTeam) VALUES (:arenaID, :worldName, :mode, :maxPlayersPerTeam);
 -- # }
 -- # { add-arena-spawn
 -- #	:arenaID string

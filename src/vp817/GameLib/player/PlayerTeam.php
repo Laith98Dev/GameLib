@@ -134,7 +134,7 @@ final class PlayerTeam
 	 */
 	public function getMaxPlayers(): int
 	{
-		return $this->maxPlayers;		
+		return $this->maxPlayers;
 	}
 
 	/**
