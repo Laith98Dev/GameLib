@@ -43,13 +43,13 @@ final class NormalForm extends FormInterface
 	 * @param string $contents
 	 * @param Closure $xButtonCallback
 	 */
-	public function __construct(string $title, string $contents, ?callable $xButtonCallback = null)
+	public function __construct(string $title, string $content, ?callable $xButtonCallback = null)
 	{
 		parent::__construct($xButtonCallback);
 		$this->data = [
 			"type" => "form",
 			"title" => $title,
-			"contents" => $contents,
+			"content" => $content,
 			"buttons" => []
 		];
 	}
