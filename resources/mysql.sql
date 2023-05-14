@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS arenas(
 	maxPlayersPerTeam INTEGER NOT NULL,
 	lobbySettings VARCHAR(65535),
 	spawns VARCHAR(65535),
-	extaData VARCHAR(65535)
+	extraData VARCHAR(65535)
 );
 -- # }
 -- # { add-arena
