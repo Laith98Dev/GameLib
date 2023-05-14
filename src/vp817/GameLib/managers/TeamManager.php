@@ -132,17 +132,22 @@ final class TeamManager
 		$availableTeams = array_filter($this->list, function ($value) use ($maxPlayersPerTeam) {
 			return count($value->getPlayers()) < $maxPlayersPerTeam + 1;
 		});
-		if (count($availableTeams) < 2 && count($availableTeams) > 0) {
-			$team = array_shift($availableTeams);
-			$team->addPlayer($player);
-		} else if ($availableTeams > 1) {
-			$team = $availableTeams[array_rand($availableTeams)];
-			$team->addPlayer($player);
+		$availableTeamsCount = count($availableTeams);
+
+		if ($availableTeamsCount > 0) {
+			if ($availableTeamsCount < 2) {
+				$team = array_shift($availableTeams);
+			} else if ($availableTeamsCount > 1) {
+				$team = $availableTeams[array_rand($availableTeams)];
+			}
 		} else {
 			if ($sendNoTeamsMsg) {
 				$player->sendMessage(TextFormat::RED . "No teams available");
 			}
+			return;
 		}
+
+		$team->addPlayer($player);
 	}
 
 	/**

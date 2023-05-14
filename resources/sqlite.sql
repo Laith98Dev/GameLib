@@ -6,8 +6,9 @@ CREATE TABLE IF NOT EXISTS arenas(
 	worldName VARCHAR NOT NULL,
 	mode VARCHAR NOT NULL,
 	maxPlayersPerTeam INTEGER NOT NULL,
-	waitingLobbySettings VARCHAR,
-	spawns VARCHAR
+	lobbySettings VARCHAR,
+	spawns VARCHAR,
+	extraData VARCHAR
 );
 -- # }
 -- # { add-arena
@@ -17,10 +18,20 @@ CREATE TABLE IF NOT EXISTS arenas(
 -- # 	:maxPlayersPerTeam int
 INSERT INTO arenas(arenaID, worldName, mode, maxPlayersPerTeam) VALUES (:arenaID, :worldName, :mode, :maxPlayersPerTeam);
 -- # }
--- # { set-arena-spawns
+-- # { update-arena-spawns
 -- #	:arenaID string
 -- #	:spawns string
 UPDATE arenas SET spawns = :spawns WHERE arenaID = :arenaID;
+-- # }
+-- # { update-arena-lobby-settings
+-- #	:arenaID string
+-- #	:settings string
+UPDATE arenas SET lobbySettings = :settings WHERE arenaID = :arenaID;
+-- # }
+-- # { update-arena-exta-data
+-- #	:arenaID string
+-- #	:extraData string
+UPDATE arenas SET extraData = :extraData WHERE arenaID = :arenaID;
 -- # }
 -- # { remove-arena
 -- #	:arenaID string

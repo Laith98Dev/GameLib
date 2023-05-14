@@ -51,7 +51,7 @@ final class ArenasManager
 	 */
 	public function signAsLoaded(string $arenaID, Arena $arena, ?callable $onSuccess = null, ?callable $onFail = null): void
 	{
-		if ($this->has($arenaID)) {
+		if ($this->hasLoadedArena($arenaID)) {
 			if (!is_null($onFail)) {
 				$onFail($arenaID);
 			}
@@ -72,7 +72,7 @@ final class ArenasManager
 	 */
 	public function unsignFromBeingLoaded(string $arenaID, ?callable $onSuccess = null, ?callable $onFail = null): void
 	{
-		if (!$this->has($arenaID)) {
+		if (!$this->hasLoadedArena($arenaID)) {
 			if (!is_null($onFail)) {
 				$onFail($arenaID);
 			}
@@ -81,7 +81,7 @@ final class ArenasManager
 
 		unset($this->loadedArenas[$arenaID]);
 		if (!is_null($onSuccess)) {
-			$onSuccess($arenaID);
+			$onSuccess();
 		}
 	}
 
@@ -93,7 +93,7 @@ final class ArenasManager
 	 */
 	public function getLoadedArena(string $arenaID, callable $onSuccess, ?callable $onFail = null): void
 	{
-		if (!$this->has($arenaID)) {
+		if (!$this->hasLoadedArena($arenaID)) {
 			if (!is_null($onFail)) {
 				$onFail($arenaID);
 			}
@@ -106,7 +106,7 @@ final class ArenasManager
 	 * @param string $arenaID
 	 * @return bool
 	 */
-	public function has(string $arenaID): bool
+	public function hasLoadedArena(string $arenaID): bool
 	{
 		return array_key_exists($arenaID, $this->loadedArenas);
 	}

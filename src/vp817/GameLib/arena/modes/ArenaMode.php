@@ -51,13 +51,15 @@ abstract class ArenaMode
 
 	/**
 	 * @param Player $player
+	 * @param mixed ...$arguments
 	 * @return void
 	 */
-	abstract public function onJoin(Player $player): void;
+	abstract public function onJoin(Player $player, ...$arguments): void;
 
 	/**
 	 * @param Player $player
+	 * @param mixed ...$arguments
 	 * @return void
 	 */
-	abstract public function onQuit(Player $player): void;
+	abstract public function onQuit(Player $player, ...$arguments): void;
 }

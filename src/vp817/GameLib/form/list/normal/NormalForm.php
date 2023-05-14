@@ -46,6 +46,7 @@ final class NormalForm extends FormInterface
 	public function __construct(string $title, string $content, ?callable $xButtonCallback = null)
 	{
 		parent::__construct($xButtonCallback);
+
 		$this->data = [
 			"type" => "form",
 			"title" => $title,
@@ -58,17 +59,20 @@ final class NormalForm extends FormInterface
 	 * @param string $text
 	 * @param Closure $onUse
 	 * @param null|FormButtonImageType $imageType
-	 * @param string $imageDataPath
+	 * @param string $imagePath
 	 * @return void
 	 */
-	public function pushButton(string $text, ?callable $onUse = null, ?FormButtonImageType $imageType = null, string $imageDataPath = ""): void
+	public function pushButton(string $text, ?callable $onUse = null, ?FormButtonImageType $imageType = null, string $imagePath = ""): void
 	{
 		$button = ["text" => $text];
 		if (!is_null($imageType)) {
 			$button["image"]["type"] = $imageType->name();
-			$button["image"]["data"] = $imageDataPath;
+			$button["image"]["data"] = $imagePath;
 		}
 		$this->data["buttons"][] = $button;
-		$this->onUse = $onUse;
+
+		if (!is_null($onUse)) {
+			$this->onUseList[] = $onUse;
+		}
 	}
 }

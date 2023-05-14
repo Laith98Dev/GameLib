@@ -75,11 +75,21 @@ class Arena
 
 	/**
 	 * @param Player $player
+	 * @param mixed ...$arguments
 	 * @return void
 	 */
-	public function join(Player $player): void
+	public function join(Player $player, ...$arguments): void
 	{
-		$this->mode->onJoin($player);
+		$this->mode->onJoin($player, ...$arguments);
+	}
+
+	/**
+	 * @param Player $player
+	 * @return void
+	 */
+	public function quit(Player $player, ...$arguments): void
+	{
+		$this->mode->onQuit($player, ...$arguments);
 	}
 
 	/**
@@ -88,5 +98,10 @@ class Arena
 	public function getMaxPlayersPerTeam(): int
 	{
 		return intval($this->dataParser->parse("maxPlayersPerTeam"));
+	}
+
+	public function getID()
+	{
+		
 	}
 }

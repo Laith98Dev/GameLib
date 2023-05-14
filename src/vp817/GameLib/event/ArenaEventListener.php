@@ -29,23 +29,10 @@
 
 declare(strict_types=1);
 
-namespace vp817\GameLib\step;
+namespace vp817\event;
 
-use pocketmine\player\Player;
-use pocketmine\utils\EnumTrait;
+use pocketmine\event\Listener;
 
-final class SetupPhases
+class ArenaEventListener implements Listener
 {
-	use EnumTrait;
-
-	/**
-	 * @param Player $player
-	 */
-	public static function setup()
-	{
-		self::registerAll(
-			new self("SPAWNS"),
-			new self("FINISH")
-		);
-	}
 }

@@ -43,8 +43,8 @@ class FormInterface implements Form
 	protected array $data = [];
 	/** @var Closure $xButtonCallback */
 	private ?Closure $xButtonCallback = null;
-	/** @var null|Closure $onUse */
-	protected ?Closure $onUse = null;
+	/** @var Closure[] $onUse */
+	protected array $onUseList = [];
 
 	/**
 	 * @param null|Closure $xButtonCallback
@@ -65,8 +65,9 @@ class FormInterface implements Form
 			($this->xButtonCallback)($player);
 			return;
 		}
-		if (!is_null($this->onUse)) {
-			($this->onUse)($player, $data);
+
+		if (count($this->onUseList) > 0) {
+			($this->onUseList[$data])($player, $data);
 		}
 	}
 

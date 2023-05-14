@@ -34,33 +34,33 @@ namespace vp817\GameLib\managers;
 use Closure;
 use pocketmine\player\Player;
 use vp817\GameLib\player\SetupPlayer;
-
 use function is_null;
 use function array_key_exists;
 
 final class SetupManager
 {
-	/** @var Player[] $setupPlayers */
-	private array $setupPlayers = [];
+	/** @var SetupPlayer[] $list */
+	private array $list = [];
 
 	/**
 	 * @param Player $player
-	 * @param Closure $onSuccess
-	 * @param Closure $onFail
+	 * @param string $arenaID
+	 * @param null|Closure $onSuccess
+	 * @param null|Closure $onFail
 	 * @return void
 	 */
-	public function addToSetupPlayers(Player $player, ?callable $onSuccess = null, ?callable $onFail = null): void
+	public function add(Player $player, string $arenaID, ?callable $onSuccess = null, ?callable $onFail = null): void
 	{
 		$bytes = $player->getUniqueId()->getBytes();
-		if ($this->hasSetupPlayer($bytes)) {
+		if ($this->has($bytes)) {
 			if (!is_null($onFail)) {
 				$onFail();
 			}
 			return;
 		}
 
-		$setupPlayer = new SetupPlayer($player);
-		$this->setupPlayers[$bytes] = $setupPlayer;
+		$setupPlayer = new SetupPlayer($player, $arenaID);
+		$this->list[$bytes] = $setupPlayer;
 		if (!is_null($onSuccess)) {
 			$onSuccess($setupPlayer);
 		}
@@ -68,32 +68,49 @@ final class SetupManager
 
 	/**
 	 * @param Player $player
-	 * @param Closure $onSuccess
-	 * @param Closure $onFail
+	 * @param null|Closure $onSuccess
+	 * @param null|Closure $onFail
 	 * @return void
 	 */
-	public function removeFromSetupPlayers(Player $player, ?callable $onSuccess, ?callable $onFail = null): void
+	public function remove(Player $player, ?callable $onSuccess = null, ?callable $onFail = null): void
 	{
 		$bytes = $player->getUniqueId()->getBytes();
-		if (!$this->hasSetupPlayer($bytes)) {
+		if (!$this->has($bytes)) {
 			if (!is_null($onFail)) {
 				$onFail();
 			}
 			return;
 		}
 
-		unset($this->setupPlayers[$bytes]);
+		unset($this->list[$bytes]);
 		if (!is_null($onSuccess)) {
 			$onSuccess();
 		}
 	}
 
 	/**
+	 * @param Closure $onSuccess
+	 * @param null|Closure $onFail
+	 * @return void
+	 */
+	public function get(string $bytes, callable $onSuccess, ?callable $onFail = null): void
+	{
+		if (!$this->has($bytes)) {
+			if (!is_null($onFail)) {
+				$onFail();
+			}
+			return;
+		}
+
+		$onSuccess($this->list[$bytes]);
+	}
+
+	/**
 	 * @param string $bytes
 	 * @return bool
 	 */
-	public function hasSetupPlayer(string $bytes): bool
+	public function has(string $bytes): bool
 	{
-		return array_key_exists($bytes, $this->setupPlayers);
+		return array_key_exists($bytes, $this->list);
 	}
 }

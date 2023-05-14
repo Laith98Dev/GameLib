@@ -47,18 +47,19 @@ class TrioMode extends ArenaMode
 
 	/**
 	 * @param Player $player
+	 * @param mixed ...$arguments
 	 * @return void
 	 */
-	public function onJoin(Player $player): void
+	public function onJoin(Player $player, ...$arguments): void
 	{
-		
 	}
 
 	/**
 	 * @param Player $player
+	 * @param mixed ...$arguments
 	 * @return void
 	 */
-	public function onQuit(Player $player): void
+	public function onQuit(Player $player, ...$arguments): void
 	{
 	}
 }

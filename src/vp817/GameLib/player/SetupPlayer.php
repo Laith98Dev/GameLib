@@ -32,35 +32,43 @@ declare(strict_types=1);
 namespace vp817\GameLib\player;
 
 use pocketmine\player\Player;
+use vp817\GameLib\setup\SetupSettings;
 
 final class SetupPlayer
 {
 
-	public const STEPS = [
-		"SPAWNS" => 0,
-		"SPAWNS" => 0,
-		"SPAWNS" => 0,
-	];
-
-	private int $step = 0;
+	/** @var SetupSettings $setupSettings */
+	private SetupSettings $setupSettings;
 
 	/**
 	 * @param Player $player
 	 */
-	public function __construct(private Player $player)
+	public function __construct(private Player $player, private string $setuppingArenaID)
 	{
+		$this->setupSettings = new SetupSettings();
 	}
 
 	/**
 	 * @return Player
 	 */
-	public function getPlayerCells(): Player
+	public function getCells(): Player
 	{
 		return $this->player;
 	}
 
-	public function turnToNextStep()
+	/**
+	 * @return string
+	 */
+	public function getSetuppingArenaID(): string
 	{
-		
+		return $this->setuppingArenaID;
+	}
+
+	/**
+	 * @return SetupSettings
+	 */
+	public function getSetupSettings(): SetupSettings
+	{
+		return $this->setupSettings;
 	}
 }
