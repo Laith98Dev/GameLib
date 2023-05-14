@@ -257,6 +257,9 @@ final class GameLib
 	{
 		self::$database->executeSelect(SqlQueries::GET_ALL_ARENAS, [], function ($rows) use ($onSuccess, $onFail): void {
 			if (count($rows) < 1) {
+				if (!is_null($onFail)) {
+					$onFail("None", "no arenas to be loaded");
+				}
 				return;
 			}
 			foreach ($rows as $arenasData) {
@@ -322,13 +325,14 @@ final class GameLib
 				"arenaID" => $arenaID,
 				"worldName" => $worldName,
 				"mode" => $mode,
-				"maxPlayersPerTeam" => $maxPlayersPerTeam,
-				"lobbySettings" => json_encode([])
+				"maxPlayersPerTeam" => $maxPlayersPerTeam
 			];
 
 			self::$database->executeInsert(SqlQueries::ADD_ARENA, $data);
 
+			$data["lobbySettings"] = json_encode([]);
 			$data["spawns"] = json_encode([]);
+			$data["extraData"] = json_encode([]);
 
 			$this->getArenasManager()->signAsLoaded($arenaID, new Arena($this, new ArenaDataParser($data)), function ($arenaID, $arena) use ($onSuccess): void {
 				if (!is_null($onSuccess)) {
@@ -349,7 +353,7 @@ final class GameLib
 	{
 		$this->arenaExistsInDB($arenaID, function($arenaExists) use ($arenaID, $onSuccess, $onFail, $alertConsole): void {
 			if (!$arenaExists && !$this->getArenasManager()->hasLoadedArena($arenaID)) {
-				$reason = "Arena doesnt exists";
+				$reason = "Arena does not exists";
 				if (!is_null($onFail)) {
 					$onFail($arenaID, $reason);
 				}
@@ -436,6 +440,7 @@ final class GameLib
 
 		$setupManager->get($player->getUniqueId()->getBytes(), function (SetupPlayer $setupPlayer) use ($setupManager, $onSuccess, $onFail): void {
 			$setupSettings = $setupPlayer->getSetupSettings();
+			$arenaID = $setupPlayer->getSetuppingArenaID();
 
 			$fail = function (SqlError $error) use ($onFail): void {
 				if (!is_null($onFail)) {
@@ -443,15 +448,14 @@ final class GameLib
 				}
 			};
 
-			self::$database->executeChange(SqlQueries::UPDATE_ARENA_SPAWNS, ["arenaID" => $setupPlayer->getSetuppingArenaID(), "spawns" => json_encode($setupSettings->getSpawns())], null, $fail);
-			self::$database->executeChange(SqlQueries::UPDATE_ARENA_LOBBY_SETTINGS, ["arenaID" => $setupPlayer->getSetuppingArenaID(), "settings" => $setupSettings->getLobbySettings()], null, $fail);
+			self::$database->executeChange(SqlQueries::UPDATE_ARENA_SPAWNS, ["arenaID" => $arenaID, "spawns" => json_encode($setupSettings->getSpawns())], null, $fail);
+			self::$database->executeChange(SqlQueries::UPDATE_ARENA_LOBBY_SETTINGS, ["arenaID" => $arenaID, "settings" => $setupSettings->getLobbySettings()], null, $fail);
 
 			if ($setupSettings->hasExtraData()) {
-				self::$database->executeChange(SqlQueries::UPDATE_ARENA_EXTRA_DATA, ["arenaID" => $setupPlayer->getSetuppingArenaID(), "extraData" => $setupSettings->getExtraData()], null, $fail);
+				self::$database->executeChange(SqlQueries::UPDATE_ARENA_EXTRA_DATA, ["arenaID" => $arenaID, "extraData" => $setupSettings->getExtraData()], null, $fail);
 			}
 
 			$setupSettings->clear();
-
 			$setupManager->remove($setupPlayer->getCells());
 
 			if (!is_null($onSuccess)) {
