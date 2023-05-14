@@ -46,7 +46,8 @@ final class ArenaDataParser
 		"mode" => "",
 		"maxPlayersPerTeam" => -1,
 		"lobbySettings" => "{}",
-		"spawns" => "{}"
+		"spawns" => "{}",
+		"extraData" => "{}"
 	];
 	/** @var array $data */
 	private array $data = [];

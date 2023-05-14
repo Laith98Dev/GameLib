@@ -99,9 +99,4 @@ class Arena
 	{
 		return intval($this->dataParser->parse("maxPlayersPerTeam"));
 	}
-
-	public function getID()
-	{
-		
-	}
 }
