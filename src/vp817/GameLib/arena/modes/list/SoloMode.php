@@ -134,6 +134,8 @@ class SoloMode extends ArenaMode
 		
 		$arenaPlayer->setAll(true);
 
+		$this->playerManager->remove($bytes);
+
 		$player->teleport($arena->getGameLib()->getWorldManager()->getDefaultWorld()->getSpawnLocation());
 
 		$player->sendMessage($arenaMessages->SucessfullyLeftArena());
