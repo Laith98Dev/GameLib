@@ -29,47 +29,43 @@
 
 declare(strict_types=1);
 
-namespace vp817\GameLib\player;
+namespace vp817\GameLib\arena\parse;
 
-use pocketmine\player\Player;
-use vp817\GameLib\setup\SetupSettings;
+use pocketmine\entity\Location;
+use pocketmine\world\World;
+use pocketmine\world\WorldManager;
 
-final class SetupPlayer
+final class LobbySettings
 {
 
-	/** @var SetupSettings $setupSettings */
-	private SetupSettings $setupSettings;
-
 	/**
-	 * @param Player $player
-	 * @param string $setuppingArenaID
+	 * @param WorldManager $worldManager
+	 * @param array $settings
 	 */
-	public function __construct(private Player $player, private string $setuppingArenaID)
+	public function __construct(private WorldManager $worldManager, private array $settings)
 	{
-		$this->setupSettings = new SetupSettings();
 	}
 
 	/**
-	 * @return Player
+	 * @return null|World
 	 */
-	public function getCells(): Player
+	public function getWorld(): ?World
 	{
-		return $this->player;
+		return $this->worldManager->getWorldByName($this->settings["worldName"]);
 	}
 
 	/**
-	 * @return string
+	 * @return Location
 	 */
-	public function getSetuppingArenaID(): string
+	public function getLocation(): Location
 	{
-		return $this->setuppingArenaID;
-	}
+		$location = $this->settings["location"];
+		$x = $location["x"];
+		$y = $location["y"];
+		$z = $location["z"];
+		$yaw = $location["yaw"];
+		$pitch = $location["pitch"];
 
-	/**
-	 * @return SetupSettings
-	 */
-	public function getSetupSettings(): SetupSettings
-	{
-		return $this->setupSettings;
+		return new Location($x, $y, $z, $this->getWorld(), $yaw, $pitch);
 	}
 }

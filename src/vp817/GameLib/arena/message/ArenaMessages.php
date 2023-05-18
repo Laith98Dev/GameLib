@@ -35,7 +35,12 @@ abstract class ArenaMessages
 {
 	abstract public function NoArenasFound(): string;
 	abstract public function NoTeamsFound(): string;
+	abstract public function NoTeamsAvailable(): string;
 	abstract public function PlayerAlreadyInsideAnArena(): string;
-	abstract public function ArenaIsFull(): string; // for when wanting to join a certain arena but its full
+	abstract public function ArenaIsFull(): string;
+	abstract public function ArenaIsAlreadyRunning(): string;
 	abstract public function CantLeaveDueToState(): string;
+	abstract public function NotInsideAnArenaToLeave(): string;
+	abstract public function SucessfullyJoinedArena(): string;
+	abstract public function SucessfullyLeftArena(): string;
 }

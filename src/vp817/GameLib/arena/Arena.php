@@ -35,42 +35,43 @@ use pocketmine\player\Player;
 use vp817\GameLib\arena\message\ArenaMessages;
 use vp817\GameLib\arena\modes\ArenaMode;
 use vp817\GameLib\arena\modes\ArenaModes;
+use vp817\GameLib\arena\parse\LobbySettings;
+use vp817\GameLib\arena\states\ArenaStates;
 use vp817\GameLib\GameLib;
 
-class Arena
+final class Arena
 {
 
 	/** @var string $arenaID */
 	protected string $arenaID;
-	/** @var GameLib $lib */
-	protected GameLib $lib;
-	/** @var ArenaDataParser $dataParser */
-	protected ArenaDataParser $dataParser;
-	// /** @var TeamManager $teamManager */
-	// protected TeamManager $teamManager;
+	/** @var ArenaStates $state */
+	protected ArenaStates $state;
 	/** @var ArenaMode $mode */
 	protected ArenaMode $mode;
-	/** @var ArenaMessags $messages */
+	/** @var ArenaMessages $messages */
 	protected ArenaMessages $messages;
+	/** @var LobbySettings $lobbySettings */
+	protected LobbySettings $lobbySettings;
 
 	/**
+	 * @param GameLib $gamelib
 	 * @param ArenaDataParser $arenaDataParser
 	 */
-	public function __construct(GameLib $gamelib, ArenaDataParser $dataParser)
+	public function __construct(private GameLib $gamelib, private ArenaDataParser $dataParser)
 	{
-		$this->lib = $gamelib;
-		$this->arenaID = $dataParser->parse("arenaID");
-		$this->dataParser = $dataParser;
-		// $this->teamManager = new TeamManager($this);
-		// $teams = $gamelib->getTeams();
-		// if (count($teams) < 0) {
-		// 	throw new \RuntimeException("You must set the teams that will be used for players. [GameLib]");
-		// }
-		// foreach ($gamelib->getTeams() as $key => $team) {
-		// 	$this->teamManager->addTeam($team->getName(), $team->getColor());
-		// }
-		$this->mode = ArenaModes::fromString($this->dataParser->parse("mode"));
+		$this->arenaID = strval($dataParser->parse("arenaID"));
+		$this->state = ArenaStates::WAITING();
+		$this->mode = ArenaModes::fromString($dataParser->parse("mode"));
 		$this->messages = $gamelib->getArenaMessagesClass();
+		$this->lobbySettings = new LobbySettings($gamelib->getWorldManager(), $dataParser->parse("lobbySettings"));
+	}
+
+	/**
+	 * @return ArenaMessages
+	 */
+	public function getMessages(): ArenaMessages
+	{
+		return $this->messages;
 	}
 
 	/**
@@ -80,7 +81,7 @@ class Arena
 	 */
 	public function join(Player $player, ...$arguments): void
 	{
-		$this->mode->onJoin($player, ...$arguments);
+		$this->mode->onJoin($this, $player, ...$arguments);
 	}
 
 	/**
@@ -89,7 +90,31 @@ class Arena
 	 */
 	public function quit(Player $player, ...$arguments): void
 	{
-		$this->mode->onQuit($player, ...$arguments);
+		$this->mode->onQuit($this, $player, ...$arguments);
+	}
+
+	/**
+	 * @return GameLib
+	 */
+	public function getGameLib(): GameLib
+	{
+		return $this->gamelib;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getID(): string
+	{
+		return $this->arenaID;
+	}
+
+	/**
+	 * @return ArenaStates
+	 */
+	public function getState(): ArenaStates
+	{
+		return $this->state;
 	}
 
 	/**
@@ -98,5 +123,22 @@ class Arena
 	public function getMaxPlayersPerTeam(): int
 	{
 		return intval($this->dataParser->parse("maxPlayersPerTeam"));
+	}
+
+	/**
+	 * @return LobbySettings
+	 */
+	public function getLobbySettings(): LobbySettings
+	{
+		return $this->lobbySettings;
+	}
+
+	/**
+	 * @param ArenaStates $state
+	 * @return void
+	 */
+	public function setState(ArenaStates $state): void
+	{
+		$this->state = $state;
 	}
 }

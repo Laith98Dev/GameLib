@@ -75,7 +75,7 @@ final class SetupSettings
 
 		$this->queue["lobbySettingsQueue"] = json_encode([
 			"worldName" => $worldName,
-			"position" => [
+			"location" => [
 				"x" => $location->getX(),
 				"y" => $location->getY(),
 				"z" => $location->getZ(),

@@ -280,4 +280,17 @@ final class Utils
 		}
 		return $folder . $path;
 	}
+
+	/**
+	 * @param object|string $object1
+	 * @param string $object1Property
+	 * @param mixed $value
+	 * @return void
+	 */
+	public static function refSetProp(object|string $object1, string $object1Property, mixed $value): void
+	{
+		$ref = new ReflectionProperty($object1, $object1Property);
+		$ref->setAccessible(true);
+		$ref->setValue($object1Property, $value);
+	}
 }

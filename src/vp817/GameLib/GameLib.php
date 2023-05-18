@@ -34,6 +34,7 @@ namespace vp817\GameLib;
 use Closure;
 use pocketmine\player\Player;
 use pocketmine\plugin\PluginBase;
+use pocketmine\world\WorldManager;
 use poggit\libasynql\DataConnector;
 use poggit\libasynql\SqlError;
 use RuntimeException;
@@ -49,13 +50,15 @@ use vp817\GameLib\player\PlayerTeam;
 use vp817\GameLib\player\SetupPlayer;
 use vp817\GameLib\utilities\SqlQueries;
 use vp817\GameLib\utilities\Utils;
-use function is_dir;
-use function mkdir;
-use function count;
-use function is_null;
 use function basename;
-use function strtolower;
+use function count;
+use function mkdir;
+use function is_dir;
 use function json_encode;
+use function is_null;
+use function strtolower;
+use function realpath;
+use const DIRECTORY_SEPARATOR;
 
 final class GameLib
 {
@@ -175,7 +178,7 @@ final class GameLib
 	 */
 	public function getResourcesPath(): string
 	{
-		return __DIR__ . "/../../../resources/";
+		return realpath(__DIR__ . "/../../../resources") . DIRECTORY_SEPARATOR;
 	}
 
 	/**
@@ -187,12 +190,23 @@ final class GameLib
 		if (!is_dir($path)) {
 			@mkdir($path);
 		}
+
 		$this->arenasBackupPath = $path . DIRECTORY_SEPARATOR;
+	}
+
+	/**
+	 * @return WorldManager
+	 */
+	public function getWorldManager(): WorldManager
+	{
+		return self::$plugin->getServer()->getWorldManager();
 	}
 
 	/**
 	 * @param array $teams
 	 * @return void
+	 * 
+	 * @deprecated
 	 */
 	public function setTeams(array $teams): void
 	{

@@ -32,10 +32,27 @@ declare(strict_types=1);
 namespace vp817\GameLib\arena\modes\list;
 
 use pocketmine\player\Player;
+use vp817\GameLib\arena\Arena;
 use vp817\GameLib\arena\modes\ArenaMode;
+use vp817\GameLib\arena\states\ArenaStates;
+use vp817\GameLib\event\PlayerJoinArenaEvent;
+use vp817\GameLib\event\PlayerQuitArenaEvent;
+use vp817\GameLib\managers\PlayerManager;
+use function is_null;
 
 class SoloMode extends ArenaMode
 {
+
+	/** @var PlayerManager $playerManager */
+	private PlayerManager $playerManager;
+
+	/**
+	 * initialize arena solo mode
+	 */
+	public function __construct()
+	{
+		$this->playerManager = new PlayerManager();
+	}
 
 	/**
 	 * @return int
@@ -46,20 +63,79 @@ class SoloMode extends ArenaMode
 	}
 
 	/**
+	 * @param Arena $arena
 	 * @param Player $player
 	 * @param mixed ...$arguments
 	 * @return void
 	 */
-	public function onJoin(Player $player, ...$arguments): void
+	public function onJoin(Arena $arena, Player $player, ...$arguments): void
 	{
+		$bytes = $player->getUniqueId()->getBytes();
+		$arenaMessages = $arena->getMessages();
+
+		if ($this->playerManager->has($bytes)) {
+			$player->sendMessage($arenaMessages->PlayerAlreadyInsideAnArena());
+			return;
+		}
+		if (count($this->playerManager->getAll()) > $this->getMaxPlayersPerTeam() + 1) {
+			$player->sendMessage($arenaMessages->ArenaIsFull());
+			return;
+		}
+		if ($arena->getState() === ArenaStates::INGAME()) {
+			$player->sendMessage($arenaMessages->ArenaIsAlreadyRunning());
+			return;
+		}
+
+		$arenaPlayer = $this->playerManager->add($player);
+
+		if (is_null($arenaPlayer)) { // shouldnt happen
+			$player->sendMessage($arenaMessages->PlayerAlreadyInsideAnArena());
+			return;
+		}
+
+		(new PlayerJoinArenaEvent($arenaPlayer, $arena))->call();
+
+		$arenaPlayer->setAll();
+
+		$player->teleport($arena->getLobbySettings()->getLocation());
+
+		$player->sendMessage($arenaMessages->SucessfullyJoinedArena());
 	}
 
 	/**
+	 * @param Arena $arena
 	 * @param Player $player
 	 * @param mixed ...$arguments
 	 * @return void
 	 */
-	public function onQuit(Player $player, ...$arguments): void
+	public function onQuit(Arena $arena, Player $player, ...$arguments): void
 	{
+		$bytes = $player->getUniqueId()->getBytes();
+		$arenaMessages = $arena->getMessages();
+
+		if (!$this->playerManager->has($bytes)) {
+			$player->sendMessage($arenaMessages->NotInsideAnArenaToLeave());
+			return;
+		}
+
+		if ($arena->getState() === ArenaStates::INGAME() || $arena->getState() === ArenaStates::RESTARTING()) {
+			$player->sendMessage($arenaMessages->CantLeaveDueToState());
+			return;
+		}
+
+		$arenaPlayer = $this->playerManager->get($bytes);
+
+		if (is_null($arenaPlayer)) { // shouldnt happen
+			$player->sendMessage($arenaMessages->NotInsideAnArenaToLeave());
+			return;
+		}
+
+		(new PlayerQuitArenaEvent($arenaPlayer, $arena))->call();
+		
+		$arenaPlayer->setAll(true);
+
+		$player->teleport($arena->getGameLib()->getWorldManager()->getDefaultWorld()->getSpawnLocation());
+
+		$player->sendMessage($arenaMessages->SucessfullyLeftArena());
 	}
 }

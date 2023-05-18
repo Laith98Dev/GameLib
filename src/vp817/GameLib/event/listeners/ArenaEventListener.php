@@ -29,47 +29,10 @@
 
 declare(strict_types=1);
 
-namespace vp817\GameLib\player;
+namespace vp817\event\listeners;
 
-use pocketmine\player\Player;
-use vp817\GameLib\setup\SetupSettings;
+use pocketmine\event\Listener;
 
-final class SetupPlayer
+class ArenaEventListener implements Listener
 {
-
-	/** @var SetupSettings $setupSettings */
-	private SetupSettings $setupSettings;
-
-	/**
-	 * @param Player $player
-	 * @param string $setuppingArenaID
-	 */
-	public function __construct(private Player $player, private string $setuppingArenaID)
-	{
-		$this->setupSettings = new SetupSettings();
-	}
-
-	/**
-	 * @return Player
-	 */
-	public function getCells(): Player
-	{
-		return $this->player;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getSetuppingArenaID(): string
-	{
-		return $this->setuppingArenaID;
-	}
-
-	/**
-	 * @return SetupSettings
-	 */
-	public function getSetupSettings(): SetupSettings
-	{
-		return $this->setupSettings;
-	}
 }

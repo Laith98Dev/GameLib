@@ -32,6 +32,7 @@ declare(strict_types=1);
 namespace vp817\GameLib\arena\modes;
 
 use pocketmine\player\Player;
+use vp817\GameLib\arena\Arena;
 
 abstract class ArenaMode
 {
@@ -50,16 +51,18 @@ abstract class ArenaMode
 	abstract public function getMaxPlayersPerTeam(): int;
 
 	/**
+	 * @param Arena $arena
 	 * @param Player $player
 	 * @param mixed ...$arguments
 	 * @return void
 	 */
-	abstract public function onJoin(Player $player, ...$arguments): void;
+	abstract public function onJoin(Arena $arena, Player $player, ...$arguments): void;
 
 	/**
+	 * @param Arena $arena
 	 * @param Player $player
 	 * @param mixed ...$arguments
 	 * @return void
 	 */
-	abstract public function onQuit(Player $player, ...$arguments): void;
+	abstract public function onQuit(Arena $arena, Player $player, ...$arguments): void;
 }

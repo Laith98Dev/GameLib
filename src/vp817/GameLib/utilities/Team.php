@@ -29,47 +29,72 @@
 
 declare(strict_types=1);
 
-namespace vp817\GameLib\player;
+namespace vp817\GameLib\util;
 
-use pocketmine\player\Player;
-use vp817\GameLib\setup\SetupSettings;
+use vp817\GameLib\trait\ArenaPlayerTrait;
 
-final class SetupPlayer
+final class Team
 {
-
-	/** @var SetupSettings $setupSettings */
-	private SetupSettings $setupSettings;
-
-	/**
-	 * @param Player $player
-	 * @param string $setuppingArenaID
-	 */
-	public function __construct(private Player $player, private string $setuppingArenaID)
-	{
-		$this->setupSettings = new SetupSettings();
+	use ArenaPlayerTrait {
+		add as public addPlayer;
+		remove as public removePlayer;
+		get as public getPlayer;
+		has as public hasPlayer;
+		getAll as public getPlayers;
+		add as private add;
+		remove as private remove;
+		get as private get;
+		has as private has;
+		getAll as private getAll;
 	}
 
+	/** @var string $name */
+	private string $name;
+	/** @var string $color */
+	private string $color;
+	/** @var int $maxPlayers */
+	private int $maxPlayers = -1;
+
 	/**
-	 * @return Player
+	 * @param string $name
+	 * @param string $color
 	 */
-	public function getCells(): Player
+	public function __construct(string $name, string $color)
 	{
-		return $this->player;
+		$this->name = $name;
+		$this->color = $color;
 	}
 
 	/**
 	 * @return string
 	 */
-	public function getSetuppingArenaID(): string
+	public function getName(): string
 	{
-		return $this->setuppingArenaID;
+		return $this->name;
 	}
 
 	/**
-	 * @return SetupSettings
+	 * @return string
 	 */
-	public function getSetupSettings(): SetupSettings
+	public function getColor(): string
 	{
-		return $this->setupSettings;
+		return $this->color;
+	}
+
+	/**
+	 * @param int $value
+	 * @return void
+	 */
+	public function setMaxPlayers(int $value): void
+	{
+		$this->maxPlayers = $value;
+	}
+
+	/**
+	 * @return int
+	 */
+	public function getMaxPlayers(): int
+	{
+		return $this->maxPlayers;
 	}
 }

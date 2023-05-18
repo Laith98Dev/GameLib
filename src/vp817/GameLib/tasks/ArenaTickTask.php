@@ -29,47 +29,18 @@
 
 declare(strict_types=1);
 
-namespace vp817\GameLib\player;
+namespace vp817\GameLib\tasks;
 
-use pocketmine\player\Player;
-use vp817\GameLib\setup\SetupSettings;
+use pocketmine\scheduler\Task;
 
-final class SetupPlayer
+class ArenaTickTask extends Task
 {
 
-	/** @var SetupSettings $setupSettings */
-	private SetupSettings $setupSettings;
+	/** @var int $startTimer */
+	private int $startTimer = 5 * 60;
 
-	/**
-	 * @param Player $player
-	 * @param string $setuppingArenaID
-	 */
-	public function __construct(private Player $player, private string $setuppingArenaID)
+	public function onRun(): void
 	{
-		$this->setupSettings = new SetupSettings();
-	}
-
-	/**
-	 * @return Player
-	 */
-	public function getCells(): Player
-	{
-		return $this->player;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getSetuppingArenaID(): string
-	{
-		return $this->setuppingArenaID;
-	}
-
-	/**
-	 * @return SetupSettings
-	 */
-	public function getSetupSettings(): SetupSettings
-	{
-		return $this->setupSettings;
+		//
 	}
 }

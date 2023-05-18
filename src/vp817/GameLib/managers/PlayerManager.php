@@ -29,10 +29,11 @@
 
 declare(strict_types=1);
 
-namespace vp817\event;
+namespace vp817\GameLib\managers;
 
-use pocketmine\event\Listener;
+use vp817\GameLib\trait\ArenaPlayerTrait;
 
-class ArenaEventListener implements Listener
+final class PlayerManager
 {
+	use ArenaPlayerTrait;
 }

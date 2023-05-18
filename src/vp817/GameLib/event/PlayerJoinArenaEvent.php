@@ -29,47 +29,36 @@
 
 declare(strict_types=1);
 
-namespace vp817\GameLib\player;
+namespace vp817\GameLib\event;
 
-use pocketmine\player\Player;
-use vp817\GameLib\setup\SetupSettings;
+use pocketmine\event\Event;
+use vp817\GameLib\arena\Arena;
+use vp817\GameLib\player\ArenaPlayer;
 
-final class SetupPlayer
+class PlayerJoinArenaEvent extends Event
 {
 
-	/** @var SetupSettings $setupSettings */
-	private SetupSettings $setupSettings;
-
 	/**
-	 * @param Player $player
-	 * @param string $setuppingArenaID
+	 * @param ArenaPlayer $player
+	 * @param Arena $arena
 	 */
-	public function __construct(private Player $player, private string $setuppingArenaID)
+	public function __construct(protected ArenaPlayer $player, protected Arena $arena)
 	{
-		$this->setupSettings = new SetupSettings();
 	}
 
 	/**
-	 * @return Player
+	 * @return ArenaPlayer
 	 */
-	public function getCells(): Player
+	public function getPlayer(): ArenaPlayer
 	{
 		return $this->player;
 	}
 
 	/**
-	 * @return string
+	 * @return Arena
 	 */
-	public function getSetuppingArenaID(): string
+	public function getArena(): Arena
 	{
-		return $this->setuppingArenaID;
-	}
-
-	/**
-	 * @return SetupSettings
-	 */
-	public function getSetupSettings(): SetupSettings
-	{
-		return $this->setupSettings;
+		return $this->arena;
 	}
 }

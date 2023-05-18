@@ -46,6 +46,11 @@ class DefaultArenaMessages extends ArenaMessages
 		return TextFormat::RED . "No teams found";
 	}
 
+	public function NoTeamsAvailable(): string
+	{
+		return TextFormat::RED . "No teams available";
+	}
+
 	public function PlayerAlreadyInsideAnArena(): string
 	{
 		return TextFormat::RED . "You are already inside an arena";
@@ -56,8 +61,28 @@ class DefaultArenaMessages extends ArenaMessages
 		return TextFormat::RED . "Arena is full";
 	}
 
+	public function ArenaIsAlreadyRunning(): string
+	{
+		return TextFormat::RED . "Cant join due to: Arena is already running";
+	}
+
 	public function CantLeaveDueToState(): string
 	{
 		return TextFormat::RED . "Cant leave arena due to its state";
+	}
+
+	public function NotInsideAnArenaToLeave(): string
+	{
+		return TextFormat::RED . "You are not inside an arena";
+	}
+
+	public function SucessfullyJoinedArena(): string
+	{
+		return TextFormat::AQUA . "[%name%] " . TextFormat::GREEN .  "joined the arena. " . TextFormat::GRAY . "[%current%/%max%]";
+	}
+
+	public function SucessfullyLeftArena(): string
+	{
+		return TextFormat::AQUA . "[%name%] " . TextFormat::RED .  "left the arena. " . TextFormat::GRAY . "[%current%/%max%]";
 	}
 }

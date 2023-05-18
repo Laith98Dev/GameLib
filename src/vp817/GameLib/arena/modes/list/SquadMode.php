@@ -32,6 +32,7 @@ declare(strict_types=1);
 namespace vp817\GameLib\arena\modes\list;
 
 use pocketmine\player\Player;
+use vp817\GameLib\arena\Arena;
 use vp817\GameLib\arena\modes\ArenaMode;
 
 class SquadMode extends ArenaMode
@@ -46,20 +47,22 @@ class SquadMode extends ArenaMode
 	}
 
 	/**
+	 * @param Arena $arena
 	 * @param Player $player
 	 * @param mixed ...$arguments
 	 * @return void
 	 */
-	public function onJoin(Player $player, ...$arguments): void
+	public function onJoin(Arena $arena, Player $player, ...$arguments): void
 	{
 	}
 
 	/**
+	 * @param Arena $arena
 	 * @param Player $player
 	 * @param mixed ...$arguments
 	 * @return void
 	 */
-	public function onQuit(Player $player, ...$arguments): void
+	public function onQuit(Arena $arena, Player $player, ...$arguments): void
 	{
 	}
 }

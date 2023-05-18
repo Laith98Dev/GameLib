@@ -29,47 +29,77 @@
 
 declare(strict_types=1);
 
-namespace vp817\GameLib\player;
+namespace vp817\GameLib\trait;
 
 use pocketmine\player\Player;
-use vp817\GameLib\setup\SetupSettings;
+use vp817\GameLib\player\ArenaPlayer;
+use function array_key_exists;
 
-final class SetupPlayer
+trait ArenaPlayerTrait
 {
 
-	/** @var SetupSettings $setupSettings */
-	private SetupSettings $setupSettings;
+	/** @var ArenaPlayer[] $list */
+	private array $list = [];
 
 	/**
 	 * @param Player $player
-	 * @param string $setuppingArenaID
+	 * @return ?ArenaPlayer
 	 */
-	public function __construct(private Player $player, private string $setuppingArenaID)
+	public function add(Player $player): ?ArenaPlayer
 	{
-		$this->setupSettings = new SetupSettings();
+		$bytes = $player->getUniqueId()->getBytes();
+		if ($this->hasPlayer($bytes)) {
+			return null;
+		}
+
+		$this->list[$bytes] = new ArenaPlayer($player);
+
+		return $this->list[$bytes];
 	}
 
 	/**
-	 * @return Player
+	 * @param string $bytes
+	 * @return void
 	 */
-	public function getCells(): Player
+	public function remove(string $bytes): void
 	{
-		return $this->player;
+		if (!$this->hasPlayer($bytes)) {
+			return;
+		}
+
+		unset($this->list[$bytes]);
 	}
 
 	/**
-	 * @return string
+	 * @param string $bytes
+	 * @return null|ArenaPlayer
 	 */
-	public function getSetuppingArenaID(): string
+	public function get(string $bytes): ?ArenaPlayer
 	{
-		return $this->setuppingArenaID;
+		if (!$this->hasPlayer($bytes)) {
+			return null;
+		}
+
+		return $this->list[$bytes];
 	}
 
 	/**
-	 * @return SetupSettings
+	 * @param string $bytes
+	 * @return bool
 	 */
-	public function getSetupSettings(): SetupSettings
+	public function has(string $bytes): bool
 	{
-		return $this->setupSettings;
+		if (!array_key_exists($bytes, $this->list)) {
+			return false;
+		}
+		return true;
+	}
+
+	/**
+	 * @return ArenaPlayer[]
+	 */
+	public function getAll(): array
+	{
+		return $this->list;
 	}
 }

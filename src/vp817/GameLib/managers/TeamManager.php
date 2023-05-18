@@ -34,7 +34,7 @@ namespace vp817\GameLib\managers;
 use pocketmine\player\Player;
 use pocketmine\utils\TextFormat;
 use vp817\GameLib\arena\Arena;
-use vp817\GameLib\player\PlayerTeam;
+use vp817\GameLib\util\Team;
 use function strtolower;
 use function array_key_exists;
 use function array_filter;
@@ -67,7 +67,7 @@ final class TeamManager
 			return;
 		}
 
-		$this->list[strtolower($name)] = new PlayerTeam($name, $color);
+		$this->list[strtolower($name)] = new Team($name, $color);
 	}
 
 	/**
@@ -85,9 +85,9 @@ final class TeamManager
 
 	/**
 	 * @param string $name
-	 * @return null|PlayerTeam
+	 * @return null|Team
 	 */
-	public function getTeam(string $name): ?PlayerTeam
+	public function getTeam(string $name): ?Team
 	{
 		if (!$this->hasTeam($name)) {
 			return null;
@@ -134,15 +134,13 @@ final class TeamManager
 		});
 		$availableTeamsCount = count($availableTeams);
 
-		if ($availableTeamsCount > 0) {
-			if ($availableTeamsCount < 2) {
-				$team = array_shift($availableTeams);
-			} else if ($availableTeamsCount > 1) {
-				$team = $availableTeams[array_rand($availableTeams)];
-			}
+		if ($availableTeamsCount > 0 && $availableTeamsCount < 2) {
+			$team = array_shift($availableTeams);
+		} else if ($availableTeamsCount > 1) {
+			$team = $availableTeams[array_rand($availableTeams)];
 		} else {
 			if ($sendNoTeamsMsg) {
-				$player->sendMessage(TextFormat::RED . "No teams available");
+				$player->sendMessage($this->arena->getMessages()->NoTeamsAvailable());
 			}
 			return;
 		}
@@ -166,9 +164,9 @@ final class TeamManager
 
 	/**
 	 * @param Player $player
-	 * @return null|PlayerTeam
+	 * @return null|Team
 	 */
-	public function getPlayerTeam(Player $player): ?PlayerTeam
+	public function getTeamOf(Player $player): ?Team
 	{
 		foreach ($this->list as $teamName => $team) {
 			if ($team->hasPlayer($player->getUniqueId()->getBytes())) {
