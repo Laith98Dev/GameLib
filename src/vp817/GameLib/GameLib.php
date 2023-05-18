@@ -45,7 +45,6 @@ use vp817\GameLib\arena\message\ArenaMessages;
 use vp817\GameLib\arena\message\DefaultArenaMessages;
 use vp817\GameLib\managers\ArenasManager;
 use vp817\GameLib\managers\SetupManager;
-use vp817\GameLib\player\PlayerTeam;
 use vp817\GameLib\player\SetupPlayer;
 use vp817\GameLib\utilities\SqlQueries;
 use vp817\GameLib\utilities\Utils;
@@ -72,8 +71,6 @@ final class GameLib
 	private ArenaMessages $arenaMessages;
 	/** @var string $arenasBackupPath */
 	private string $arenasBackupPath;
-	/** @var PlayerTeam[] $teams */
-	private array $teams = [];
 	/** @var SetupManager $setupManager */
 	private SetupManager $setupManager;
 
