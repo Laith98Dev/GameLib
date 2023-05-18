@@ -38,8 +38,10 @@ use vp817\GameLib\arena\modes\ArenaModes;
 use vp817\GameLib\arena\modes\list\DuoMode;
 use vp817\GameLib\arena\modes\list\SoloMode;
 use vp817\GameLib\arena\parse\LobbySettings;
+use vp817\GameLib\arena\states\ArenaState;
 use vp817\GameLib\arena\states\ArenaStates;
 use vp817\GameLib\GameLib;
+use vp817\GameLib\tasks\ArenaTickTask;
 use function intval;
 use function json_decode;
 use function strval;
@@ -49,8 +51,8 @@ final class Arena
 
 	/** @var string $arenaID */
 	protected string $arenaID;
-	/** @var ArenaStates $state */
-	protected ArenaStates $state;
+	/** @var ArenaState $state */
+	protected ArenaState $state;
 	/** @var ArenaMode $mode */
 	protected ArenaMode $mode;
 	/** @var ArenaMessages $messages */
@@ -76,6 +78,7 @@ final class Arena
 		$this->mode = $mode;
 		$this->messages = $gamelib->getArenaMessagesClass();
 		$this->lobbySettings = new LobbySettings($gamelib->getWorldManager(), $dataParser->parse("lobbySettings"));
+		$gamelib->getScheduler()->scheduleRepeatingTask(new ArenaTickTask($this, intval($dataParser->parse("countdownTime")), intval($dataParser->parse("arenaTime")), intval($dataParser->parse("restartingTime"))), 20);
 	}
 
 	/**
@@ -122,9 +125,9 @@ final class Arena
 	}
 
 	/**
-	 * @return ArenaStates
+	 * @return ArenaState
 	 */
-	public function getState(): ArenaStates
+	public function getState(): ArenaState
 	{
 		return $this->state;
 	}
@@ -154,10 +157,10 @@ final class Arena
 	}
 
 	/**
-	 * @param ArenaStates $state
+	 * @param ArenaState $state
 	 * @return void
 	 */
-	public function setState(ArenaStates $state): void
+	public function setState(ArenaState $state): void
 	{
 		$this->state = $state;
 	}

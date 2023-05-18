@@ -31,18 +31,23 @@ declare(strict_types=1);
 
 namespace vp817\GameLib\arena\states;
 
-use pocketmine\utils\EnumTrait;
+use pocketmine\utils\CloningRegistryTrait;
+use vp817\GameLib\arena\states\list\CountdownState;
+use vp817\GameLib\arena\states\list\InGameState;
+use vp817\GameLib\arena\states\list\ResettingState;
+use vp817\GameLib\arena\states\list\RestartingState;
+use vp817\GameLib\arena\states\list\WaitingState;
 
 /**
- * @method static ArenaStates WAITING()
- * @method static ArenaStates COUNTDOWN()
- * @method static ArenaStates INGAME()
- * @method static ArenaStates RESTARTING()
- * @method static ArenaStates RESETTING()
+ * @method static WaitingState WAITING()
+ * @method static CountdownState COUNTDOWN()
+ * @method static InGameState INGAME()
+ * @method static RestartingState RESTARTING()
+ * @method static ResettingState RESETTING()
  */
 final class ArenaStates
 {
-	use EnumTrait;
+	use CloningRegistryTrait;
 
 	/**
 	 * @return void
@@ -50,12 +55,10 @@ final class ArenaStates
 	 */
 	public static function setup(): void
 	{
-		self::registerAll(
-			new self("waiting"),
-			new self("countdown"),
-			new self("ingame"),
-			new self("restarting"),
-			new self("resetting")
-		);
+		self::_registryRegister("waiting", new WaitingState());
+		self::_registryRegister("countdown", new CountdownState());
+		self::_registryRegister("ingame", new InGameState());
+		self::_registryRegister("restarting", new RestartingState());
+		self::_registryRegister("resetting", new ResettingState());
 	}
 }

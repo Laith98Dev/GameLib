@@ -29,47 +29,25 @@
 
 declare(strict_types=1);
 
-namespace vp817\GameLib\tasks;
+namespace vp817\GameLib\arena\states;
 
-use pocketmine\scheduler\Task;
 use vp817\GameLib\arena\Arena;
-use vp817\GameLib\arena\states\list\CountdownState;
-use vp817\GameLib\arena\states\list\InGameState;
-use vp817\GameLib\arena\states\list\ResettingState;
-use vp817\GameLib\arena\states\list\RestartingState;
-use vp817\GameLib\arena\states\list\WaitingState;
 
-class ArenaTickTask extends Task
+abstract class ArenaState
 {
 
 	/**
-	 * @param Arena $arena
-	 * @param int $countdownTime
-	 * @param int $arenaTime
-	 * @param int $restartingTime
+	 * @return string
 	 */
-	public function __construct(private Arena $arena, private int $countdownTime, private int $arenaTime, private int $restartingTime)
+	public function name(): string
 	{
+		return str_replace("mode", "", basename(strtolower(static::class), ";"));
 	}
 
 	/**
-	 * @return void
+	 * @param Arena $arena
+	 * @param int $time
+	 * @return int
 	 */
-	public function onRun(): void
-	{
-		$arena = $this->arena;
-		$state = $arena->getState();
-
-		if ($state instanceof WaitingState) {
-			$state->tick($arena, 0);
-		} else if ($state instanceof CountdownState) {
-			$this->countdownTime = $state->tick($arena, $this->countdownTime);
-		} else if ($state instanceof InGameState) {
-			$this->arenaTime = $state->tick($arena, $this->arenaTime);
-		} else if ($state instanceof RestartingState) {
-			$this->restartingTime = $state->tick($arena, $this->restartingTime);
-		} else if ($state instanceof ResettingState) {
-			$state->tick($arena, 0);
-		}
-	}
+	abstract public function tick(Arena $arena, int $time): int;
 }

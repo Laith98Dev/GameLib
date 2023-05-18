@@ -34,6 +34,7 @@ namespace vp817\GameLib;
 use Closure;
 use pocketmine\player\Player;
 use pocketmine\plugin\PluginBase;
+use pocketmine\scheduler\TaskScheduler;
 use pocketmine\world\WorldManager;
 use poggit\libasynql\DataConnector;
 use poggit\libasynql\SqlError;
@@ -196,6 +197,14 @@ final class GameLib
 	public function getWorldManager(): WorldManager
 	{
 		return self::$plugin->getServer()->getWorldManager();
+	}
+
+	/**
+	 * @return TaskScheduler
+	 */
+	public function getScheduler(): TaskScheduler
+	{
+		return self::$plugin->getScheduler();
 	}
 
 	/**
