@@ -68,11 +68,10 @@ final class Arena
 		$this->state = ArenaStates::WAITING();
 		$mode = ArenaModes::fromString($dataParser->parse("mode"));
 		$arenaData = json_decode($dataParser->parse("arenaData"), true);
-		$spawns = json_decode($dataParser->parse("spawns"), true);
 		if ($mode instanceof SoloMode) {
-			$mode->init(intval($arenaData["slots"]), $spawns);
+			$mode->init(intval($arenaData["slots"]));
 		} else if ($mode instanceof DuoMode) {
-			$mode->init(json_decode($arenaData["teams"], true), $this, $spawns);
+			$mode->init(json_decode($arenaData["teams"], true), $this);
 		}
 		$this->mode = $mode;
 		$this->messages = $gamelib->getArenaMessagesClass();
