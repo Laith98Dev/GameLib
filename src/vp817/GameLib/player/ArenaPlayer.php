@@ -36,17 +36,16 @@ use pocketmine\inventory\ArmorInventory;
 use pocketmine\inventory\PlayerInventory;
 use pocketmine\player\GameMode;
 use pocketmine\player\Player;
-use vp817\GameLib\utilities\Utils;
 
 final class ArenaPlayer
 {
 
-	/** @var array $savedCells */
-	private array $savedCells = [];
-	/** @var Player $cells */
-	private Player $cells;
+    /** @var array $savedCells */
+    private array $savedCells = [];
+    /** @var Player $cells */
+    private Player $cells;
 
-	/** @var string $displayName */
+    /** @var string $displayName */
     private string $displayName;
     /** @var string $nameTag */
     private string $nameTag;
@@ -67,14 +66,14 @@ final class ArenaPlayer
     /** @var GameMode $gamemode */
     private GameMode $gamemode;
 
-	/**
-	 * @param Player $player
-	 */
-	public function __construct(Player $player)
-	{
-		$this->cells = $player;
+    /**
+     * @param Player $player
+     */
+    public function __construct(Player $player)
+    {
+        $this->cells = $player;
 
-		$this->displayName = $player->getDisplayName();
+        $this->displayName = $player->getDisplayName();
         $this->nameTag = $player->getName();
         $this->inventory = clone $player->getInventory();
         $this->armorInventory = clone $player->getArmorInventory();
@@ -85,21 +84,21 @@ final class ArenaPlayer
         $this->maxFood = $player->getHungerManager()->getMaxFood();
         $this->gamemode = $player->getGamemode();
 
-		$this->savedCells = [
-			"displayName" => $this->displayName,
-			"nameTag" => $this->nameTag,
-			"inventory" => $this->inventory->getContents(),
-			"armorInventory" => $this->armorInventory->getContents(),
-			"effectManager" => $this->effectManager->all(),
-			"health" => $this->health,
-			"maxHealth" => $this->maxHealth,
-			"food" => $this->food,
-			"maxFood" => $this->maxFood,
-			"gamemode" => $this->gamemode
-		];
-	}
+        $this->savedCells = [
+            "displayName" => $this->displayName,
+            "nameTag" => $this->nameTag,
+            "inventory" => $this->inventory->getContents(),
+            "armorInventory" => $this->armorInventory->getContents(),
+            "effectManager" => $this->effectManager->all(),
+            "health" => $this->health,
+            "maxHealth" => $this->maxHealth,
+            "food" => $this->food,
+            "maxFood" => $this->maxFood,
+            "gamemode" => $this->gamemode
+        ];
+    }
 
-	/**
+    /**
      * @param string $value
      * @return void
      */
@@ -242,58 +241,68 @@ final class ArenaPlayer
         return $this->gamemode;
     }
 
-	/**
-	 * @return void
-	 */
-	public function initBasic(): void
-	{
-		$this->getInventory()->clearAll();
-		$this->getArmorInventory()->clearAll();
-		$this->getEffectManager()->clear();
-		$this->setHealth($this->getMaxHealth());
-		$this->setFood($this->getMaxFood());
-		$this->setGamemode(GameMode::ADVENTURE());
-	}
+    /**
+     * @return void
+     */
+    public function initBasic(): void
+    {
+        $this->getInventory()->clearAll();
+        $this->getArmorInventory()->clearAll();
+        $this->getEffectManager()->clear();
+        $this->setHealth($this->getMaxHealth());
+        $this->setFood($this->getMaxFood());
+        $this->setGamemode(GameMode::ADVENTURE());
+    }
 
-	/**
-	 * @return void
-	 */
-	public function deinitBasic(): void
-	{
-		$this->getInventory()->setContents($this->savedCells["inventory"]);
-		$this->getArmorInventory()->setContents($this->savedCells["armorInventory"]);
-		$this->getEffectManager()->clear();
+    /**
+     * @return void
+     */
+    public function deinitBasic(): void
+    {
+        $this->getInventory()->setContents($this->savedCells["inventory"]);
+        $this->getArmorInventory()->setContents($this->savedCells["armorInventory"]);
+        $this->getEffectManager()->clear();
 
-		Utils::refSetProp($this->getEffectManager(), "effects", $this->savedCells["effects"]);
+        $effects = $this->savedCells["effects"];
+        if (!empty($effects)) {
+            foreach ($effects as $key => $value) {
+                $this->getEffectManager()->add($value);
+            }
+        }
 
-		$this->setHealth($this->savedCells["health"]);
-		$this->setMaxHealth($this->savedCells["maxHealth"]);
-		$this->setFood($this->savedCells["food"]);
-		$this->setMaxFood($this->savedCells["maxFood"]);
-		$this->setGamemode($this->savedCells["gamemode"]);
-	}
+        $this->setHealth($this->savedCells["health"]);
+        $this->setMaxHealth($this->savedCells["maxHealth"]);
+        $this->setFood($this->savedCells["food"]);
+        $this->setMaxFood($this->savedCells["maxFood"]);
+        $this->setGamemode($this->savedCells["gamemode"]);
+    }
 
-	/**
-	 * @return Player
-	 */
-	public function getCells(): Player
-	{
-		return $this->cells;
-	}
+    /**
+     * @return Player
+     */
+    public function getCells(): Player
+    {
+        return $this->cells;
+    }
 
-	/**
-	 * @return void
-	 */
-	public function setAll(bool $unsetSavedCells = false): void
-	{
-		$this->getCells()->getInventory()->setContents($this->getInventory()->getContents());
-		$this->getCells()->getArmorInventory()->setContents($this->getArmorInventory()->getContents());
-		$this->getCells()->getEffects()->clear();
+    /**
+     * @return void
+     */
+    public function setAll(bool $unsetSavedCells = false): void
+    {
+        $this->getCells()->getInventory()->setContents($this->getInventory()->getContents());
+        $this->getCells()->getArmorInventory()->setContents($this->getArmorInventory()->getContents());
+        $this->getCells()->getEffects()->clear();
 
-		Utils::refSetProp($this->getCells()->getEffects(), "effects", $this->getEffectManager()->all());
+        $effects = $this->getEffectManager()->all();
+        if (!empty($effects)) {
+            foreach ($effects as $key => $value) {
+                $this->getCells()->getEffects()->add($value);
+            }
+        }
 
-		if ($unsetSavedCells) {
-			unset($this->savedCells);
-		}
-	}
+        if ($unsetSavedCells) {
+            unset($this->savedCells);
+        }
+    }
 }

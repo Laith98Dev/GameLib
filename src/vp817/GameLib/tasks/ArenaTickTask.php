@@ -41,6 +41,5 @@ class ArenaTickTask extends Task
 
 	public function onRun(): void
 	{
-		//
 	}
 }
