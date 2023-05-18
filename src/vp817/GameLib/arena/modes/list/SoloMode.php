@@ -150,6 +150,6 @@ class SoloMode extends ArenaMode
 
 		$player->teleport($arena->getGameLib()->getWorldManager()->getDefaultWorld()->getSpawnLocation());
 
-		$player->sendMessage(str_replace(["%name%", "%current%", "%max%"], [$arenaPlayer->getDisplayName(), count($this->playerManager->getAll()), $this->getMaxPlayers()], $arenaMessages->SucessfullyLeftArena()));
+		$player->sendMessage(str_replace(["%name%", "%current%", "%max%"], [$player->getDisplayName(), count($this->playerManager->getAll()), $this->getMaxPlayers()], $arenaMessages->SucessfullyLeftArena()));
 	}
 }
