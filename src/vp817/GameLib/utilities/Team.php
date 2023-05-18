@@ -31,7 +31,7 @@ declare(strict_types=1);
 
 namespace vp817\GameLib\util;
 
-use vp817\GameLib\trait\ArenaPlayerTrait;
+use vp817\GameLib\traits\ArenaPlayerTrait;
 
 final class Team
 {

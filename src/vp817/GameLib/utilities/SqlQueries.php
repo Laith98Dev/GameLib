@@ -37,6 +37,7 @@ class SqlQueries
 	public const ADD_ARENA = "gl-queries.add-arena";
 	public const UPDATE_ARENA_SPAWNS = "gl-queries.update-arena-spawns";
 	public const UPDATE_ARENA_LOBBY_SETTINGS = "gl-queries.update-arena-lobby-settings";
+	public const UPDATE_ARENA_DATA = "gl-queries.update-arena-data";
 	public const UPDATE_ARENA_EXTRA_DATA = "gl-queries.update-arena-extra-data";
 	public const GET_ARENA_DATA = "gl-queries.get-arena-data";
 	public const REMOVE_ARENA = "gl-queries.remove-arena";

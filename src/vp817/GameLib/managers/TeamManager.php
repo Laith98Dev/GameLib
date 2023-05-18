@@ -32,7 +32,6 @@ declare(strict_types=1);
 namespace vp817\GameLib\managers;
 
 use pocketmine\player\Player;
-use pocketmine\utils\TextFormat;
 use vp817\GameLib\arena\Arena;
 use vp817\GameLib\util\Team;
 use function strtolower;
@@ -61,13 +60,28 @@ final class TeamManager
 	 * @param string $name
 	 * @param string $color
 	 */
-	public function addTeam(string $name, string $color): void
+	public function createTeam(string $name, string $color): void
 	{
+		$name = strtolower($name);
 		if ($this->hasTeam($name)) {
 			return;
 		}
 
 		$this->list[strtolower($name)] = new Team($name, $color);
+	}
+
+	/**
+	 * @param Team $team
+	 * @return void
+	 */
+	public function addTeam(Team $team): void
+	{
+		$name = strtolower($team->getName());
+		if ($this->hasTeam($name)) {
+			return;
+		}
+
+		$this->list[strtolower($name)] = $team;
 	}
 
 	/**
@@ -92,6 +106,7 @@ final class TeamManager
 		if (!$this->hasTeam($name)) {
 			return null;
 		}
+
 		return $this->list[strtolower($name)];
 	}
 
@@ -108,17 +123,25 @@ final class TeamManager
 	}
 
 	/**
+	 * @return Team[]
+	 */
+	public function getTeams(): array
+	{
+		return $this->list;
+	}
+
+	/**
 	 * @param Player $player
-	 * @param string $team
+	 * @param string $teamName
 	 * @return void
 	 */
-	public function addPlayerToTeam(Player $player, string $team): void
+	public function addPlayerToTeam(Player $player, string $teamName): void
 	{
 		if ($this->isPlayerInATeam($player)) {
 			return;
 		}
 
-		$this->getTeam($team)->addPlayer($player);
+		$this->getTeam($teamName)->addPlayer($player);
 	}
 
 	/**
@@ -128,7 +151,7 @@ final class TeamManager
 	 */
 	public function addPlayerToRandomTeam(Player $player, bool $sendNoTeamsMsg = true): void
 	{
-		$maxPlayersPerTeam = $this->arena->getMaxPlayersPerTeam();
+		$maxPlayersPerTeam = $this->arena->getMode()->getMaxPlayersPerTeam();
 		$availableTeams = array_filter($this->list, function ($value) use ($maxPlayersPerTeam) {
 			return count($value->getPlayers()) < $maxPlayersPerTeam + 1;
 		});

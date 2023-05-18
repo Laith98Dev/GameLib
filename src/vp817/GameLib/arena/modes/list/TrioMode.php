@@ -31,11 +31,7 @@ declare(strict_types=1);
 
 namespace vp817\GameLib\arena\modes\list;
 
-use pocketmine\player\Player;
-use vp817\GameLib\arena\Arena;
-use vp817\GameLib\arena\modes\ArenaMode;
-
-class TrioMode extends ArenaMode
+class TrioMode extends DuoMode
 {
 
 	/**
@@ -44,25 +40,5 @@ class TrioMode extends ArenaMode
 	public function getMaxPlayersPerTeam(): int
 	{
 		return 3;
-	}
-
-	/**
-	 * @param Arena $arena
-	 * @param Player $player
-	 * @param mixed ...$arguments
-	 * @return void
-	 */
-	public function onJoin(Arena $arena, Player $player, ...$arguments): void
-	{
-	}
-
-	/**
-	 * @param Arena $arena
-	 * @param Player $player
-	 * @param mixed ...$arguments
-	 * @return void
-	 */
-	public function onQuit(Arena $arena, Player $player, ...$arguments): void
-	{
 	}
 }

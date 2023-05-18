@@ -36,8 +36,14 @@ use pocketmine\scheduler\Task;
 class ArenaTickTask extends Task
 {
 
-	/** @var int $startTimer */
-	private int $startTimer = 5 * 60;
+	/**
+	 * @param int $countdownTime
+	 * @param int $arenaTime
+	 * @param int $restartingTime
+	 */
+	public function __construct(private int $countdownTime, private int $arenaTime, private int $restartingTime)
+	{
+	}
 
 	public function onRun(): void
 	{

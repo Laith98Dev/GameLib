@@ -51,6 +51,11 @@ abstract class ArenaMode
 	abstract public function getMaxPlayersPerTeam(): int;
 
 	/**
+	 * @return int
+	 */
+	abstract public function getMaxPlayers(): int;
+
+	/**
 	 * @param Arena $arena
 	 * @param Player $player
 	 * @param mixed ...$arguments

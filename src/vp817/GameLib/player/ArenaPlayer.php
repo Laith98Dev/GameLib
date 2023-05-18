@@ -264,10 +264,8 @@ final class ArenaPlayer
         $this->getEffectManager()->clear();
 
         $effects = $this->savedCells["effects"];
-        if (!empty($effects)) {
-            foreach ($effects as $key => $value) {
-                $this->getEffectManager()->add($value);
-            }
+        foreach ($effects as $key => $value) {
+            $this->getEffectManager()->add($value);
         }
 
         $this->setHealth($this->savedCells["health"]);
@@ -295,10 +293,8 @@ final class ArenaPlayer
         $this->getCells()->getEffects()->clear();
 
         $effects = $this->getEffectManager()->all();
-        if (!empty($effects)) {
-            foreach ($effects as $key => $value) {
-                $this->getCells()->getEffects()->add($value);
-            }
+        foreach ($effects as $key => $value) {
+            $this->getCells()->getEffects()->add($value);
         }
 
         if ($unsetSavedCells) {

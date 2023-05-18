@@ -45,13 +45,17 @@ class SoloMode extends ArenaMode
 
 	/** @var PlayerManager $playerManager */
 	private PlayerManager $playerManager;
+	/** @var int $slots */
+	private int $slots;
 
 	/**
-	 * initialize arena solo mode
+	 * @param array $spawns
+	 * @return void
 	 */
-	public function __construct()
+	public function init(int $slots): void
 	{
 		$this->playerManager = new PlayerManager();
+		$this->slots = $slots;
 	}
 
 	/**
@@ -60,6 +64,14 @@ class SoloMode extends ArenaMode
 	public function getMaxPlayersPerTeam(): int
 	{
 		return 1;
+	}
+
+	/**
+	 * @return int
+	 */
+	public function getMaxPlayers(): int
+	{
+		return $this->slots;
 	}
 
 	/**
@@ -77,7 +89,7 @@ class SoloMode extends ArenaMode
 			$player->sendMessage($arenaMessages->PlayerAlreadyInsideAnArena());
 			return;
 		}
-		if (count($this->playerManager->getAll()) > $this->getMaxPlayersPerTeam() + 1) {
+		if (count($this->playerManager->getAll()) > $this->getMaxPlayers()) {
 			$player->sendMessage($arenaMessages->ArenaIsFull());
 			return;
 		}
@@ -99,7 +111,7 @@ class SoloMode extends ArenaMode
 
 		$player->teleport($arena->getLobbySettings()->getLocation());
 
-		$player->sendMessage($arenaMessages->SucessfullyJoinedArena());
+		$player->sendMessage(str_replace(["%name%", "%current%", "%max%"], [$arenaPlayer->getDisplayName(), count($this->playerManager->getAll()), $this->getMaxPlayers()], $arenaMessages->SucessfullyJoinedArena()));
 	}
 
 	/**
@@ -138,6 +150,6 @@ class SoloMode extends ArenaMode
 
 		$player->teleport($arena->getGameLib()->getWorldManager()->getDefaultWorld()->getSpawnLocation());
 
-		$player->sendMessage($arenaMessages->SucessfullyLeftArena());
+		$player->sendMessage(str_replace(["%name%", "%current%", "%max%"], [$arenaPlayer->getDisplayName(), count($this->playerManager->getAll()), $this->getMaxPlayers()], $arenaMessages->SucessfullyLeftArena()));
 	}
 }

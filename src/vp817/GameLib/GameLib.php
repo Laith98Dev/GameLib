@@ -43,7 +43,6 @@ use vp817\GameLib\arena\Arena;
 use vp817\GameLib\arena\ArenaDataParser;
 use vp817\GameLib\arena\message\ArenaMessages;
 use vp817\GameLib\arena\message\DefaultArenaMessages;
-use vp817\GameLib\arena\modes\ArenaModes;
 use vp817\GameLib\managers\ArenasManager;
 use vp817\GameLib\managers\SetupManager;
 use vp817\GameLib\player\PlayerTeam;
@@ -203,31 +202,12 @@ final class GameLib
 	}
 
 	/**
-	 * @param array $teams
-	 * @return void
-	 * 
-	 * @deprecated
-	 */
-	public function setTeams(array $teams): void
-	{
-		$this->teams = $teams;
-	}
-
-	/**
 	 * @param ArenaMessages $arenaMessages
 	 * @return void
 	 */
 	public function setArenaMessagesClass(ArenaMessages $arenaMessages): void
 	{
 		$this->arenaMessages = $arenaMessages;
-	}
-
-	/**
-	 * @return array
-	 */
-	public function getTeams(): array
-	{
-		return $this->teams;
 	}
 
 	/**
@@ -300,13 +280,14 @@ final class GameLib
 	 * @param string $arenaID
 	 * @param string $worldName
 	 * @param string $mode
-	 * @param null|int $maxPlayersPerTeam
+	 * @param int $countdownTime
+	 * @param int $arenaTime
+	 * @param int $restartingTime
 	 * @param Closure $onSuccess
 	 * @param Closure $onFail
 	 * @return void
-	 * @throws RuntimeException
 	 */
-	public function createArena(string $arenaID, string $worldName, string $mode, ?int $maxPlayersPerTeam = null, ?callable $onSuccess = null, ?callable $onFail = null): void
+	public function createArena(string $arenaID, string $worldName, string $mode, int $countdownTime, int $arenaTime, int $restartingTime, ?callable $onSuccess = null, ?callable $onFail = null): void
 	{
 		if ($this->getArenasManager()->hasLoadedArena($arenaID)) {
 			$reason = "Arena is already loaded";
@@ -317,17 +298,7 @@ final class GameLib
 			throw new RuntimeException($reason);
 		}
 
-		$mode = strtolower($mode);
-		if (is_null($maxPlayersPerTeam)) {
-			$arenaMode = ArenaModes::fromString($mode);
-			if (!is_null($arenaMode)) {
-				$maxPlayersPerTeam = $arenaMode->getMaxPlayersPerTeam();
-			} else {
-				throw new RuntimeException("You need to set the arena max players per team if you are using custom arena modes");
-			}
-		}
-
-		$this->arenaExistsInDB($arenaID, function (bool $arenaExists) use ($arenaID, $worldName, $mode, $maxPlayersPerTeam, $onSuccess, $onFail): void {
+		$this->arenaExistsInDB($arenaID, function (bool $arenaExists) use ($arenaID, $worldName, $mode, $countdownTime, $arenaTime, $restartingTime, $onSuccess, $onFail): void {
 			if ($arenaExists) {
 				if (!is_null($onFail)) {
 					$onFail($arenaID, "Arena already exists");
@@ -339,7 +310,9 @@ final class GameLib
 				"arenaID" => $arenaID,
 				"worldName" => $worldName,
 				"mode" => $mode,
-				"maxPlayersPerTeam" => $maxPlayersPerTeam
+				"countdownTime" => $countdownTime,
+				"arenaTime" => $arenaTime,
+				"restartingTime" => $restartingTime
 			];
 
 			self::$database->executeInsert(SqlQueries::ADD_ARENA, $data);
@@ -464,6 +437,7 @@ final class GameLib
 
 			self::$database->executeChange(SqlQueries::UPDATE_ARENA_SPAWNS, ["arenaID" => $arenaID, "spawns" => json_encode($setupSettings->getSpawns())], null, $fail);
 			self::$database->executeChange(SqlQueries::UPDATE_ARENA_LOBBY_SETTINGS, ["arenaID" => $arenaID, "settings" => $setupSettings->getLobbySettings()], null, $fail);
+			self::$database->executeChange(SqlQueries::UPDATE_ARENA_DATA, ["arenaID" => $arenaID, "arenaData" => $setupSettings->getArenaData()], null, $fail);
 
 			if ($setupSettings->hasExtraData()) {
 				self::$database->executeChange(SqlQueries::UPDATE_ARENA_EXTRA_DATA, ["arenaID" => $arenaID, "extraData" => $setupSettings->getExtraData()], null, $fail);

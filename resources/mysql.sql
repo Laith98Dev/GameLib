@@ -2,21 +2,26 @@
 -- # { gl-queries
 -- # { init
 CREATE TABLE IF NOT EXISTS arenas(
-	arenaID VARCHAR(65535) NOT NULL PRIMARY KEY,
-	worldName VARCHAR(65535) NOT NULL,
-	mode VARCHAR(65535) NOT NULL,
-	maxPlayersPerTeam INTEGER NOT NULL,
-	lobbySettings VARCHAR(65535),
-	spawns VARCHAR(65535),
-	extraData VARCHAR(65535)
+	arenaID TEXT NOT NULL PRIMARY KEY,
+	worldName TEXT NOT NULL,
+	mode TEXT NOT NULL,
+	countdownTime INTEGER NOT NULL,
+	arenaTime INTEGER NOT NULL,
+	restartingTime INTEGER NOT NULL,
+	lobbySettings TEXT,
+	spawns TEXT,
+	arenaData MEDIUMTEXT,
+	extraData LARGETEXT
 );
 -- # }
 -- # { add-arena
 -- # 	:arenaID string
 -- # 	:worldName string
 -- # 	:mode string
--- # 	:maxPlayersPerTeam int
-INSERT INTO arenas(arenaID, worldName, mode, maxPlayersPerTeam) VALUES (:arenaID, :worldName, :mode, :maxPlayersPerTeam);
+-- #	:countdownTime int
+-- #	:arenaTime int
+-- #	:restartingTime int
+INSERT INTO arenas(arenaID, worldName, mode, countdownTime, arenaTime, restartingTime) VALUES (:arenaID, :worldName, :mode, :countdownTime, :arenaTime, :restartingTime);
 -- # }
 -- # { update-arena-spawns
 -- #	:arenaID string
@@ -28,7 +33,12 @@ UPDATE arenas SET spawns = :spawns WHERE arenaID = :arenaID;
 -- #	:settings string
 UPDATE arenas SET lobbySettings = :settings WHERE arenaID = :arenaID;
 -- # }
--- # { update-arena-exta-data
+-- # { update-arena-data
+-- #	:arenaID string
+-- #	:arenaData string
+UPDATE arenas SET arenaData = :arenaData WHERE arenaID = :arenaID;
+-- # }
+-- # { update-arena-extra-data
 -- #	:arenaID string
 -- #	:extraData string
 UPDATE arenas SET extraData = :extraData WHERE arenaID = :arenaID;

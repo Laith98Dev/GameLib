@@ -29,7 +29,7 @@
 
 declare(strict_types=1);
 
-namespace vp817\GameLib\trait;
+namespace vp817\GameLib\traits;
 
 use pocketmine\player\Player;
 use vp817\GameLib\player\ArenaPlayer;

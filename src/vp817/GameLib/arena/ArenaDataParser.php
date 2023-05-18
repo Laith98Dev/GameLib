@@ -44,9 +44,12 @@ final class ArenaDataParser
 		"arenaID" => "",
 		"worldName" => "",
 		"mode" => "",
-		"maxPlayersPerTeam" => -1,
+		"countdownTime" => -1,
+		"arenaTime" => -1,
+		"restartingTime" => -1,
 		"lobbySettings" => "{}",
 		"spawns" => "{}",
+		"arenaData" => "{}",
 		"extraData" => "{}"
 	];
 	/** @var array $data */

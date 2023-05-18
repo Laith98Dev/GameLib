@@ -35,9 +35,14 @@ use pocketmine\player\Player;
 use vp817\GameLib\arena\message\ArenaMessages;
 use vp817\GameLib\arena\modes\ArenaMode;
 use vp817\GameLib\arena\modes\ArenaModes;
+use vp817\GameLib\arena\modes\list\DuoMode;
+use vp817\GameLib\arena\modes\list\SoloMode;
 use vp817\GameLib\arena\parse\LobbySettings;
 use vp817\GameLib\arena\states\ArenaStates;
 use vp817\GameLib\GameLib;
+use function intval;
+use function json_decode;
+use function strval;
 
 final class Arena
 {
@@ -61,7 +66,15 @@ final class Arena
 	{
 		$this->arenaID = strval($dataParser->parse("arenaID"));
 		$this->state = ArenaStates::WAITING();
-		$this->mode = ArenaModes::fromString($dataParser->parse("mode"));
+		$mode = ArenaModes::fromString($dataParser->parse("mode"));
+		$arenaData = json_decode($dataParser->parse("arenaData"), true);
+		$spawns = json_decode($dataParser->parse("spawns"), true);
+		if ($mode instanceof SoloMode) {
+			$mode->init(intval($arenaData["slots"]), $spawns);
+		} else if ($mode instanceof DuoMode) {
+			$mode->init(json_decode($arenaData["teams"], true), $this, $spawns);
+		}
+		$this->mode = $mode;
 		$this->messages = $gamelib->getArenaMessagesClass();
 		$this->lobbySettings = new LobbySettings($gamelib->getWorldManager(), $dataParser->parse("lobbySettings"));
 	}
@@ -118,11 +131,19 @@ final class Arena
 	}
 
 	/**
-	 * @return int
+	 * @return ArenaMode
 	 */
-	public function getMaxPlayersPerTeam(): int
+	public function getMode(): ArenaMode
 	{
-		return intval($this->dataParser->parse("maxPlayersPerTeam"));
+		return $this->mode;
+	}
+
+	/**
+	 * @return ArenaDataParser
+	 */
+	public function getDataParser(): ArenaDataParser
+	{
+		return $this->dataParser;
 	}
 
 	/**

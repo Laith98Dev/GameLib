@@ -32,7 +32,6 @@ declare(strict_types=1);
 namespace vp817\GameLib\setup;
 
 use pocketmine\entity\Location;
-use pocketmine\math\Vector3;
 
 final class SetupSettings
 {
@@ -67,7 +66,7 @@ final class SetupSettings
 	 * @param Location $location
 	 * @return void
 	 */
-	public function setLobbySettings(string $worldName, Vector3 $location): void
+	public function setLobbySettings(string $worldName, Location $location): void
 	{
 		if (array_key_exists("lobbySettingsQueue", $this->queue)) {
 			return;
@@ -83,6 +82,19 @@ final class SetupSettings
 				"pitch" => $location->getPitch()
 			]
 		]);
+	}
+
+	/**
+	 * @param array $data
+	 * @return void
+	 */
+	public function setArenaData(array $data): void
+	{
+		if (array_key_exists("arenaDataQueue", $this->queue)) {
+			return;
+		}
+
+		$this->queue["arenaDataQueue"] = json_encode($data);
 	}
 
 	/**
@@ -117,6 +129,14 @@ final class SetupSettings
 	/**
 	 * @return string
 	 */
+	public function getArenaData(): string
+	{
+		return $this->queue["arenaDataQueue"];
+	}
+
+	/**
+	 * @return string
+	 */
 	public function getExtraData(): string
 	{
 		return $this->queue["extraDataQueue"];
@@ -140,6 +160,7 @@ final class SetupSettings
 		}
 		unset($this->queue["spawnsQueue"]);
 		unset($this->queue["lobbySettingsQueue"]);
+		unset($this->queue["arenaData"]);
 		if ($this->hasExtraData()) {
 			unset($this->queue["extraDataQueue"]);
 		}

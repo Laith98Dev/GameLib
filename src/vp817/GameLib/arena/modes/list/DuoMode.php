@@ -34,9 +34,26 @@ namespace vp817\GameLib\arena\modes\list;
 use pocketmine\player\Player;
 use vp817\GameLib\arena\Arena;
 use vp817\GameLib\arena\modes\ArenaMode;
+use vp817\GameLib\managers\TeamManager;
 
 class DuoMode extends ArenaMode
 {
+
+	/** @var TeamManager $teamManager */
+	private TeamManager $teamManager;
+
+	/**
+	 * @param array $teams
+	 * @param Arena $arena
+	 * @return void
+	 */
+	public function init(array $teams, Arena $arena): void
+	{
+		$this->teamManager = new TeamManager($arena);
+		foreach ($teams as $key => $value) {
+			$this->teamManager->addTeam($value);
+		}
+	}
 
 	/**
 	 * @return int
@@ -44,6 +61,14 @@ class DuoMode extends ArenaMode
 	public function getMaxPlayersPerTeam(): int
 	{
 		return 2;
+	}
+
+	/**
+	 * @return int
+	 */
+	public function getMaxPlayers(): int
+	{
+		return count($this->teamManager->getTeams()) * $this->getMaxPlayersPerTeam();
 	}
 
 	/**
