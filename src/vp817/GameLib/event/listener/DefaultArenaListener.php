@@ -32,17 +32,19 @@ declare(strict_types=1);
 namespace vp817\GameLib\event\listener;
 
 use pocketmine\event\Listener;
-use pocketmine\plugin\PluginBase;
+use pocketmine\plugin\Plugin;
 use vp817\GameLib\arena\Arena;
+use vp817\GameLib\GameLib;
 
 class DefaultArenaListener implements Listener
 {
 
 	/**
-	 * @param PluginBase $plugin
+	 * @param Plugin $plugin
+	 * @param GameLib $gamelib
 	 * @param Arena $arena
 	 */
-	public function __construct(protected PluginBase $plugin, protected ?Arena $arena = null)
+	public function __construct(protected Plugin $plugin, protected GameLib $gamelib, protected ?Arena $arena = null)
 	{
 	}
 }

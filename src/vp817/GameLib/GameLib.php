@@ -291,7 +291,7 @@ final class GameLib
 			return;
 		}
 
-		$listener = new $class($this, $arena);
+		$listener = new $class(self::$plugin, $this, $arena);
 		self::$plugin->getServer()->getPluginManager()->registerEvents($listener, self::$plugin);
 	}
 
