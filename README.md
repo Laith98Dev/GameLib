@@ -63,6 +63,7 @@ $gamelib->setArenaMessagesClass(new Class());
 $gamelib->setArenaListenerClass(Class::class);
 // if you didnt get what was written up there then this is a tip
 $gamelib->setArenaListenerClass(\your_path\CustomArenaListener::class);
+
 ?>
 
 ```
@@ -261,6 +262,11 @@ $setupSettings->setExtraData([
 		// ...
 	]
 ]);
+
+// then you can get it by:
+$extraData = \json_decode($arena->getDataParser()->parse("extraData"), true);
+$beds = $extraData["beds"];
+\print_r($beds);
 
 ?>
 ```
