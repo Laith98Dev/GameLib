@@ -33,18 +33,28 @@ namespace vp817\GameLib\arena\states\list;
 
 use vp817\GameLib\arena\Arena;
 use vp817\GameLib\arena\states\ArenaState;
+use vp817\GameLib\arena\states\ArenaStates;
+use vp817\GameLib\event\PlayerArenaTickEvent;
 
 class CountdownState extends ArenaState
 {
 
 	/**
 	 * @param int $time
-	 * @return int
+	 * @return void
 	 */
-	public function tick(Arena $arena, int $time): int
+	public function tick(Arena $arena): void
 	{
-		--$time;
+		$tickTask = $arena->getTickTask();
+		$mode = $arena->getMode();
+		$timer = $tickTask->getCountdownTime();
+		--$timer;
 
-		return $time;
+		(new PlayerArenaTickEvent($arena, $this, $timer))->call();
+
+		if ($timer === 0) {
+			$mode->setupSpawns($arena, $arena->getSpawns());
+			$arena->setState(ArenaStates::INGAME());
+		}
 	}
 }

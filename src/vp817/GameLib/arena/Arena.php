@@ -31,7 +31,9 @@ declare(strict_types=1);
 
 namespace vp817\GameLib\arena;
 
+use pocketmine\entity\Location;
 use pocketmine\player\Player;
+use pocketmine\world\World;
 use vp817\GameLib\arena\message\ArenaMessages;
 use vp817\GameLib\arena\modes\ArenaMode;
 use vp817\GameLib\arena\modes\ArenaModes;
@@ -49,8 +51,8 @@ use function strval;
 final class Arena
 {
 
-	/** @var string $arenaID */
-	protected string $arenaID;
+	/** @var string $id */
+	protected string $id;
 	/** @var ArenaState $state */
 	protected ArenaState $state;
 	/** @var ArenaMode $mode */
@@ -59,6 +61,10 @@ final class Arena
 	protected ArenaMessages $messages;
 	/** @var LobbySettings $lobbySettings */
 	protected LobbySettings $lobbySettings;
+	/**  @var ?World $world */
+	protected ?World $world = null;
+	/** @var array $spawns */
+	protected array $spawns;
 	/** @var ArenaTickTask $arenaTickTask */
 	protected ArenaTickTask $arenaTickTask;
 
@@ -68,7 +74,7 @@ final class Arena
 	 */
 	public function __construct(private GameLib $gamelib, private ArenaDataParser $dataParser)
 	{
-		$this->arenaID = strval($dataParser->parse("arenaID"));
+		$this->id = strval($dataParser->parse("arenaID"));
 		$this->state = ArenaStates::WAITING();
 		$mode = ArenaModes::fromString($dataParser->parse("mode"));
 		$arenaData = json_decode($dataParser->parse("arenaData"), true);
@@ -79,7 +85,9 @@ final class Arena
 		}
 		$this->mode = $mode;
 		$this->messages = $gamelib->getArenaMessagesClass();
-		$this->lobbySettings = new LobbySettings($gamelib->getWorldManager(), $dataParser->parse("lobbySettings"));
+		$this->lobbySettings = new LobbySettings($gamelib->getWorldManager(), json_decode($dataParser->parse("lobbySettings")));
+		$this->spawns = json_decode($dataParser->parse("spawns"));
+		$this->world = $gamelib->getWorldManager()->getWorldByName("worldName");
 		$this->arenaTickTask = new ArenaTickTask($this, intval($dataParser->parse("countdownTime")), intval($dataParser->parse("arenaTime")), intval($dataParser->parse("restartingTime")));
 		$gamelib->getScheduler()->scheduleRepeatingTask($this->arenaTickTask, 20);
 	}
@@ -124,7 +132,7 @@ final class Arena
 	 */
 	public function getID(): string
 	{
-		return $this->arenaID;
+		return $this->id;
 	}
 
 	/**
@@ -160,11 +168,57 @@ final class Arena
 	}
 
 	/**
+	 * @return array
+	 */
+	public function getSpawns(): array
+	{
+		return $this->spawns;
+	}
+
+	/**
+	 * @return World
+	 */
+	public function getWorld(): World
+	{
+		return $this->world;
+	}
+
+	/**
+	 * @return ArenaTickTask
+	 */
+	public function getTickTask(): ArenaTickTask
+	{
+		return $this->arenaTickTask;
+	}
+
+	/**
+	 * @param array $spawn
+	 * @return Location
+	 */
+	public function getLocationOfSpawn(array $spawn): Location
+	{
+		$x = $spawn["x"];
+		$y = $spawn["y"];
+		$z = $spawn["z"];
+		$yaw = $spawn["yaw"];
+		$pitch = $spawn["pitch"];
+		return new Location($x, $y, $z, $this->getWorld(), $yaw, $pitch);
+	}
+
+	/**
 	 * @param ArenaState $state
 	 * @return void
 	 */
 	public function setState(ArenaState $state): void
 	{
 		$this->state = $state;
+	}
+
+	/**
+	 * @return void
+	 */
+	public function endGame(): void
+	{
+		// TODO
 	}
 }

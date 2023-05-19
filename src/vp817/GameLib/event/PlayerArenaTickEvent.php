@@ -29,19 +29,47 @@
 
 declare(strict_types=1);
 
-namespace vp817\GameLib\arena\states\list;
+namespace vp817\GameLib\event;
 
+use pocketmine\event\Event;
 use vp817\GameLib\arena\Arena;
 use vp817\GameLib\arena\states\ArenaState;
 
-class ResettingState extends ArenaState
+class PlayerArenaTickEvent extends Event
 {
 
+	public const NO_TIMER = -1;
+
 	/**
-	 * @param int $time
-	 * @return void
+	 * @param Arena $arena
+	 * @param ArenaState $state
+	 * @param int $timer
 	 */
-	public function tick(Arena $arena): void
+	public function __construct(protected Arena $arena, protected ArenaState $state, private int $timer)
 	{
+	}
+
+	/**
+	 * @return Arena
+	 */
+	public function getArena(): Arena
+	{
+		return $this->arena;
+	}
+
+	/**
+	 * @return ArenaState
+	 */
+	public function getState(): ArenaState
+	{
+		return $this->state;
+	}
+
+	/**
+	 * @return int
+	 */
+	public function getTimer(): int
+	{
+		return $this->timer;
 	}
 }

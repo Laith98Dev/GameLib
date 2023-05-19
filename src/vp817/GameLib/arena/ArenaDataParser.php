@@ -31,8 +31,8 @@ declare(strict_types=1);
 
 namespace vp817\GameLib\arena;
 
+use RuntimeException;
 use vp817\GameLib\utilities\Utils;
-
 use function array_keys;
 use function json_encode;
 
@@ -57,11 +57,12 @@ final class ArenaDataParser
 
 	/**
 	 * @param array $data
+	 * @throws RuntimeException
 	 */
 	public function __construct(array $data)
 	{
 		if (!Utils::arrayKeysExist(array_keys($data), $this->imitatedData)) {
-			throw new \RuntimeException("Corrupted ArenaData, Expected: " . json_encode($this->imitatedData) . ", got: " . json_encode($data));
+			throw new RuntimeException("Corrupted ArenaData, Expected: " . json_encode($this->imitatedData) . ", got: " . json_encode($data));
 		}
 		$this->data = $data;
 	}

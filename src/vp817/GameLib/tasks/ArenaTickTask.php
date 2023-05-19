@@ -33,10 +33,12 @@ namespace vp817\GameLib\tasks;
 
 use pocketmine\scheduler\Task;
 use vp817\GameLib\arena\Arena;
-use vp817\GameLib\arena\states\ArenaStates;
 
 class ArenaTickTask extends Task
 {
+
+	/** @var array $savedTimes */
+	private array $savedTimes = [];
 
 	/**
 	 * @param Arena $arena
@@ -46,6 +48,44 @@ class ArenaTickTask extends Task
 	 */
 	public function __construct(private Arena $arena, private int $countdownTime, private int $arenaTime, private int $restartingTime)
 	{
+		$this->savedTimes = [
+			"countdownTime" => $countdownTime,
+			"arenaTime" => $arenaTime,
+			"restartingTime" => $restartingTime
+		];
+	}
+
+	/**
+	 * @return int
+	 */
+	public function getCountdownTime(): int
+	{
+		return $this->countdownTime;
+	}
+
+	/**
+	 * @return int
+	 */
+	public function getArenaTime(): int
+	{
+		return $this->arenaTime;
+	}
+
+	/**
+	 * @return int
+	 */
+	public function getRestartingTime(): int
+	{
+		return $this->restartingTime;
+	}
+
+	/**
+	 * @param string $key
+	 * @return int
+	 */
+	public function getSavedTime(string $key): int
+	{
+		return $this->savedTimes[$key];
 	}
 
 	/**
@@ -53,19 +93,6 @@ class ArenaTickTask extends Task
 	 */
 	public function onRun(): void
 	{
-		$arena = $this->arena;
-		$state = $arena->getState();
-
-		if ($state->equals(ArenaStates::WAITING())) {
-			$state->tick($arena, 0);
-		} else if ($state->equals(ArenaStates::COUNTDOWN())) {
-			$this->countdownTime = $state->tick($arena, $this->countdownTime);
-		} else if ($state->equals(ArenaStates::INGAME())) {
-			$this->arenaTime = $state->tick($arena, $this->arenaTime);
-		} else if ($state->equals(ArenaStates::RESTARTING())) {
-			$this->restartingTime = $state->tick($arena, $this->restartingTime);
-		} else if ($state->equals(ArenaStates::RESETTING())) {
-			$state->tick($arena, 0);
-		}
+		$this->arena->getState()->tick($this->arena);
 	}
 }

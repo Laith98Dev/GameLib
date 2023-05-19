@@ -33,16 +33,25 @@ namespace vp817\GameLib\arena\states\list;
 
 use vp817\GameLib\arena\Arena;
 use vp817\GameLib\arena\states\ArenaState;
+use vp817\GameLib\arena\states\ArenaStates;
+use vp817\GameLib\event\PlayerArenaTickEvent;
 
 class WaitingState extends ArenaState
 {
 
 	/**
 	 * @param int $time
-	 * @return int
+	 * @return void
 	 */
-	public function tick(Arena $arena, int $time): int
+	public function tick(Arena $arena): void
 	{
-		return $time;
+		$playerCount = $arena->getMode()->getPlayerCount();
+		$maxPlayerCount = $arena->getMode()->getMaxPlayers();
+
+		(new PlayerArenaTickEvent($arena, $this, PlayerArenaTickEvent::NO_TIMER))->call();
+
+		if ($playerCount >= $maxPlayerCount) {
+			$arena->setState(ArenaStates::COUNTDOWN());
+		}
 	}
 }

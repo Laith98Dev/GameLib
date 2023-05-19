@@ -34,6 +34,7 @@ namespace vp817\GameLib;
 use Closure;
 use pocketmine\player\Player;
 use pocketmine\plugin\PluginBase;
+use pocketmine\plugin\PluginLogger;
 use pocketmine\scheduler\TaskScheduler;
 use pocketmine\world\WorldManager;
 use poggit\libasynql\DataConnector;
@@ -192,6 +193,7 @@ final class GameLib
 	}
 
 	/**
+	 * @internal
 	 * @return WorldManager
 	 */
 	public function getWorldManager(): WorldManager
@@ -200,11 +202,21 @@ final class GameLib
 	}
 
 	/**
+	 * @internal
 	 * @return TaskScheduler
 	 */
 	public function getScheduler(): TaskScheduler
 	{
 		return self::$plugin->getScheduler();
+	}
+
+	/**
+	 * @internal
+	 * @return PluginLogger
+	 */
+	public function getLogger(): PluginLogger
+	{
+		return self::$plugin->getLogger();
 	}
 
 	/**

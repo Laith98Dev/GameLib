@@ -57,6 +57,11 @@ abstract class ArenaMode
 	/**
 	 * @return int
 	 */
+	abstract public function getPlayerCount(): int;
+
+	/**
+	 * @return int
+	 */
 	abstract public function getMaxPlayersPerTeam(): int;
 
 	/**
@@ -67,16 +72,21 @@ abstract class ArenaMode
 	/**
 	 * @param Arena $arena
 	 * @param Player $player
-	 * @param mixed ...$arguments
 	 * @return void
 	 */
-	abstract public function onJoin(Arena $arena, Player $player, ...$arguments): void;
+	abstract public function onJoin(Arena $arena, Player $player): void;
 
 	/**
 	 * @param Arena $arena
 	 * @param Player $player
-	 * @param mixed ...$arguments
 	 * @return void
 	 */
-	abstract public function onQuit(Arena $arena, Player $player, ...$arguments): void;
+	abstract public function onQuit(Arena $arena, Player $player): void;
+
+	/**
+	 * @param Arena $arena
+	 * @param array $spawns
+	 * @return void
+	 */
+	abstract public function setupSpawns(Arena $arena, array $spawns): void;
 }

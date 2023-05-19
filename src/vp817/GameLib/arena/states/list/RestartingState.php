@@ -39,12 +39,9 @@ class RestartingState extends ArenaState
 
 	/**
 	 * @param int $time
-	 * @return int
+	 * @return void
 	 */
-	public function tick(Arena $arena, int $time): int
+	public function tick(Arena $arena): void
 	{
-		--$time;
-
-		return $time;
 	}
 }

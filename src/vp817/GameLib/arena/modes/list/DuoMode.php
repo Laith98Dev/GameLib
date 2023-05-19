@@ -58,6 +58,14 @@ class DuoMode extends ArenaMode
 	/**
 	 * @return int
 	 */
+	public function getPlayerCount(): int
+	{
+		return 0; // TODO
+	}
+
+	/**
+	 * @return int
+	 */
 	public function getMaxPlayersPerTeam(): int
 	{
 		return 2;
@@ -74,10 +82,9 @@ class DuoMode extends ArenaMode
 	/**
 	 * @param Arena $arena
 	 * @param Player $player
-	 * @param mixed ...$arguments
 	 * @return void
 	 */
-	public function onJoin(Arena $arena, Player $player, ...$arguments): void
+	public function onJoin(Arena $arena, Player $player): void
 	{
 	}
 
@@ -87,7 +94,18 @@ class DuoMode extends ArenaMode
 	 * @param mixed ...$arguments
 	 * @return void
 	 */
-	public function onQuit(Arena $arena, Player $player, ...$arguments): void
+	public function onQuit(Arena $arena, Player $player): void
 	{
+	}
+
+
+	/**
+	 * @param Arena $arena
+	 * @param array $spawns
+	 * @return void
+	 */
+	public function setupSpawns(Arena $arena, array $spawns): void
+	{
+		
 	}
 }

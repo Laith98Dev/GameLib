@@ -55,8 +55,7 @@ abstract class ArenaState
 
 	/**
 	 * @param Arena $arena
-	 * @param int $time
-	 * @return int
+	 * @return void
 	 */
-	abstract public function tick(Arena $arena, int $time): int;
+	abstract public function tick(Arena $arena): void;
 }
