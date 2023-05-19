@@ -338,10 +338,8 @@ final class GameLib
 	 */
 	public function loadArena(string $arenaID, ?callable $onSuccess = null, ?callable $onFail = null): void
 	{
-		var_dump($arenaID);
 		$this->arenaExistsInDB($arenaID, function ($arenaExists) use ($arenaID, $onSuccess, $onFail): void {
 			if (!$arenaExists) {
-				var_dump("Arena does not exists in db");
 				if (!is_null($onFail)) {
 					$onFail();
 				}
@@ -353,8 +351,6 @@ final class GameLib
 					if (!is_null($onFail)) {
 						$onFail();
 					}
-					var_dump("ROWS 0");
-					var_dump($rows);
 					return;
 				}
 
@@ -366,11 +362,7 @@ final class GameLib
 					if (!array_key_exists("arenaData", $arenaData)) $arenaData["arenaData"] = json_encode([]);
 					if (!array_key_exists("extraData", $arenaData)) $arenaData["extraData"] = json_encode([]);
 
-					var_dump("NEW");
-					var_dump($rows);
-
 					$this->getArenasManager()->signAsLoaded($arenaID, new Arena($this, new ArenaDataParser($arenaData)), function ($arena) use ($onSuccess): void {
-						var_dump("SUCCESS");
 						if (!is_null($onSuccess)) {
 							$onSuccess($arena);
 						}
@@ -461,7 +453,6 @@ final class GameLib
 	public function arenaExistsInDB(string $arenaID, callable $valueCallback): void
 	{
 		self::$database->executeSelect(SqlQueries::GET_ALL_ARENAS, [], function ($rows) use ($valueCallback, $arenaID): void {
-			var_dump(count($rows));
 			foreach ($rows as $arenasData) {
 				if (strtolower($arenasData["arenaID"]) === strtolower($arenaID)) {
 					$valueCallback(true);
@@ -514,7 +505,6 @@ final class GameLib
 			if (!is_null($onFail)) {
 				$onFail("The player is not inside the setup");
 			}
-			var_dump("Player not inside setup");
 			return;
 		}
 
@@ -523,7 +513,6 @@ final class GameLib
 			$arenaID = $setupPlayer->getSetuppingArenaID();
 
 			$fail = function (SqlError $error) use ($onFail): void {
-				var_dump("SqlError recieve");
 				if (!is_null($onFail)) {
 					$onFail($error->getMessage());
 				}
@@ -540,12 +529,10 @@ final class GameLib
 			$setupSettings->clear();
 
 			$this->loadArena($arenaID, function (Arena $arena) use ($onSuccess): void {
-				var_dump("Success");
 				if (!is_null($onSuccess)) {
 					$onSuccess($arena);
 				}
 			}, function () use ($onFail): void {
-				var_dump("FAIL");
 				if (!is_null($onFail)) {
 					$onFail("unable to load arena");
 				}
