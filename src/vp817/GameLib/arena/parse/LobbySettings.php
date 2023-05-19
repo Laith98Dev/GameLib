@@ -81,8 +81,6 @@ final class LobbySettings
 	 */
 	public function getLocation(): Location
 	{
-		// $this->lazyUpdateWorld();
-
 		$location = $this->settings["location"];
 		$x = $location["x"];
 		$y = $location["y"];
