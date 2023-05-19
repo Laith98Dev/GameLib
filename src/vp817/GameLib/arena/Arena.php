@@ -102,21 +102,20 @@ final class Arena
 
 	/**
 	 * @param Player $player
-	 * @param mixed ...$arguments
 	 * @return void
 	 */
-	public function join(Player $player, ...$arguments): void
+	public function join(Player $player): void
 	{
-		$this->mode->onJoin($this, $player, ...$arguments);
+		$this->mode->onJoin($this, $player);
 	}
 
 	/**
 	 * @param Player $player
 	 * @return void
 	 */
-	public function quit(Player $player, ...$arguments): void
+	public function quit(Player $player): void
 	{
-		$this->mode->onQuit($this, $player, ...$arguments);
+		$this->mode->onQuit($this, $player);
 	}
 
 	/**
