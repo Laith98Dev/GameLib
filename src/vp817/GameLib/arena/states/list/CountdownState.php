@@ -54,7 +54,6 @@ class CountdownState extends ArenaState
 
 		if ($mode->getPlayerCount() < $mode->getMaxPlayers()) {
 			$arena->setState(ArenaStates::WAITING());
-			// $this->resetCountdownTime();
 			return;
 		}
 
