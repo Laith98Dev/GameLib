@@ -302,6 +302,7 @@ final class GameLib
 		if ($listener === null) {
 			return;
 		}
+
 		self::$plugin->getServer()->getPluginManager()->registerEvents($listener, self::$plugin);
 	}
 
