@@ -13,7 +13,7 @@ Do you see how people create minigames and you want to create one but you dont k
 if you know how to make a minigame but you are tired of redoing your work over and over this is the solution<br/><br/>
 are you tired of copy pasting people codes? this is the solution<br/><br/>
 are you having problems skidding? this is the solution<br/><br/>
-this is the solution to everything related to making a minigame on pocketmine<br/><br/>
+this is the solution to everything related to making a minigame on pocketmine
 
 <br/>
 
