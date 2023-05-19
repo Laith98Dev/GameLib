@@ -34,7 +34,6 @@ namespace vp817\GameLib\arena\states\list;
 use vp817\GameLib\arena\Arena;
 use vp817\GameLib\arena\states\ArenaState;
 use vp817\GameLib\arena\states\ArenaStates;
-use vp817\GameLib\event\ArenaTickEvent;
 
 class ResettingState extends ArenaState
 {
@@ -45,14 +44,7 @@ class ResettingState extends ArenaState
 	 */
 	public function tick(Arena $arena): void
 	{
-		$tickTask = $arena->getTickTask();
-		$timer = $tickTask->getRestartingTime();
-		--$timer;
-
-		(new ArenaTickEvent($arena, $this, $timer))->call();
-
-		if ($timer === 0) {
-			$arena->setState(ArenaStates::RESETTING());
-		}
+		// TODO
+		$arena->setState(ArenaStates::WAITING());
 	}
 }
