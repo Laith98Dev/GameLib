@@ -33,6 +33,7 @@ namespace vp817\GameLib\tasks;
 
 use pocketmine\scheduler\Task;
 use vp817\GameLib\arena\Arena;
+use vp817\GameLib\arena\states\ArenaState;
 use vp817\GameLib\arena\states\ArenaStates;
 
 class ArenaTickTask extends Task
@@ -126,6 +127,26 @@ class ArenaTickTask extends Task
 	public function resetRestartingTime(): void
 	{
 		$this->restartingTime = $this->savedTimes["restartingTime"];
+	}
+
+	/**
+	 * @param ArenaState $oldState
+	 * @param ArenaState $newState
+	 * @return void
+	 */
+	public function checkForTimerReset(ArenaState $oldState, ArenaState $newState): void
+	{
+		if ($oldState->equals(ArenaStates::COUNTDOWN()) && $newState->equals(ArenaStates::WAITING())) {
+			$this->resetCountdownTime();
+		}
+
+		if ($oldState->equals(ArenaStates::INGAME()) && $newState->equals(ArenaStates::RESTARTING())) {
+			$this->resetArenaTime();
+		}
+
+		if ($oldState->equals(ArenaStates::RESTARTING()) && $newState->equals(ArenaStates::RESETTING())) {
+			$this->resetRestartingTime();
+		}
 	}
 
 	/**

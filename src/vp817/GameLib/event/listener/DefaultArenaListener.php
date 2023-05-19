@@ -60,16 +60,6 @@ class DefaultArenaListener implements Listener
 		$newState = $event->getNewState();
 		$tickTask = $event->getArena()->getTickTask();
 
-		if ($oldState->equals(ArenaStates::COUNTDOWN()) && $newState->equals(ArenaStates::WAITING())) {
-			$tickTask->resetCountdownTime();
-		}
-
-		if ($oldState->equals(ArenaStates::INGAME()) && $newState->equals(ArenaStates::RESTARTING())) {
-			$tickTask->resetArenaTime();
-		}
-
-		if ($oldState->equals(ArenaStates::RESTARTING()) && $newState->equals(ArenaStates::RESETTING())) {
-			$tickTask->resetRestartingTime();
-		}
+		$tickTask->checkForTimerReset($oldState, $newState);
 	}
 }
