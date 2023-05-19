@@ -105,7 +105,7 @@ class SoloMode extends ArenaMode
 			$player->sendMessage($arenaMessages->PlayerAlreadyInsideAnArena());
 			return;
 		}
-		if (count($this->playerManager->getAll()) > $this->getMaxPlayers()) {
+		if ($this->getPlayerCount() > $this->getMaxPlayers()) {
 			$player->sendMessage($arenaMessages->ArenaIsFull());
 			return;
 		}
@@ -127,7 +127,7 @@ class SoloMode extends ArenaMode
 
 		$player->teleport($arena->getLobbySettings()->getLocation());
 
-		$player->sendMessage(str_replace(["%name%", "%current%", "%max%"], [$arenaPlayer->getDisplayName(), count($this->playerManager->getAll()), $this->getMaxPlayers()], $arenaMessages->SucessfullyJoinedArena()));
+		$player->sendMessage(str_replace(["%name%", "%current%", "%max%"], [$arenaPlayer->getDisplayName(), $this->getPlayerCount(), $this->getMaxPlayers()], $arenaMessages->SucessfullyJoinedArena()));
 	}
 
 	/**
@@ -165,7 +165,7 @@ class SoloMode extends ArenaMode
 
 		$player->teleport($arena->getGameLib()->getWorldManager()->getDefaultWorld()->getSpawnLocation());
 
-		$player->sendMessage(str_replace(["%name%", "%current%", "%max%"], [$player->getDisplayName(), count($this->playerManager->getAll()), $this->getMaxPlayers()], $arenaMessages->SucessfullyLeftArena()));
+		$player->sendMessage(str_replace(["%name%", "%current%", "%max%"], [$player->getDisplayName(), $this->getPlayerCount(), $this->getMaxPlayers()], $arenaMessages->SucessfullyLeftArena()));
 	}
 
 	/**
@@ -175,7 +175,7 @@ class SoloMode extends ArenaMode
 	 */
 	public function setupSpawns(Arena $arena, array $spawns): void
 	{
-		$players = $this->playerManager->getAll();
+		$players = $this->playerManager->getAll(true);
 		for ($i = 1; $i <= $this->getMaxPlayers(); ++$i) {
 			$player = $players[$i - 1];
 			// TODO: EVENT?

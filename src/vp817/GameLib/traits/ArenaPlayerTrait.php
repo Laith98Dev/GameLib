@@ -96,10 +96,20 @@ trait ArenaPlayerTrait
 	}
 
 	/**
+	 * @param bool $sortInNumbers
 	 * @return ArenaPlayer[]
 	 */
-	public function getAll(): array
+	public function getAll(bool $sortInNumbers = false): array
 	{
-		return $this->list;
+		if (!$sortInNumbers) {
+			return $this->list;
+		}
+
+		$list = [];
+		foreach ($this->list as $bytes => $player) {
+			$list[] = $player;
+		}
+
+		return $list;
 	}
 }

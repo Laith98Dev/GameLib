@@ -82,6 +82,30 @@ class ArenaTickTask extends Task
 	/**
 	 * @return void
 	 */
+	public function decrementCountdownTime(): void
+	{
+		--$this->countdownTime;
+	}
+
+	/**
+	 * @return void
+	 */
+	public function decrementArenaTime(): void
+	{
+		--$this->arenaTime;
+	}
+
+	/**
+	 * @return void
+	 */
+	public function decrementRestartingTime(): void
+	{
+		--$this->restartingTime;
+	}
+
+	/**
+	 * @return void
+	 */
 	public function reload(): void
 	{
 		$this->countdownTime = $this->savedTimes["countdownTime"];

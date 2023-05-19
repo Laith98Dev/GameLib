@@ -47,12 +47,12 @@ class CountdownState extends ArenaState
 	{
 		$tickTask = $arena->getTickTask();
 		$mode = $arena->getMode();
-		$timer = $tickTask->getCountdownTime();
-		--$timer;
+		$tickTask->decrementCountdownTime();
+		$time = $tickTask->getCountdownTime();
 
-		(new ArenaTickEvent($arena, $this, $timer))->call();
+		(new ArenaTickEvent($arena, $this, $time))->call();
 
-		if ($timer === 0) {
+		if ($time === 0) {
 			$mode->setupSpawns($arena, $arena->getSpawns());
 			$arena->setState(ArenaStates::INGAME());
 		}

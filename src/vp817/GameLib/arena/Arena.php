@@ -46,7 +46,6 @@ use vp817\GameLib\event\ArenaStateChangeEvent;
 use vp817\GameLib\GameLib;
 use vp817\GameLib\tasks\ArenaTickTask;
 use vp817\GameLib\utilities\Utils;
-
 use function intval;
 use function json_decode;
 
@@ -89,10 +88,20 @@ final class Arena
 		$this->messages = $gamelib->getArenaMessagesClass();
 		$this->lobbySettings = new LobbySettings($gamelib->getWorldManager(), json_decode($dataParser->parse("lobbySettings"), true));
 		$this->spawns = json_decode($dataParser->parse("spawns"), true);
-		$this->world = Utils::getWorldByName($gamelib->getWorldManager(), $dataParser->parse("worldName"));
+		$this->lazyUpdateWorld();
 		$gamelib->registerArenaListener($this);
 		$this->arenaTickTask = new ArenaTickTask($this, intval($dataParser->parse("countdownTime")), intval($dataParser->parse("arenaTime")), intval($dataParser->parse("restartingTime")));
 		$gamelib->getScheduler()->scheduleRepeatingTask($this->arenaTickTask, 20);
+	}
+
+	/**
+	 * @return void
+	 */
+	private function lazyUpdateWorld(): void
+	{
+		if ($this->world === null) {
+			$this->world = Utils::getWorldByName($this->gamelib->getWorldManager(), $this->dataParser->parse("worldName"));
+		}
 	}
 
 	/**
@@ -179,10 +188,12 @@ final class Arena
 	}
 
 	/**
-	 * @return World
+	 * @return ?World
 	 */
-	public function getWorld(): World
+	public function getWorld(): ?World
 	{
+		$this->lazyUpdateWorld();
+
 		return $this->world;
 	}
 
@@ -205,6 +216,7 @@ final class Arena
 		$z = $spawn["z"];
 		$yaw = $spawn["yaw"];
 		$pitch = $spawn["pitch"];
+
 		return new Location($x, $y, $z, $this->getWorld(), $yaw, $pitch);
 	}
 
@@ -216,6 +228,7 @@ final class Arena
 	{
 		$event = new ArenaStateChangeEvent($this, $this->state, $state);
 		$event->call();
+
 		$this->state = $event->getNewState();
 	}
 }

@@ -39,12 +39,26 @@ use vp817\GameLib\utilities\Utils;
 final class LobbySettings
 {
 
+	/** @var null|World $world */
+	private ?World $world = null;
+
 	/**
 	 * @param WorldManager $worldManager
 	 * @param array $settings
 	 */
 	public function __construct(private WorldManager $worldManager, private array $settings)
 	{
+		$this->lazyUpdateWorld();
+	}
+
+	/**
+	 * @return void
+	 */
+	private function lazyUpdateWorld(): void
+	{
+		if ($this->world === null) {
+			$this->world = Utils::getWorldByName($this->worldManager, $this->settings["worldName"]);
+		}
 	}
 
 	/**
@@ -52,7 +66,9 @@ final class LobbySettings
 	 */
 	public function getWorld(): ?World
 	{
-		return Utils::getWorldByName($this->worldManager, $this->settings["worldName"]);
+		$this->lazyUpdateWorld();
+
+		return $this->world;
 	}
 
 	/**
