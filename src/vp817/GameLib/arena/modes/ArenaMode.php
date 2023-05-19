@@ -31,6 +31,7 @@ declare(strict_types=1);
 
 namespace vp817\GameLib\arena\modes;
 
+use Closure;
 use pocketmine\player\Player;
 use vp817\GameLib\arena\Arena;
 use vp817\GameLib\player\ArenaPlayer;
@@ -93,16 +94,20 @@ abstract class ArenaMode
 	/**
 	 * @param Arena $arena
 	 * @param Player $player
+	 * @param null|Closure $onSuccess
+	 * @param null|Closure $onFail
 	 * @return void
 	 */
-	abstract public function onJoin(Arena $arena, Player $player): void;
+	abstract public function onJoin(Arena $arena, Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null): void;
 
 	/**
 	 * @param Arena $arena
 	 * @param Player $player
+	 * @param null|Closure $onSuccess
+	 * @param null|Closure $onFail
 	 * @return void
 	 */
-	abstract public function onQuit(Arena $arena, Player $player): void;
+	abstract public function onQuit(Arena $arena, Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null): void;
 
 	/**
 	 * @param Arena $arena

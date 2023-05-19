@@ -31,7 +31,9 @@ declare(strict_types=1);
 
 namespace vp817\GameLib\arena\modes\list;
 
+use Closure;
 use pocketmine\player\Player;
+use TypeError;
 use vp817\GameLib\arena\Arena;
 use vp817\GameLib\arena\modes\ArenaMode;
 use vp817\GameLib\arena\states\ArenaStates;
@@ -52,11 +54,18 @@ class SoloMode extends ArenaMode
 	/**
 	 * @param ...$arguments
 	 * @return void
+	 * @throws TypeError
 	 */
 	public function init(mixed ...$arguments): void
 	{
+		$slots = $arguments[0];
+
+		if (!is_int($slots)) {
+			throw new TypeError("The slots is invalid");
+		}
+
 		$this->playerManager = new PlayerManager();
-		$this->slots = $arguments[0];
+		$this->slots = $slots;
 	}
 
 	/**
@@ -95,78 +104,105 @@ class SoloMode extends ArenaMode
 	/**
 	 * @param Arena $arena
 	 * @param Player $player
+	 * @param null|Closure $onSuccess
+	 * @param null|Closure $onFail
 	 * @return void
 	 */
-	public function onJoin(Arena $arena, Player $player): void
+	public function onJoin(Arena $arena, Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
 		$bytes = $player->getUniqueId()->getBytes();
 		$arenaMessages = $arena->getMessages();
 
 		if ($this->playerManager->has($bytes)) {
 			$player->sendMessage($arenaMessages->PlayerAlreadyInsideAnArena());
+
+			if (!is_null($onFail)) {
+				$onFail();
+			}
 			return;
 		}
 		if ($this->getPlayerCount() > $this->getMaxPlayers()) {
 			$player->sendMessage($arenaMessages->ArenaIsFull());
+
+			if (!is_null($onFail)) {
+				$onFail();
+			}
 			return;
 		}
-		if ($arena->getState() === ArenaStates::INGAME()) {
+		if ($arena->getState()->equals(ArenaStates::INGAME())) {
 			$player->sendMessage($arenaMessages->ArenaIsAlreadyRunning());
+
+			if (!is_null($onFail)) {
+				$onFail();
+			}
 			return;
 		}
 
-		$arenaPlayer = $this->playerManager->add($player);
+		$this->playerManager->add($player, function (ArenaPlayer $player) use ($arena, $arenaMessages, $bytes, $onSuccess): void {
+			$event = new PlayerJoinArenaEvent($player, $arena);
+			$event->call();
 
-		if (is_null($arenaPlayer)) { // shouldnt happen
-			$player->sendMessage($arenaMessages->PlayerAlreadyInsideAnArena());
-			return;
-		}
+			$arenaPlayer = $event->getPlayer();
+			$cells = $arenaPlayer->getCells();
 
-		(new PlayerJoinArenaEvent($arenaPlayer, $arena))->call();
+			$arenaPlayer->setAll();
 
-		$arenaPlayer->setAll();
+			$cells->teleport($arena->getLobbySettings()->getLocation());
+			$cells->sendMessage(str_replace(["%name%", "%current%", "%max%"], [$arenaPlayer->getDisplayName(), $this->getPlayerCount(), $this->getMaxPlayers()], $arenaMessages->SucessfullyJoinedArena()));
 
-		$player->teleport($arena->getLobbySettings()->getLocation());
-
-		$player->sendMessage(str_replace(["%name%", "%current%", "%max%"], [$arenaPlayer->getDisplayName(), $this->getPlayerCount(), $this->getMaxPlayers()], $arenaMessages->SucessfullyJoinedArena()));
+			if (!is_null($onSuccess)) {
+				$onSuccess();
+			}
+		});
 	}
 
 	/**
 	 * @param Arena $arena
 	 * @param Player $player
+	 * @param null|Closure $onSuccess
+	 * @param null|Closure $onFail
 	 * @return void
 	 */
-	public function onQuit(Arena $arena, Player $player): void
+	public function onQuit(Arena $arena, Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
 		$bytes = $player->getUniqueId()->getBytes();
 		$arenaMessages = $arena->getMessages();
 
 		if (!$this->playerManager->has($bytes)) {
 			$player->sendMessage($arenaMessages->NotInsideAnArenaToLeave());
+
+			if (!is_null($onFail)) {
+				$onFail();
+			}
 			return;
 		}
 
 		if ($arena->getState()->equals(ArenaStates::INGAME()) || $arena->getState()->equals(ArenaStates::RESTARTING())) {
 			$player->sendMessage($arenaMessages->CantLeaveDueToState());
+
+			if (!is_null($onFail)) {
+				$onFail();
+			}
 			return;
 		}
 
-		$arenaPlayer = $this->playerManager->get($bytes);
+		$this->playerManager->get($bytes, function (ArenaPlayer $player) use ($arena, $arenaMessages, $bytes, $onSuccess): void {
+			$event = new PlayerQuitArenaEvent($player, $arena);
+			$event->call();
 
-		if (is_null($arenaPlayer)) { // shouldnt happen
-			$player->sendMessage($arenaMessages->NotInsideAnArenaToLeave());
-			return;
-		}
+			$arenaPlayer = $event->getPlayer();
+			$cells = $arenaPlayer->getCells();
 
-		(new PlayerQuitArenaEvent($arenaPlayer, $arena))->call();
+			$player->setAll(true);
+			$this->playerManager->remove($bytes);
 
-		$arenaPlayer->setAll(true);
+			$cells->teleport($arena->getGameLib()->getWorldManager()->getDefaultWorld()->getSpawnLocation());
+			$cells->sendMessage(str_replace(["%name%", "%current%", "%max%"], [$arenaPlayer->getDisplayName(), $this->getPlayerCount(), $this->getMaxPlayers()], $arenaMessages->SucessfullyLeftArena()));
 
-		$this->playerManager->remove($bytes);
-
-		$player->teleport($arena->getGameLib()->getWorldManager()->getDefaultWorld()->getSpawnLocation());
-
-		$player->sendMessage(str_replace(["%name%", "%current%", "%max%"], [$player->getDisplayName(), $this->getPlayerCount(), $this->getMaxPlayers()], $arenaMessages->SucessfullyLeftArena()));
+			if (!is_null($onSuccess)) {
+				$onSuccess();
+			}
+		});
 	}
 
 	/**

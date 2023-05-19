@@ -49,7 +49,7 @@ final class ArenasManager
 	 * @param Closure $onFail
 	 * @return void
 	 */
-	public function signAsLoaded(string $arenaID, Arena $arena, ?callable $onSuccess = null, ?callable $onFail = null): void
+	public function signAsLoaded(string $arenaID, Arena $arena, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
 		if ($this->hasLoadedArena($arenaID)) {
 			if (!is_null($onFail)) {
@@ -70,7 +70,7 @@ final class ArenasManager
 	 * @param Closure $onFail
 	 * @return void
 	 */
-	public function unsignFromBeingLoaded(string $arenaID, ?callable $onSuccess = null, ?callable $onFail = null): void
+	public function unsignFromBeingLoaded(string $arenaID, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
 		if (!$this->hasLoadedArena($arenaID)) {
 			if (!is_null($onFail)) {
@@ -91,7 +91,7 @@ final class ArenasManager
 	 * @param Closure $onFail
 	 * @return void
 	 */
-	public function getLoadedArena(string $arenaID, callable $onSuccess, ?callable $onFail = null): void
+	public function getLoadedArena(string $arenaID, Closure $onSuccess, ?Closure $onFail = null): void
 	{
 		if (!$this->hasLoadedArena($arenaID)) {
 			if (!is_null($onFail)) {

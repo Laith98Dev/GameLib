@@ -51,27 +51,27 @@ use poggit\libasynql\sqlite3\Sqlite3Thread;
 use ReflectionProperty;
 use Symfony\Component\Filesystem\Path;
 use function array_key_exists;
-use function rtrim;
-use function str_replace;
+use function array_keys;
+use function basename;
+use function count;
+use function dirname;
+use function extension_loaded;
+use function fclose;
 use function file_exists;
 use function fopen;
-use function trim;
-use function mkdir;
-use function dirname;
-use function stream_copy_to_stream;
-use function fclose;
-use function substr;
-use function strlen;
-use function is_dir;
 use function is_array;
-use function count;
-use function extension_loaded;
+use function is_dir;
 use function implode;
-use function array_keys;
-use function usleep;
 use function is_string;
 use function realpath;
-use function basename;
+use function rtrim;
+use function stream_copy_to_stream;
+use function str_replace;
+use function mkdir;
+use function strlen;
+use function substr;
+use function trim;
+use function usleep;
 
 final class Utils
 {
@@ -292,9 +292,7 @@ final class Utils
 	{
 		$world = $worldManager->getWorldByName($worldName);
 		if ($world === null || !$worldManager->isWorldLoaded($worldName)) {
-			if ($worldManager->loadWorld($worldName) === false) {
-				$world = null;
-			}
+			$worldManager->loadWorld($worldName);
 		}
 		return $world;
 	}

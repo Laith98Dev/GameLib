@@ -49,7 +49,7 @@ final class SetupManager
 	 * @param null|Closure $onFail
 	 * @return void
 	 */
-	public function add(Player $player, string $arenaID, ?callable $onSuccess = null, ?callable $onFail = null): void
+	public function add(Player $player, string $arenaID, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
 		$bytes = $player->getUniqueId()->getBytes();
 		if ($this->has($bytes)) {
@@ -72,7 +72,7 @@ final class SetupManager
 	 * @param null|Closure $onFail
 	 * @return void
 	 */
-	public function remove(Player $player, ?callable $onSuccess = null, ?callable $onFail = null): void
+	public function remove(Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
 		$bytes = $player->getUniqueId()->getBytes();
 		if (!$this->has($bytes)) {
@@ -93,7 +93,7 @@ final class SetupManager
 	 * @param null|Closure $onFail
 	 * @return void
 	 */
-	public function get(string $bytes, callable $onSuccess, ?callable $onFail = null): void
+	public function get(string $bytes, Closure $onSuccess, ?Closure $onFail = null): void
 	{
 		if (!$this->has($bytes)) {
 			if (!is_null($onFail)) {

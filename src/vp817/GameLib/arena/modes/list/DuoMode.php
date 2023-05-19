@@ -31,7 +31,9 @@ declare(strict_types=1);
 
 namespace vp817\GameLib\arena\modes\list;
 
+use Closure;
 use pocketmine\player\Player;
+use TypeError;
 use vp817\GameLib\arena\Arena;
 use vp817\GameLib\arena\modes\ArenaMode;
 use vp817\GameLib\managers\TeamManager;
@@ -46,11 +48,24 @@ class DuoMode extends ArenaMode
 	/**
 	 * @param mixed ...$arguments
 	 * @return void
+	 * @throws TypeError
 	 */
 	public function init(mixed ...$arguments): void
 	{
 		$teams = $arguments[0];
 		$arena = $arguments[1];
+
+		if (!is_array($teams)) {
+			throw new TypeError("The teams is invalid");
+		}
+
+		if (!is_object($arena)) {
+			throw new TypeError("The arena is not an object");
+		}
+
+		if (!$arena instanceof Arena) {
+			throw new TypeError("The arena is invalid");
+		}
 
 		$this->teamManager = new TeamManager($arena);
 		foreach ($teams as $key => $value) {
@@ -94,9 +109,11 @@ class DuoMode extends ArenaMode
 	/**
 	 * @param Arena $arena
 	 * @param Player $player
+	 * @param null|Closure $onSuccess
+	 * @param null|Closure $onFail
 	 * @return void
 	 */
-	public function onJoin(Arena $arena, Player $player): void
+	public function onJoin(Arena $arena, Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
 	}
 
@@ -106,7 +123,7 @@ class DuoMode extends ArenaMode
 	 * @param mixed ...$arguments
 	 * @return void
 	 */
-	public function onQuit(Arena $arena, Player $player): void
+	public function onQuit(Arena $arena, Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
 	}
 

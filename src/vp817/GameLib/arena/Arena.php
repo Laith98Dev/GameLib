@@ -31,6 +31,7 @@ declare(strict_types=1);
 
 namespace vp817\GameLib\arena;
 
+use Closure;
 use pocketmine\entity\Location;
 use pocketmine\player\Player;
 use pocketmine\world\World;
@@ -47,7 +48,7 @@ use vp817\GameLib\utilities\Utils;
 use function intval;
 use function json_decode;
 
-final class Arena
+class Arena
 {
 
 	/** @var string $id */
@@ -86,10 +87,18 @@ final class Arena
 		$this->messages = $gamelib->getArenaMessagesClass();
 		$this->lobbySettings = new LobbySettings($gamelib->getWorldManager(), json_decode($dataParser->parse("lobbySettings"), true));
 		$this->spawns = json_decode($dataParser->parse("spawns"), true);
-		$this->lazyUpdateWorld();
+		$this->world = Utils::getWorldByName($this->gamelib->getWorldManager(), $this->dataParser->parse("worldName"));
 		$gamelib->registerArenaListener($this);
 		$this->arenaTickTask = new ArenaTickTask($this, intval($dataParser->parse("countdownTime")), intval($dataParser->parse("arenaTime")), intval($dataParser->parse("restartingTime")));
 		$gamelib->getScheduler()->scheduleRepeatingTask($this->arenaTickTask, 20);
+	}
+
+	/**
+	 * @return ArenaMessages
+	 */
+	public function getMessages(): ArenaMessages
+	{
+		return $this->messages;
 	}
 
 	/**
@@ -103,29 +112,25 @@ final class Arena
 	}
 
 	/**
-	 * @return ArenaMessages
+	 * @param Player $player
+	 * @param null|Closure $onSuccess
+	 * @param null|Closure $onFail
+	 * @return void
 	 */
-	public function getMessages(): ArenaMessages
+	public function join(Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
-		return $this->messages;
+		$this->mode->onJoin($this, $player, $onSuccess, $onFail);
 	}
 
 	/**
 	 * @param Player $player
+	 * @param null|Closure $onSuccess
+	 * @param null|Closure $onFail
 	 * @return void
 	 */
-	public function join(Player $player): void
+	public function quit(Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
-		$this->mode->onJoin($this, $player);
-	}
-
-	/**
-	 * @param Player $player
-	 * @return void
-	 */
-	public function quit(Player $player): void
-	{
-		$this->mode->onQuit($this, $player);
+		$this->mode->onQuit($this, $player, $onSuccess, $onFail);
 	}
 
 	/**
@@ -186,7 +191,7 @@ final class Arena
 	}
 
 	/**
-	 * @return ?World
+	 * @return null|World
 	 */
 	public function getWorld(): ?World
 	{
@@ -209,6 +214,8 @@ final class Arena
 	 */
 	public function getLocationOfSpawn(array $spawn): Location
 	{
+		// $this->lazyUpdateWorld();
+
 		$x = $spawn["x"];
 		$y = $spawn["y"];
 		$z = $spawn["z"];

@@ -31,9 +31,11 @@ declare(strict_types=1);
 
 namespace vp817\GameLib\traits;
 
+use Closure;
 use pocketmine\player\Player;
 use vp817\GameLib\player\ArenaPlayer;
 use function array_key_exists;
+use function is_null;
 
 trait ArenaPlayerTrait
 {
@@ -43,44 +45,67 @@ trait ArenaPlayerTrait
 
 	/**
 	 * @param Player $player
-	 * @return ?ArenaPlayer
+	 * @param null|Closure $onSuccess
+	 * @param null|Closure $onFail
+	 * @return void
 	 */
-	public function add(Player $player): ?ArenaPlayer
+	public function add(Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
 		$bytes = $player->getUniqueId()->getBytes();
 		if ($this->has($bytes)) {
-			return null;
+			if (!is_null($onFail)) {
+				$onFail();
+			}
+			return;
 		}
 
 		$this->list[$bytes] = new ArenaPlayer($player);
 
-		return $this->list[$bytes];
+		if (!is_null($onSuccess)) {
+			$onSuccess($this->list[$bytes]);
+		}
 	}
 
 	/**
 	 * @param string $bytes
+	 * @param null|Closure $onSuccess
+	 * @param null|Closure $onFail
 	 * @return void
 	 */
-	public function remove(string $bytes): void
+	public function remove(string $bytes, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
 		if (!$this->has($bytes)) {
+			if (!is_null($onFail)) {
+				$onFail();
+			}
 			return;
 		}
 
 		unset($this->list[$bytes]);
+
+		if (!is_null($onSuccess)) {
+			$onSuccess();
+		}
 	}
 
 	/**
 	 * @param string $bytes
-	 * @return null|ArenaPlayer
+	 * @param Closure $onSuccess
+	 * @param null|Closure $onFail
+	 * @return void
 	 */
-	public function get(string $bytes): ?ArenaPlayer
+	public function get(string $bytes, Closure $onSuccess, ?Closure $onFail = null): void
 	{
 		if (!$this->has($bytes)) {
-			return null;
+			if (!is_null($onFail)) {
+				$onFail();
+			}
+			return;
 		}
 
-		return $this->list[$bytes];
+		if (!is_null($onSuccess)) {
+			$onSuccess($this->list[$bytes]);
+		}
 	}
 
 	/**
@@ -89,10 +114,7 @@ trait ArenaPlayerTrait
 	 */
 	public function has(string $bytes): bool
 	{
-		if (!array_key_exists($bytes, $this->list)) {
-			return false;
-		}
-		return true;
+		return array_key_exists($bytes, $this->list);
 	}
 
 	/**

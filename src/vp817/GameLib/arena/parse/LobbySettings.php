@@ -56,6 +56,7 @@ final class LobbySettings
 	 */
 	private function lazyUpdateWorld(): void
 	{
+		var_dump($this->world);
 		if ($this->world === null) {
 			$this->world = Utils::getWorldByName($this->worldManager, $this->settings["worldName"]);
 		}
@@ -76,6 +77,8 @@ final class LobbySettings
 	 */
 	public function getLocation(): Location
 	{
+		$this->lazyUpdateWorld();
+
 		$location = $this->settings["location"];
 		$x = $location["x"];
 		$y = $location["y"];

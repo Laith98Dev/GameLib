@@ -108,7 +108,7 @@ class ArenaTickTask extends Task
 	/**
 	 * @return void
 	 */
-	public function resetCountdownTime(): void
+	private function resetCountdownTime(): void
 	{
 		$this->countdownTime = $this->savedTimes["countdownTime"];
 	}
@@ -116,7 +116,7 @@ class ArenaTickTask extends Task
 	/**
 	 * @return void
 	 */
-	public function resetArenaTime(): void
+	private function resetArenaTime(): void
 	{
 		$this->arenaTime = $this->savedTimes["arenaTime"];
 	}
@@ -124,7 +124,7 @@ class ArenaTickTask extends Task
 	/**
 	 * @return void
 	 */
-	public function resetRestartingTime(): void
+	private function resetRestartingTime(): void
 	{
 		$this->restartingTime = $this->savedTimes["restartingTime"];
 	}
