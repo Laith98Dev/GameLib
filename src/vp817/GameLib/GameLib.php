@@ -49,6 +49,7 @@ use vp817\GameLib\arena\message\DefaultArenaMessages;
 use vp817\GameLib\event\listener\DefaultArenaListener;
 use vp817\GameLib\managers\ArenasManager;
 use vp817\GameLib\managers\SetupManager;
+use vp817\GameLib\managers\WaterdogManager;
 use vp817\GameLib\player\SetupPlayer;
 use vp817\GameLib\utilities\SqlQueries;
 use vp817\GameLib\utilities\Utils;
@@ -78,6 +79,8 @@ final class GameLib
 	private string $arenasBackupPath;
 	/** @var SetupManager $setupManager */
 	private SetupManager $setupManager;
+	/** @var WaterdogManager $waterdogManager */
+	private WaterdogManager $waterdogManager;
 
 	/**
 	 * initialize a new gamelib
@@ -94,12 +97,29 @@ final class GameLib
 	 * 		"schema" => "schema"
 	 * ]
 	 * 
+	 * waterdogData usage example:
+	 * 
+	 * example for not using:
+	 * 
+	 * duel: ["enabled" => false]
+	 * 
+	 * example for using:
+	 * 
+	 * duel: [
+	 * 		"enabled" => true,
+	 * 		"settings" => [
+	 * 			"mode" => "simple",
+	 * 			"lobby" => "127.0.0.1:19133"
+	 * 		]
+	 * ]
+	 * 
 	 * @param PluginBase $plugin
 	 * @param array $sqlDatabase
+	 * @param array $waterdogData
 	 * @return GameLib
 	 * @throws RuntimeException
 	 */
-	public static function init(PluginBase $plugin, array $sqlDatabase): GameLib
+	public static function init(PluginBase $plugin, array $sqlDatabase, array $waterdogData = ["enabled" => false]): GameLib
 	{
 		if (self::$plugin !== null) {
 			throw new RuntimeException("GameLib is already initialized for this plugin");
@@ -109,7 +129,7 @@ final class GameLib
 			throw new RuntimeException("libasyql virion not found. unable to use gamelib");
 		}
 
-		return new GameLib($plugin, $sqlDatabase);
+		return new GameLib($plugin, $sqlDatabase, $waterdogData);
 	}
 
 	/**
@@ -124,9 +144,10 @@ final class GameLib
 
 	/**
 	 * @param PluginBase $plugin
+	 * @param array $waterdogData
 	 * @param array $sqlDatabase
 	 */
-	public function __construct(PluginBase $plugin, array $sqlDatabase = [])
+	public function __construct(PluginBase $plugin, array $sqlDatabase = [], array $waterdogData = [])
 	{
 		self::$plugin = $plugin;
 
@@ -172,6 +193,7 @@ final class GameLib
 		$this->arenasManager = new ArenasManager();
 		$this->arenaMessages = new DefaultArenaMessages();
 		$this->setupManager = new SetupManager();
+		$this->waterdogManager = new WaterdogManager($waterdogData);
 		$this->arenaListenerClass = DefaultArenaListener::class;
 	}
 
