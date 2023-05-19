@@ -218,6 +218,8 @@ $gamelib->leaveArena(player, onSuccess(arenaID), onFail());
 ?>
 ```
 
+<br/><br/>
+
 ## Other Examples center:
 
 ### adding arena extra data
