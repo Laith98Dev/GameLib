@@ -46,6 +46,15 @@ abstract class ArenaMode
 	}
 
 	/**
+	 * @param object $value
+	 * @return bool
+	 */
+	public function equals(object $value): bool
+	{
+		return $this instanceof $value;
+	}
+
+	/**
 	 * @return int
 	 */
 	abstract public function getMaxPlayersPerTeam(): int;

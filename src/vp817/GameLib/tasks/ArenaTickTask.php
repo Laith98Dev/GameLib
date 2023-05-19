@@ -33,11 +33,7 @@ namespace vp817\GameLib\tasks;
 
 use pocketmine\scheduler\Task;
 use vp817\GameLib\arena\Arena;
-use vp817\GameLib\arena\states\list\CountdownState;
-use vp817\GameLib\arena\states\list\InGameState;
-use vp817\GameLib\arena\states\list\ResettingState;
-use vp817\GameLib\arena\states\list\RestartingState;
-use vp817\GameLib\arena\states\list\WaitingState;
+use vp817\GameLib\arena\states\ArenaStates;
 
 class ArenaTickTask extends Task
 {
@@ -60,15 +56,15 @@ class ArenaTickTask extends Task
 		$arena = $this->arena;
 		$state = $arena->getState();
 
-		if ($state instanceof WaitingState) {
+		if ($state->equals(ArenaStates::WAITING())) {
 			$state->tick($arena, 0);
-		} else if ($state instanceof CountdownState) {
+		} else if ($state->equals(ArenaStates::COUNTDOWN())) {
 			$this->countdownTime = $state->tick($arena, $this->countdownTime);
-		} else if ($state instanceof InGameState) {
+		} else if ($state->equals(ArenaStates::INGAME())) {
 			$this->arenaTime = $state->tick($arena, $this->arenaTime);
-		} else if ($state instanceof RestartingState) {
+		} else if ($state->equals(ArenaStates::RESTARTING())) {
 			$this->restartingTime = $state->tick($arena, $this->restartingTime);
-		} else if ($state instanceof ResettingState) {
+		} else if ($state->equals(ArenaStates::RESETTING())) {
 			$state->tick($arena, 0);
 		}
 	}

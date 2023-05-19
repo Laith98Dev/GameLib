@@ -45,6 +45,15 @@ abstract class ArenaState
 	}
 
 	/**
+	 * @param object $value
+	 * @return bool
+	 */
+	public function equals(object $value): bool
+	{
+		return $this instanceof $value;
+	}
+
+	/**
 	 * @param Arena $arena
 	 * @param int $time
 	 * @return int
