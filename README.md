@@ -262,6 +262,6 @@ $setupSettings->setExtraData([
 ?>
 ```
 
-# Links:
+# Links
 
 <a href=https://discord.gg/m6wwGWkmZu>Discord</a>
