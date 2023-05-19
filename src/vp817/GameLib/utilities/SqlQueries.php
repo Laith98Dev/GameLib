@@ -31,7 +31,7 @@ declare(strict_types=1);
 
 namespace vp817\GameLib\utilities;
 
-class SqlQueries
+final class SqlQueries
 {
 	public const INIT = "gl-queries.init";
 	public const ADD_ARENA = "gl-queries.add-arena";

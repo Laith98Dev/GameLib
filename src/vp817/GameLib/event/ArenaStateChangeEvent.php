@@ -29,10 +29,46 @@
 
 declare(strict_types=1);
 
-namespace vp817\event\listeners;
+namespace vp817\GameLib\event;
 
-use pocketmine\event\Listener;
+use pocketmine\event\Event;
+use vp817\GameLib\arena\Arena;
+use vp817\GameLib\arena\states\ArenaState;
 
-class ArenaEventListener implements Listener
+class ArenaStateChangeEvent extends Event
 {
+
+	/**
+	 * @param Arena $arena
+	 * @param ArenaState $oldState
+	 * @param ArenaState $newState
+	 * @param int $timer
+	 */
+	public function __construct(protected Arena $arena, protected ArenaState $oldState, private ArenaState $newState)
+	{
+	}
+
+	/**
+	 * @return Arena
+	 */
+	public function getArena(): Arena
+	{
+		return $this->arena;
+	}
+
+	/**
+	 * @return ArenaState
+	 */
+	public function getOldState(): ArenaState
+	{
+		return $this->oldState;
+	}
+	
+	/**
+	 * @return ArenaState
+	 */
+	public function getNewState(): ArenaState
+	{
+		return $this->newState;
+	}
 }

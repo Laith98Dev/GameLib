@@ -56,6 +56,15 @@ class DuoMode extends ArenaMode
 	}
 
 	/**
+	 * @param string $bytes
+	 * @return bool
+	 */
+	public function hasPlayer(string $bytes): bool
+	{
+		return false; // TODO
+	}
+
+	/**
 	 * @return int
 	 */
 	public function getPlayerCount(): int
@@ -107,5 +116,14 @@ class DuoMode extends ArenaMode
 	public function setupSpawns(Arena $arena, array $spawns): void
 	{
 		
+	}
+
+	/**
+	 * @param Arena $arena
+	 * @return void
+	 */
+	public function endGame(Arena $arena): void
+	{
+		// TODO
 	}
 }

@@ -29,29 +29,20 @@
 
 declare(strict_types=1);
 
-namespace vp817\GameLib\arena\states\list;
+namespace vp817\GameLib\event\listener;
 
+use pocketmine\event\Listener;
+use pocketmine\plugin\PluginBase;
 use vp817\GameLib\arena\Arena;
-use vp817\GameLib\arena\states\ArenaState;
-use vp817\GameLib\arena\states\ArenaStates;
-use vp817\GameLib\event\ArenaTickEvent;
 
-class WaitingState extends ArenaState
+class DefaultArenaListener implements Listener
 {
 
 	/**
-	 * @param int $time
-	 * @return void
+	 * @param PluginBase $plugin
+	 * @param Arena $arena
 	 */
-	public function tick(Arena $arena): void
+	public function __construct(protected PluginBase $plugin, protected ?Arena $arena = null)
 	{
-		$playerCount = $arena->getMode()->getPlayerCount();
-		$maxPlayerCount = $arena->getMode()->getMaxPlayers();
-
-		(new ArenaTickEvent($arena, $this, ArenaTickEvent::NO_TIMER))->call();
-
-		if ($playerCount >= $maxPlayerCount) {
-			$arena->setState(ArenaStates::COUNTDOWN());
-		}
 	}
 }

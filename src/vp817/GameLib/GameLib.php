@@ -45,6 +45,7 @@ use vp817\GameLib\arena\Arena;
 use vp817\GameLib\arena\ArenaDataParser;
 use vp817\GameLib\arena\message\ArenaMessages;
 use vp817\GameLib\arena\message\DefaultArenaMessages;
+use vp817\GameLib\event\listener\DefaultArenaListener;
 use vp817\GameLib\managers\ArenasManager;
 use vp817\GameLib\managers\SetupManager;
 use vp817\GameLib\player\SetupPlayer;
@@ -70,6 +71,8 @@ final class GameLib
 	private ArenasManager $arenasManager;
 	/** @var ArenaMessages $arenaMessages */
 	private ArenaMessages $arenaMessages;
+	/** @var string $arenaListenerClass */
+	private string $arenaListenerClass;
 	/** @var string $arenasBackupPath */
 	private string $arenasBackupPath;
 	/** @var SetupManager $setupManager */
@@ -168,6 +171,7 @@ final class GameLib
 		$this->arenasManager = new ArenasManager();
 		$this->arenaMessages = new DefaultArenaMessages();
 		$this->setupManager = new SetupManager();
+		$this->arenaListenerClass = DefaultArenaListener::class;
 	}
 
 	/**
@@ -228,6 +232,15 @@ final class GameLib
 	}
 
 	/**
+	 * @param string $arenaListener
+	 * @return void
+	 */
+	public function setArenaListenerClass(string $arenaListener): void
+	{
+		$this->arenaListenerClass = $arenaListener;
+	}
+
+	/**
 	 * @return ArenasManager
 	 */
 	public function getArenasManager(): ArenasManager
@@ -252,11 +265,34 @@ final class GameLib
 	}
 
 	/**
+	 * @return string
+	 */
+	public function getArenaListenerClass(): string
+	{
+		return $this->arenaListenerClass;
+	}
+
+	/**
 	 * @return SetupManager
 	 */
 	public function getSetupManager(): SetupManager
 	{
 		return $this->setupManager;
+	}
+
+	/**
+	 * @param Arena $arena
+	 * @return void
+	 */
+	public function registerArenaListener(Arena $arena): void
+	{
+		$class = $this->arenaListenerClass;
+		if (strlen(trim($class)) < 1) {
+			return;
+		}
+
+		$listener = new $class($this, $arena);
+		self::$plugin->getServer()->getPluginManager()->registerEvents($listener, self::$plugin);
 	}
 
 	/**
@@ -336,11 +372,12 @@ final class GameLib
 
 			$data["lobbySettings"] = json_encode([]);
 			$data["spawns"] = json_encode([]);
+			$data["arenaData"] = json_encode([]);
 			$data["extraData"] = json_encode([]);
 
-			$this->getArenasManager()->signAsLoaded($arenaID, new Arena($this, new ArenaDataParser($data)), function ($arenaID, $arena) use ($onSuccess): void {
+			$this->getArenasManager()->signAsLoaded($arenaID, new Arena($this, new ArenaDataParser($data)), function ($arena) use ($onSuccess): void {
 				if (!is_null($onSuccess)) {
-					$onSuccess($arenaID, $arena);
+					$onSuccess($arena);
 				}
 			});
 		});
@@ -467,5 +504,47 @@ final class GameLib
 				$onSuccess();
 			}
 		});
+	}
+
+	/**
+	 * @param Player $player
+	 * @param string $arenaID
+	 * @param Closure $onSuccess
+	 * @param Closure $onFail
+	 * @return void
+	 */
+	public function joinArena(Player $player, string $arenaID, ?callable $onSuccess = null, ?callable $onFail = null): void
+	{
+		$this->getArenasManager()->getLoadedArena($arenaID, function (Arena $arena) use ($player, $onSuccess): void {
+			$arena->join($player);
+
+			if (!is_null($onSuccess)) {
+				$onSuccess($arena);
+			}
+		}, $onFail);
+	}
+
+	/**
+	 * @param Player $player
+	 * @param Closure $onSuccess
+	 * @param Closure $onFail
+	 * @return void
+	 */
+	public function leaveArena(Player $player, ?callable $onSuccess = null, ?callable $onFail = null): void
+	{
+		$arenasManager = $this->getArenasManager();
+		foreach ($arenasManager->getAll() as $key => $value) {
+			if ($value->getMode()->hasPlayer($player->getUniqueId()->getBytes())) {
+				$value->quit($player);
+
+				if (!is_null($onSuccess)) {
+					$onSuccess($key);
+				}
+				break;
+			}
+		}
+		if (!is_null($onFail)) {
+			$onFail();
+		}
 	}
 }

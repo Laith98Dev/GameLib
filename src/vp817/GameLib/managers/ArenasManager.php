@@ -60,7 +60,7 @@ final class ArenasManager
 
 		$this->loadedArenas[$arenaID] = $arena;
 		if (!is_null($onSuccess)) {
-			$onSuccess($arenaID, $arena);
+			$onSuccess($arena);
 		}
 	}
 
@@ -109,5 +109,13 @@ final class ArenasManager
 	public function hasLoadedArena(string $arenaID): bool
 	{
 		return array_key_exists($arenaID, $this->loadedArenas);
+	}
+
+	/**
+	 * @return Arena[]
+	 */
+	public function getAll(): array
+	{
+		return $this->loadedArenas;
 	}
 }

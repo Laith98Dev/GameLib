@@ -59,6 +59,15 @@ class SoloMode extends ArenaMode
 	}
 
 	/**
+	 * @param string $bytes
+	 * @return bool
+	 */
+	public function hasPlayer(string $bytes): bool
+	{
+		return $this->playerManager->has($bytes);
+	}
+
+	/**
 	 * @return int
 	 */
 	public function getPlayerCount(): int
@@ -172,5 +181,14 @@ class SoloMode extends ArenaMode
 			// TODO: EVENT?
 			$player->getCells()->teleport($arena->getLocationOfSpawn($spawns[$i]));
 		}
+	}
+
+	/**
+	 * @param Arena $arena
+	 * @return void
+	 */
+	public function endGame(Arena $arena): void
+	{
+		// TODO
 	}
 }

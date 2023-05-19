@@ -33,6 +33,7 @@ namespace vp817\GameLib\arena\states\list;
 
 use vp817\GameLib\arena\Arena;
 use vp817\GameLib\arena\states\ArenaState;
+use vp817\GameLib\arena\states\ArenaStates;
 
 class RestartingState extends ArenaState
 {
@@ -43,5 +44,7 @@ class RestartingState extends ArenaState
 	 */
 	public function tick(Arena $arena): void
 	{
+		// TODO
+		$arena->setState(ArenaStates::WAITING());
 	}
 }

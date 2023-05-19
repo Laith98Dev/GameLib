@@ -35,7 +35,7 @@ use pocketmine\event\Event;
 use vp817\GameLib\arena\Arena;
 use vp817\GameLib\arena\states\ArenaState;
 
-class PlayerArenaTickEvent extends Event
+class ArenaTickEvent extends Event
 {
 
 	public const NO_TIMER = -1;

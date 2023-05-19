@@ -42,11 +42,11 @@ use vp817\GameLib\arena\modes\list\SoloMode;
 use vp817\GameLib\arena\parse\LobbySettings;
 use vp817\GameLib\arena\states\ArenaState;
 use vp817\GameLib\arena\states\ArenaStates;
+use vp817\GameLib\event\ArenaStateChangeEvent;
 use vp817\GameLib\GameLib;
 use vp817\GameLib\tasks\ArenaTickTask;
 use function intval;
 use function json_decode;
-use function strval;
 
 final class Arena
 {
@@ -74,7 +74,7 @@ final class Arena
 	 */
 	public function __construct(private GameLib $gamelib, private ArenaDataParser $dataParser)
 	{
-		$this->id = strval($dataParser->parse("arenaID"));
+		$this->id = $dataParser->parse("arenaID");
 		$this->state = ArenaStates::WAITING();
 		$mode = ArenaModes::fromString($dataParser->parse("mode"));
 		$arenaData = json_decode($dataParser->parse("arenaData"), true);
@@ -87,7 +87,8 @@ final class Arena
 		$this->messages = $gamelib->getArenaMessagesClass();
 		$this->lobbySettings = new LobbySettings($gamelib->getWorldManager(), json_decode($dataParser->parse("lobbySettings")));
 		$this->spawns = json_decode($dataParser->parse("spawns"));
-		$this->world = $gamelib->getWorldManager()->getWorldByName("worldName");
+		$this->world = $gamelib->getWorldManager()->getWorldByName($dataParser->parse("worldName"));
+		$gamelib->registerArenaListener($this);
 		$this->arenaTickTask = new ArenaTickTask($this, intval($dataParser->parse("countdownTime")), intval($dataParser->parse("arenaTime")), intval($dataParser->parse("restartingTime")));
 		$gamelib->getScheduler()->scheduleRepeatingTask($this->arenaTickTask, 20);
 	}
@@ -210,14 +211,8 @@ final class Arena
 	 */
 	public function setState(ArenaState $state): void
 	{
-		$this->state = $state;
-	}
-
-	/**
-	 * @return void
-	 */
-	public function endGame(): void
-	{
-		// TODO
+		$event = new ArenaStateChangeEvent($this, $this->state, $state);
+		$event->call();
+		$this->state = $event->getNewState();
 	}
 }

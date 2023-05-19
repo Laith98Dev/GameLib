@@ -80,12 +80,13 @@ class ArenaTickTask extends Task
 	}
 
 	/**
-	 * @param string $key
-	 * @return int
+	 * @return void
 	 */
-	public function getSavedTime(string $key): int
+	public function reload(): void
 	{
-		return $this->savedTimes[$key];
+		$this->countdownTime = $this->savedTimes["countdownTime"];
+		$this->arenaTime = $this->savedTimes["arenaTime"];
+		$this->restartingTime = $this->savedTimes["restartingTime"];
 	}
 
 	/**

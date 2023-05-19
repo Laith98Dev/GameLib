@@ -34,7 +34,7 @@ namespace vp817\GameLib\arena\states\list;
 use vp817\GameLib\arena\Arena;
 use vp817\GameLib\arena\states\ArenaState;
 use vp817\GameLib\arena\states\ArenaStates;
-use vp817\GameLib\event\PlayerArenaTickEvent;
+use vp817\GameLib\event\ArenaTickEvent;
 
 class CountdownState extends ArenaState
 {
@@ -50,7 +50,7 @@ class CountdownState extends ArenaState
 		$timer = $tickTask->getCountdownTime();
 		--$timer;
 
-		(new PlayerArenaTickEvent($arena, $this, $timer))->call();
+		(new ArenaTickEvent($arena, $this, $timer))->call();
 
 		if ($timer === 0) {
 			$mode->setupSpawns($arena, $arena->getSpawns());

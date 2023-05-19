@@ -55,6 +55,12 @@ abstract class ArenaMode
 	}
 
 	/**
+	 * @param string $bytes
+	 * @return bool
+	 */
+	abstract public function hasPlayer(string $bytes): bool;
+
+	/**
 	 * @return int
 	 */
 	abstract public function getPlayerCount(): int;
@@ -89,4 +95,10 @@ abstract class ArenaMode
 	 * @return void
 	 */
 	abstract public function setupSpawns(Arena $arena, array $spawns): void;
+
+	/**
+	 * @param Arena $arena
+	 * @return void
+	 */
+	abstract public function endGame(Arena $arena): void;
 }
