@@ -62,6 +62,7 @@ $gamelib->setArenaMessagesClass(new Class());
 $gamelib->setArenaListenerClass(Class::class);
 // if you didnt get what was written up there then this is a tip
 $gamelib->setArenaListenerClass(\your_path\CustomArenaListener::class);
+
 ?>
 
 ```
