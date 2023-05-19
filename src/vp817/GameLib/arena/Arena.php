@@ -59,6 +59,8 @@ final class Arena
 	protected ArenaMessages $messages;
 	/** @var LobbySettings $lobbySettings */
 	protected LobbySettings $lobbySettings;
+	/** @var ArenaTickTask $arenaTickTask */
+	protected ArenaTickTask $arenaTickTask;
 
 	/**
 	 * @param GameLib $gamelib
@@ -78,7 +80,8 @@ final class Arena
 		$this->mode = $mode;
 		$this->messages = $gamelib->getArenaMessagesClass();
 		$this->lobbySettings = new LobbySettings($gamelib->getWorldManager(), $dataParser->parse("lobbySettings"));
-		$gamelib->getScheduler()->scheduleRepeatingTask(new ArenaTickTask($this, intval($dataParser->parse("countdownTime")), intval($dataParser->parse("arenaTime")), intval($dataParser->parse("restartingTime"))), 20);
+		$this->arenaTickTask = new ArenaTickTask($this, intval($dataParser->parse("countdownTime")), intval($dataParser->parse("arenaTime")), intval($dataParser->parse("restartingTime")));
+		$gamelib->getScheduler()->scheduleRepeatingTask($this->arenaTickTask, 20);
 	}
 
 	/**
