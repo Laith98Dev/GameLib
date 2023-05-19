@@ -89,7 +89,7 @@ final class ArenaPlayer
             "nameTag" => $this->nameTag,
             "inventory" => $this->inventory->getContents(),
             "armorInventory" => $this->armorInventory->getContents(),
-            "effectManager" => $this->effectManager->all(),
+            "effects" => $this->effectManager->all(),
             "health" => $this->health,
             "maxHealth" => $this->maxHealth,
             "food" => $this->food,

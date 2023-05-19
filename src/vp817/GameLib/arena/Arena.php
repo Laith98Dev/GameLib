@@ -37,8 +37,6 @@ use pocketmine\world\World;
 use vp817\GameLib\arena\message\ArenaMessages;
 use vp817\GameLib\arena\modes\ArenaMode;
 use vp817\GameLib\arena\modes\ArenaModes;
-use vp817\GameLib\arena\modes\list\DuoMode;
-use vp817\GameLib\arena\modes\list\SoloMode;
 use vp817\GameLib\arena\parse\LobbySettings;
 use vp817\GameLib\arena\states\ArenaState;
 use vp817\GameLib\arena\states\ArenaStates;
@@ -79,9 +77,9 @@ final class Arena
 		$this->state = ArenaStates::WAITING();
 		$mode = ArenaModes::fromString($dataParser->parse("mode"));
 		$arenaData = json_decode($dataParser->parse("arenaData"), true);
-		if ($mode instanceof SoloMode) {
+		if ($mode->equals(ArenaModes::SOLO())) {
 			$mode->init(intval($arenaData["slots"]));
-		} else if ($mode instanceof DuoMode) {
+		} else if ($mode->equals(ArenaModes::DUO())) {
 			$mode->init(json_decode($arenaData["teams"], true), $this);
 		}
 		$this->mode = $mode;
@@ -226,7 +224,7 @@ final class Arena
 	 */
 	public function setState(ArenaState $state): void
 	{
-		$event = new ArenaStateChangeEvent($this, $this->state, $state);
+		$event = new ArenaStateChangeEvent($this, clone $this->state, $state);
 		$event->call();
 
 		$this->state = $event->getNewState();

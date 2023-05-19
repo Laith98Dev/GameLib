@@ -50,7 +50,7 @@ abstract class ArenaState
 	 */
 	public function equals(object $value): bool
 	{
-		return $value instanceof self;
+		return $value instanceof static;
 	}
 
 	/**

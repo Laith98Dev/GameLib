@@ -41,6 +41,7 @@ use poggit\libasynql\DataConnector;
 use poggit\libasynql\SqlError;
 use RuntimeException;
 use Symfony\Component\Filesystem\Path;
+use TypeError;
 use vp817\GameLib\arena\Arena;
 use vp817\GameLib\arena\ArenaDataParser;
 use vp817\GameLib\arena\message\ArenaMessages;
@@ -291,7 +292,16 @@ final class GameLib
 			return;
 		}
 
-		$listener = new $class(self::$plugin, $this, $arena);
+		$listener = null;
+		try {
+			$listener = new $class(self::$plugin, $this, $arena);
+		} catch (TypeError $error) {
+			$listener = null;
+		}
+
+		if ($listener === null) {
+			return;
+		}
 		self::$plugin->getServer()->getPluginManager()->registerEvents($listener, self::$plugin);
 	}
 
@@ -577,7 +587,7 @@ final class GameLib
 		$arenasManager = $this->getArenasManager();
 		foreach ($arenasManager->getAll() as $key => $value) {
 			if ($value->getMode()->hasPlayer($player->getUniqueId()->getBytes())) {
-				$value->quit($player);
+				$value->quit($player); // TODO: we need onSuccess and onFail for this so we can get an accurate value
 
 				if (!is_null($onSuccess)) {
 					$onSuccess($key);

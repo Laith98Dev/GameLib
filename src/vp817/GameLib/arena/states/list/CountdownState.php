@@ -52,6 +52,12 @@ class CountdownState extends ArenaState
 
 		(new ArenaTickEvent($arena, $this, $time))->call();
 
+		if ($mode->getPlayerCount() < $mode->getMaxPlayers()) {
+			$arena->setState(ArenaStates::WAITING());
+			// $this->resetCountdownTime();
+			return;
+		}
+
 		if ($time === 0) {
 			$mode->setupSpawns($arena, $arena->getSpawns());
 			$arena->setState(ArenaStates::INGAME());

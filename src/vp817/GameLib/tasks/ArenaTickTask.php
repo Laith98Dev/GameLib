@@ -33,6 +33,7 @@ namespace vp817\GameLib\tasks;
 
 use pocketmine\scheduler\Task;
 use vp817\GameLib\arena\Arena;
+use vp817\GameLib\arena\states\ArenaStates;
 
 class ArenaTickTask extends Task
 {
@@ -106,11 +107,35 @@ class ArenaTickTask extends Task
 	/**
 	 * @return void
 	 */
-	public function reload(): void
+	public function resetCountdownTime(): void
 	{
 		$this->countdownTime = $this->savedTimes["countdownTime"];
+	}
+
+	/**
+	 * @return void
+	 */
+	public function resetArenaTime(): void
+	{
 		$this->arenaTime = $this->savedTimes["arenaTime"];
+	}
+
+	/**
+	 * @return void
+	 */
+	public function resetRestartingTime(): void
+	{
 		$this->restartingTime = $this->savedTimes["restartingTime"];
+	}
+
+	/**
+	 * @return void
+	 */
+	public function reload(): void
+	{
+		$this->resetCountdownTime();
+		$this->resetArenaTime();
+		$this->resetRestartingTime();
 	}
 
 	/**

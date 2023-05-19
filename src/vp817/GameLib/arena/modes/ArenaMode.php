@@ -33,6 +33,7 @@ namespace vp817\GameLib\arena\modes;
 
 use pocketmine\player\Player;
 use vp817\GameLib\arena\Arena;
+use vp817\GameLib\player\ArenaPlayer;
 
 abstract class ArenaMode
 {
@@ -46,12 +47,18 @@ abstract class ArenaMode
 	}
 
 	/**
+	 * @param mixed ...$arguments
+	 * @return void
+	 */
+	abstract public function init(mixed ...$arguments): void;
+
+	/**
 	 * @param object $value
 	 * @return bool
 	 */
 	public function equals(object $value): bool
 	{
-		return $value instanceof self;
+		return $value instanceof static;
 	}
 
 	/**
@@ -61,9 +68,17 @@ abstract class ArenaMode
 	abstract public function hasPlayer(string $bytes): bool;
 
 	/**
+	 * @return ArenaPlayer[]
+	 */
+	abstract public function getPlayers(): array;
+
+	/**
 	 * @return int
 	 */
-	abstract public function getPlayerCount(): int;
+	public function getPlayerCount(): int
+	{
+		return count($this->getPlayers());
+	}
 
 	/**
 	 * @return int

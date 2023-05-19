@@ -35,6 +35,7 @@ use pocketmine\player\Player;
 use vp817\GameLib\arena\Arena;
 use vp817\GameLib\arena\modes\ArenaMode;
 use vp817\GameLib\managers\TeamManager;
+use vp817\GameLib\player\ArenaPlayer;
 
 class DuoMode extends ArenaMode
 {
@@ -43,12 +44,14 @@ class DuoMode extends ArenaMode
 	private TeamManager $teamManager;
 
 	/**
-	 * @param array $teams
-	 * @param Arena $arena
+	 * @param mixed ...$arguments
 	 * @return void
 	 */
-	public function init(array $teams, Arena $arena): void
+	public function init(mixed ...$arguments): void
 	{
+		$teams = $arguments[0];
+		$arena = $arguments[1];
+
 		$this->teamManager = new TeamManager($arena);
 		foreach ($teams as $key => $value) {
 			$this->teamManager->addTeam($value);
@@ -65,11 +68,11 @@ class DuoMode extends ArenaMode
 	}
 
 	/**
-	 * @return int
+	 * @return ArenaPlayer[]
 	 */
-	public function getPlayerCount(): int
+	public function getPlayers(): array
 	{
-		return 0; // TODO
+		return []; // TODO
 	}
 
 	/**

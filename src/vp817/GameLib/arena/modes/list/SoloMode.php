@@ -38,6 +38,7 @@ use vp817\GameLib\arena\states\ArenaStates;
 use vp817\GameLib\event\PlayerJoinArenaEvent;
 use vp817\GameLib\event\PlayerQuitArenaEvent;
 use vp817\GameLib\managers\PlayerManager;
+use vp817\GameLib\player\ArenaPlayer;
 use function is_null;
 
 class SoloMode extends ArenaMode
@@ -49,13 +50,13 @@ class SoloMode extends ArenaMode
 	private int $slots;
 
 	/**
-	 * @param array $spawns
+	 * @param ...$arguments
 	 * @return void
 	 */
-	public function init(int $slots): void
+	public function init(mixed ...$arguments): void
 	{
 		$this->playerManager = new PlayerManager();
-		$this->slots = $slots;
+		$this->slots = $arguments[0];
 	}
 
 	/**
@@ -68,11 +69,11 @@ class SoloMode extends ArenaMode
 	}
 
 	/**
-	 * @return int
+	 * @return ArenaPlayer[]
 	 */
-	public function getPlayerCount(): int
+	public function getPlayers(): array
 	{
-		return count($this->playerManager->getAll());
+		return $this->playerManager->getAll();
 	}
 
 	/**
@@ -145,7 +146,7 @@ class SoloMode extends ArenaMode
 			return;
 		}
 
-		if ($arena->getState() === ArenaStates::INGAME() || $arena->getState() === ArenaStates::RESTARTING()) {
+		if ($arena->getState()->equals(ArenaStates::INGAME()) || $arena->getState()->equals(ArenaStates::RESTARTING())) {
 			$player->sendMessage($arenaMessages->CantLeaveDueToState());
 			return;
 		}
@@ -158,7 +159,7 @@ class SoloMode extends ArenaMode
 		}
 
 		(new PlayerQuitArenaEvent($arenaPlayer, $arena))->call();
-		
+
 		$arenaPlayer->setAll(true);
 
 		$this->playerManager->remove($bytes);

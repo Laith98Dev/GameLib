@@ -34,6 +34,8 @@ namespace vp817\GameLib\event\listener;
 use pocketmine\event\Listener;
 use pocketmine\plugin\Plugin;
 use vp817\GameLib\arena\Arena;
+use vp817\GameLib\arena\states\ArenaStates;
+use vp817\GameLib\event\ArenaStateChangeEvent;
 use vp817\GameLib\GameLib;
 
 class DefaultArenaListener implements Listener
@@ -46,5 +48,28 @@ class DefaultArenaListener implements Listener
 	 */
 	public function __construct(protected Plugin $plugin, protected GameLib $gamelib, protected ?Arena $arena = null)
 	{
+	}
+
+	/**
+	 * @param ArenaStateChangeEvent $event
+	 * @return void
+	 */
+	public function _S1293182(ArenaStateChangeEvent $event): void
+	{
+		$oldState = $event->getOldState();
+		$newState = $event->getNewState();
+		$tickTask = $event->getArena()->getTickTask();
+
+		if ($oldState->equals(ArenaStates::COUNTDOWN()) && $newState->equals(ArenaStates::WAITING())) {
+			$tickTask->resetCountdownTime();
+		}
+
+		if ($oldState->equals(ArenaStates::INGAME()) && $newState->equals(ArenaStates::RESTARTING())) {
+			$tickTask->resetArenaTime();
+		}
+
+		if ($oldState->equals(ArenaStates::RESTARTING()) && $newState->equals(ArenaStates::RESETTING())) {
+			$tickTask->resetRestartingTime();
+		}
 	}
 }
