@@ -85,7 +85,7 @@ final class Arena
 		}
 		$this->mode = $mode;
 		$this->messages = $gamelib->getArenaMessagesClass();
-		$this->lobbySettings = new LobbySettings($gamelib->getWorldManager(), json_decode($dataParser->parse("lobbySettings")));
+		$this->lobbySettings = new LobbySettings($gamelib->getWorldManager(), json_decode($dataParser->parse("lobbySettings"), true));
 		$this->spawns = json_decode($dataParser->parse("spawns"));
 		$this->world = $gamelib->getWorldManager()->getWorldByName($dataParser->parse("worldName"));
 		$gamelib->registerArenaListener($this);

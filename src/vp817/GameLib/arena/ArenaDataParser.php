@@ -64,6 +64,7 @@ final class ArenaDataParser
 		if (!Utils::arrayKeysExist(array_keys($data), $this->imitatedData)) {
 			throw new RuntimeException("Corrupted ArenaData, Expected: " . json_encode($this->imitatedData) . ", got: " . json_encode($data));
 		}
+		var_dump($data);
 		$this->data = $data;
 	}
 
