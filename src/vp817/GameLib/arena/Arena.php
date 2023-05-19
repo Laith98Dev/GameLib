@@ -45,6 +45,8 @@ use vp817\GameLib\arena\states\ArenaStates;
 use vp817\GameLib\event\ArenaStateChangeEvent;
 use vp817\GameLib\GameLib;
 use vp817\GameLib\tasks\ArenaTickTask;
+use vp817\GameLib\utilities\Utils;
+
 use function intval;
 use function json_decode;
 
@@ -87,7 +89,7 @@ final class Arena
 		$this->messages = $gamelib->getArenaMessagesClass();
 		$this->lobbySettings = new LobbySettings($gamelib->getWorldManager(), json_decode($dataParser->parse("lobbySettings"), true));
 		$this->spawns = json_decode($dataParser->parse("spawns"), true);
-		$this->world = $gamelib->getWorldManager()->getWorldByName($dataParser->parse("worldName"));
+		$this->world = Utils::getWorldByName($gamelib->getWorldManager(), $dataParser->parse("worldName"));
 		$gamelib->registerArenaListener($this);
 		$this->arenaTickTask = new ArenaTickTask($this, intval($dataParser->parse("countdownTime")), intval($dataParser->parse("arenaTime")), intval($dataParser->parse("restartingTime")));
 		$gamelib->getScheduler()->scheduleRepeatingTask($this->arenaTickTask, 20);
@@ -120,6 +122,7 @@ final class Arena
 	}
 
 	/**
+	 * @internal
 	 * @return GameLib
 	 */
 	public function getGameLib(): GameLib

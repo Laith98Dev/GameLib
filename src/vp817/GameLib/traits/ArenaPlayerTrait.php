@@ -48,7 +48,7 @@ trait ArenaPlayerTrait
 	public function add(Player $player): ?ArenaPlayer
 	{
 		$bytes = $player->getUniqueId()->getBytes();
-		if ($this->hasPlayer($bytes)) {
+		if ($this->has($bytes)) {
 			return null;
 		}
 
@@ -63,7 +63,7 @@ trait ArenaPlayerTrait
 	 */
 	public function remove(string $bytes): void
 	{
-		if (!$this->hasPlayer($bytes)) {
+		if (!$this->has($bytes)) {
 			return;
 		}
 
@@ -76,7 +76,7 @@ trait ArenaPlayerTrait
 	 */
 	public function get(string $bytes): ?ArenaPlayer
 	{
-		if (!$this->hasPlayer($bytes)) {
+		if (!$this->has($bytes)) {
 			return null;
 		}
 

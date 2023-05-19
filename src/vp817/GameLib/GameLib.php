@@ -313,9 +313,15 @@ final class GameLib
 			foreach ($rows as $arenasData) {
 				$arenaID = $arenasData["arenaID"];
 				$this->arenaExistsInDB($arenaID, function (bool $arenaExists) use ($arenaID, $arenasData, $onSuccess, $onFail): void {
-					if ($arenaExists || $this->getArenasManager()->hasLoadedArena($arenaID)) {
+					if (!$arenaExists) {
 						if (!is_null($onFail)) {
-							$onFail($arenaID, "Arena already exists");
+							$onFail($arenaID, "Arena doesnt exists in db. this shouldnt happen");
+						}
+						return;
+					}
+					if ($this->getArenasManager()->hasLoadedArena($arenaID)) {
+						if (!is_null($onFail)) {
+							$onFail($arenaID, "unable to load an already loaded arena");
 						}
 						return;
 					}

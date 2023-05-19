@@ -36,6 +36,8 @@ use pocketmine\plugin\PluginBase;
 use pocketmine\plugin\ResourceProvider;
 use pocketmine\utils\AssumptionFailedError;
 use pocketmine\utils\Utils as PMUtils;
+use pocketmine\world\World;
+use pocketmine\world\WorldManager;
 use poggit\libasynql\base\DataConnectorImpl;
 use poggit\libasynql\base\SqlThreadPool;
 use poggit\libasynql\ConfigException;
@@ -279,5 +281,21 @@ final class Utils
 			}
 		}
 		return $folder . $path;
+	}
+
+	/**
+	 * @param WorldManager $worldManager
+	 * @param string $worldName
+	 * @return null|World
+	 */
+	public static function getWorldByName(WorldManager $worldManager, string $worldName): ?World
+	{
+		$world = $worldManager->getWorldByName($worldName);
+		if ($world === null || !$worldManager->isWorldLoaded($worldName)) {
+			if ($worldManager->loadWorld($worldName) === false) {
+				$world = null;
+			}
+		}
+		return $world;
 	}
 }

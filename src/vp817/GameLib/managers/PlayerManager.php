@@ -36,4 +36,5 @@ use vp817\GameLib\traits\ArenaPlayerTrait;
 final class PlayerManager
 {
 	use ArenaPlayerTrait;
+
 }
