@@ -65,6 +65,8 @@ class Arena
 	protected ?World $world = null;
 	/** @var array $spawns */
 	protected array $spawns;
+	/** @var string $worldName */
+	protected string $worldName;
 	/** @var ArenaTickTask $arenaTickTask */
 	protected ArenaTickTask $arenaTickTask;
 
@@ -87,7 +89,8 @@ class Arena
 		$this->messages = $gamelib->getArenaMessagesClass();
 		$this->lobbySettings = new LobbySettings($gamelib->getWorldManager(), json_decode($dataParser->parse("lobbySettings"), true));
 		$this->spawns = json_decode($dataParser->parse("spawns"), true);
-		$this->world = Utils::getWorldByName($this->gamelib->getWorldManager(), $this->dataParser->parse("worldName"));
+		$this->worldName = $dataParser->parse("worldName");
+		$this->world = Utils::getWorldByName($this->gamelib->getWorldManager(), $this->worldName);
 		$gamelib->registerArenaListener($this);
 		$this->arenaTickTask = new ArenaTickTask($this, intval($dataParser->parse("countdownTime")), intval($dataParser->parse("arenaTime")), intval($dataParser->parse("restartingTime")));
 		$gamelib->getScheduler()->scheduleRepeatingTask($this->arenaTickTask, 20);
@@ -106,8 +109,12 @@ class Arena
 	 */
 	private function lazyUpdateWorld(): void
 	{
-		if ($this->world === null) {
-			$this->world = Utils::getWorldByName($this->gamelib->getWorldManager(), $this->dataParser->parse("worldName"));
+		$worldManager = $this->gamelib->getWorldManager();
+
+		if (!$worldManager->isWorldLoaded($this->worldName)) {
+			$worldManager->loadWorld($this->worldName);
+
+			$this->world = $worldManager->getWorldByName($this->worldName);
 		}
 	}
 
@@ -214,8 +221,6 @@ class Arena
 	 */
 	public function getLocationOfSpawn(array $spawn): Location
 	{
-		// $this->lazyUpdateWorld();
-
 		$x = $spawn["x"];
 		$y = $spawn["y"];
 		$z = $spawn["z"];
