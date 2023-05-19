@@ -10,9 +10,10 @@
 
 > gamelib is a virion to make pocketmine minigames easier and easily<br/><br/>
 Do you see how people create minigames and you want to create one but you dont know how to? this is the solution<br/><br/>
-if you know ho to make a minigame but you are tired of redoing your work over and over this is the solution<br/><br/>
-are u tired of copy pasting people codes? this is the solution<br/><br/>
-this is the solution to everything related to making a minigame<br/><br/>
+if you know how to make a minigame but you are tired of redoing your work over and over this is the solution<br/><br/>
+are you tired of copy pasting people codes? this is the solution<br/><br/>
+are you having problems skidding? this is the solution<br/><br/>
+this is the solution to everything related to making a minigame on pocketmine<br/><br/>
 
 <br/>
 
