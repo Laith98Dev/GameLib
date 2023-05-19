@@ -57,7 +57,6 @@ use function is_dir;
 use function json_encode;
 use function is_null;
 use function strtolower;
-use function realpath;
 use const DIRECTORY_SEPARATOR;
 
 final class GameLib
@@ -176,7 +175,7 @@ final class GameLib
 	 */
 	public function getResourcesPath(): string
 	{
-		return realpath(__DIR__ . "/../../../resources") . DIRECTORY_SEPARATOR;
+		return __DIR__ . "/../../../resources" . DIRECTORY_SEPARATOR;
 	}
 
 	/**
