@@ -46,13 +46,15 @@ class RestartingState extends ArenaState
 	public function tick(Arena $arena): void
 	{
 		$tickTask = $arena->getTickTask();
-		$tickTask->decrementRestartingTime();
 		$time = $tickTask->getRestartingTime();
 
 		(new ArenaTickEvent($arena, $this, $time))->call();
 
 		if ($time === 0) {
 			$arena->setState(ArenaStates::RESETTING());
+			return;
 		}
+
+		$tickTask->decrementRestartingTime();
 	}
 }

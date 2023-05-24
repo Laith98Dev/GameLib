@@ -113,7 +113,7 @@ class SoloMode extends ArenaMode
 		$bytes = $player->getUniqueId()->getBytes();
 		$arenaMessages = $arena->getMessages();
 
-		if ($this->playerManager->has($bytes)) {
+		if ($this->hasPlayer($bytes)) {
 			$player->sendMessage($arenaMessages->PlayerAlreadyInsideAnArena());
 
 			if (!is_null($onFail)) {
@@ -168,7 +168,7 @@ class SoloMode extends ArenaMode
 		$bytes = $player->getUniqueId()->getBytes();
 		$arenaMessages = $arena->getMessages();
 
-		if (!$this->playerManager->has($bytes)) {
+		if (!$this->hasPlayer($bytes)) {
 			$player->sendMessage($arenaMessages->NotInsideAnArenaToLeave());
 
 			if (!is_null($onFail)) {
@@ -191,17 +191,19 @@ class SoloMode extends ArenaMode
 			$event->call();
 
 			$arenaPlayer = $event->getPlayer();
-			$cells = $arenaPlayer->getCells();
 
-			$player->setAll(true);
-			$this->playerManager->remove($bytes);
+			$arenaPlayer->setAll(true);
 
-			$cells->teleport($arena->getGameLib()->getWorldManager()->getDefaultWorld()->getSpawnLocation());
-			$cells->sendMessage(str_replace(["%name%", "%current%", "%max%"], [$arenaPlayer->getDisplayName(), $this->getPlayerCount(), $this->getMaxPlayers()], $arenaMessages->SucessfullyLeftArena()));
+			$this->playerManager->remove($bytes, function () use ($arena, $arenaMessages, $arenaPlayer, $onSuccess): void {
+				$cells = $arenaPlayer->getCells();
 
-			if (!is_null($onSuccess)) {
-				$onSuccess();
-			}
+				$cells->teleport($arena->getGameLib()->getWorldManager()->getDefaultWorld()->getSpawnLocation());
+				$cells->sendMessage(str_replace(["%name%", "%current%", "%max%"], [$arenaPlayer->getDisplayName(), $this->getPlayerCount(), $this->getMaxPlayers()], $arenaMessages->SucessfullyLeftArena()));
+	
+				if (!is_null($onSuccess)) {
+					$onSuccess();
+				}
+			});
 		});
 	}
 

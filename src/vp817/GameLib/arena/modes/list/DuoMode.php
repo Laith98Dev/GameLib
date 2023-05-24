@@ -36,8 +36,13 @@ use pocketmine\player\Player;
 use TypeError;
 use vp817\GameLib\arena\Arena;
 use vp817\GameLib\arena\modes\ArenaMode;
+use vp817\GameLib\arena\states\ArenaStates;
+use vp817\GameLib\event\PlayerJoinArenaEvent;
+use vp817\GameLib\event\PlayerQuitArenaEvent;
 use vp817\GameLib\managers\TeamManager;
 use vp817\GameLib\player\ArenaPlayer;
+use vp817\GameLib\util\Team;
+
 use function is_array;
 use function is_object;
 
@@ -81,7 +86,7 @@ class DuoMode extends ArenaMode
 	 */
 	public function hasPlayer(string $bytes): bool
 	{
-		return false; // TODO
+		return $this->teamManager->isPlayerInATeamFromBytes($bytes);
 	}
 
 	/**
@@ -89,7 +94,7 @@ class DuoMode extends ArenaMode
 	 */
 	public function getPlayers(): array
 	{
-		return []; // TODO
+		return $this->teamManager->getTeamsPlayers();
 	}
 
 	/**
@@ -117,6 +122,50 @@ class DuoMode extends ArenaMode
 	 */
 	public function onJoin(Arena $arena, Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
+		$bytes = $player->getUniqueId()->getBytes();
+		$arenaMessages = $arena->getMessages();
+
+		if ($this->hasPlayer($bytes)) {
+			$player->sendMessage($arenaMessages->PlayerAlreadyInsideAnArena());
+
+			if (!is_null($onFail)) {
+				$onFail();
+			}
+			return;
+		}
+		if ($this->getPlayerCount() > $this->getMaxPlayers()) {
+			$player->sendMessage($arenaMessages->ArenaIsFull());
+
+			if (!is_null($onFail)) {
+				$onFail();
+			}
+			return;
+		}
+		if ($arena->getState()->equals(ArenaStates::INGAME())) {
+			$player->sendMessage($arenaMessages->ArenaIsAlreadyRunning());
+
+			if (!is_null($onFail)) {
+				$onFail();
+			}
+			return;
+		}
+
+		$this->teamManager->addPlayerToRandomTeam($player, function (ArenaPlayer $player, Team $team) use ($arena, $arenaMessages, $bytes, $onSuccess): void {
+			$event = new PlayerJoinArenaEvent($player, $arena);
+			$event->call();
+
+			$arenaPlayer = $event->getPlayer();
+			$cells = $arenaPlayer->getCells();
+
+			$arenaPlayer->setAll();
+
+			$cells->teleport($arena->getLobbySettings()->getLocation());
+			$cells->sendMessage(str_replace(["%name%", "%current%", "%max%"], [$arenaPlayer->getDisplayName(), $this->getPlayerCount(), $this->getMaxPlayers()], $arenaMessages->SucessfullyJoinedArena()));
+
+			if (!is_null($onSuccess)) {
+				$onSuccess();
+			}
+		});
 	}
 
 	/**
@@ -127,6 +176,48 @@ class DuoMode extends ArenaMode
 	 */
 	public function onQuit(Arena $arena, Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
+		$bytes = $player->getUniqueId()->getBytes();
+		$arenaMessages = $arena->getMessages();
+
+		if (!$this->hasPlayer($bytes)) {
+			$player->sendMessage($arenaMessages->NotInsideAnArenaToLeave());
+
+			if (!is_null($onFail)) {
+				$onFail();
+			}
+			return;
+		}
+
+		if ($arena->getState()->equals(ArenaStates::INGAME()) || $arena->getState()->equals(ArenaStates::RESTARTING())) {
+			$player->sendMessage($arenaMessages->CantLeaveDueToState());
+
+			if (!is_null($onFail)) {
+				$onFail();
+			}
+			return;
+		}
+
+		$this->teamManager->getTeamOfPlayerFromBytes($bytes, function (Team $team) use ($arena, $arenaMessages, $bytes, $onSuccess): void {
+			$team->getPlayer($bytes, function (ArenaPlayer $player) use ($team, $arena, $arenaMessages, $bytes, $onSuccess): void {
+				$event = new PlayerQuitArenaEvent($player, $arena);
+				$event->call();
+
+				$arenaPlayer = $event->getPlayer();
+
+				$arenaPlayer->setAll(true);
+
+				$team->removePlayer($bytes, function () use ($arena, $arenaMessages, $arenaPlayer, $onSuccess): void {
+					$cells = $arenaPlayer->getCells();
+
+					$cells->teleport($arena->getGameLib()->getWorldManager()->getDefaultWorld()->getSpawnLocation());
+					$cells->sendMessage(str_replace(["%name%", "%current%", "%max%"], [$arenaPlayer->getDisplayName(), $this->getPlayerCount(), $this->getMaxPlayers()], $arenaMessages->SucessfullyLeftArena()));
+	
+					if (!is_null($onSuccess)) {
+						$onSuccess();
+					}
+				});
+			});
+		});
 	}
 
 
@@ -137,7 +228,13 @@ class DuoMode extends ArenaMode
 	 */
 	public function setupSpawns(Arena $arena, array $spawns): void
 	{
-		
+		$players = $this->getPlayers();
+		foreach ($players as $key => $player) {
+			$this->teamManager->getTeamOfPlayerFromBytes($player->getCells()->getUniqueId()->getBytes(), function (Team $team) use ($arena, $spawns, $player): void {
+				// TODO: EVENT?
+				$player->getCells()->teleport($arena->getLocationOfSpawn($spawns[strtolower($team->getName())]));
+			});
+		}
 	}
 
 	/**

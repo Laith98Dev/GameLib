@@ -46,7 +46,6 @@ class InGameState extends ArenaState
 	public function tick(Arena $arena): void
 	{
 		$tickTask = $arena->getTickTask();
-		$tickTask->decrementArenaTime();
 		$time = $tickTask->getArenaTime();
 
 		(new ArenaTickEvent($arena, $this, $time))->call();
@@ -54,6 +53,9 @@ class InGameState extends ArenaState
 		if ($time === 0) {
 			$arena->getMode()->endGame($arena);
 			$arena->setState(ArenaStates::RESTARTING());
+			return;
 		}
+
+		$tickTask->decrementArenaTime();
 	}
 }

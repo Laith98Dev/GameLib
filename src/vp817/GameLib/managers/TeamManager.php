@@ -31,9 +31,12 @@ declare(strict_types=1);
 
 namespace vp817\GameLib\managers;
 
+use Closure;
 use pocketmine\player\Player;
 use vp817\GameLib\arena\Arena;
+use vp817\GameLib\player\ArenaPlayer;
 use vp817\GameLib\util\Team;
+use function is_null;
 use function strtolower;
 use function array_key_exists;
 use function array_filter;
@@ -57,69 +60,75 @@ final class TeamManager
 	}
 
 	/**
-	 * @param string $name
-	 * @param string $color
-	 */
-	public function createTeam(string $name, string $color): void
-	{
-		$name = strtolower($name);
-		if ($this->hasTeam($name)) {
-			return;
-		}
-
-		$this->list[strtolower($name)] = new Team($name, $color);
-	}
-
-	/**
 	 * @param Team $team
+	 * @param null|Closure $onSuccess
+	 * @param null|Closure $onFail
 	 * @return void
 	 */
-	public function addTeam(Team $team): void
+	public function addTeam(Team $team, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
 		$name = strtolower($team->getName());
 		if ($this->hasTeam($name)) {
+			if (!is_null($onFail)) {
+				$onFail();
+			}
 			return;
 		}
 
 		$this->list[strtolower($name)] = $team;
+
+		if (!is_null($onSuccess)) {
+			$onSuccess();
+		}
 	}
 
 	/**
 	 * @param string $name
+	 * @param null|Closure $onSuccess
+	 * @param null|Closure $onFail
 	 * @return void
 	 */
-	public function removeTeam(string $name): void
+	public function removeTeam(string $name, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
 		if (!$this->hasTeam($name)) {
+			if (!is_null($onFail)) {
+				$onFail();
+			}
 			return;
 		}
 
 		unset($this->list[strtolower($name)]);
+
+		if (!is_null($onSuccess)) {
+			$onSuccess();
+		}
 	}
 
 	/**
 	 * @param string $name
-	 * @return null|Team
+	 * @param Closure $onSuccess
+	 * @param null|Closure $onFail
+	 * @return void
 	 */
-	public function getTeam(string $name): ?Team
+	public function getTeam(string $name, Closure $onSuccess, ?Closure $onFail = null): void
 	{
 		if (!$this->hasTeam($name)) {
-			return null;
+			if (!is_null($onFail)) {
+				$onFail();
+			}
+			return;
 		}
 
-		return $this->list[strtolower($name)];
+		$onSuccess($this->list[strtolower($name)]);
 	}
 
 	/**
 	 * @param string $name
-	 * @return null|PlayerTeam
+	 * @return bool
 	 */
 	public function hasTeam(string $name): bool
 	{
-		if (!array_key_exists(strtolower($name), $this->list)) {
-			return false;
-		}
-		return true;
+		return array_key_exists(strtolower($name), $this->list);
 	}
 
 	/**
@@ -131,25 +140,48 @@ final class TeamManager
 	}
 
 	/**
-	 * @param Player $player
-	 * @param string $teamName
-	 * @return void
+	 * @return ArenaPlayer[]
 	 */
-	public function addPlayerToTeam(Player $player, string $teamName): void
+	public function getTeamsPlayers(): array
 	{
-		if ($this->isPlayerInATeam($player)) {
-			return;
+		$players = [];
+
+		foreach ($this->getTeams() as $name => $team) {
+			if (count($team->getPlayers()) < 1) continue;
+
+			foreach ($team->getPlayers() as $bytes => $player) {
+				$players[] = $player;
+			}
 		}
 
-		$this->getTeam($teamName)->addPlayer($player);
+		return $players;
 	}
 
 	/**
 	 * @param Player $player
-	 * @param bool $sendNoTeamsMsg
+	 * @param string $teamName
+	 * @param null|Closure $onSuccess
+	 * @param null|Closure $onFail
 	 * @return void
 	 */
-	public function addPlayerToRandomTeam(Player $player, bool $sendNoTeamsMsg = true): void
+	public function addPlayerToTeam(Player $player, string $teamName, ?Closure $onSuccess = null, ?Closure $onFail = null): void
+	{
+		if ($this->isPlayerInATeamFromBytes($player->getUniqueId()->getBytes())) {
+			return;
+		}
+
+		$this->getTeam($teamName, function (Team $team) use ($player, $onSuccess, $onFail): void {
+			$team->addPlayer($player, $onSuccess, $onFail);
+		}, $onFail);
+	}
+
+	/**
+	 * @param Player $player
+	 * @param null|Closure $onSuccess
+	 * @param null|Closure $onFail
+	 * @return void
+	 */
+	public function addPlayerToRandomTeam(Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
 		$maxPlayersPerTeam = $this->arena->getMode()->getMaxPlayersPerTeam();
 		$availableTeams = array_filter($this->list, function ($value) use ($maxPlayersPerTeam) {
@@ -162,40 +194,59 @@ final class TeamManager
 		} else if ($availableTeamsCount > 1) {
 			$team = $availableTeams[array_rand($availableTeams)];
 		} else {
-			if ($sendNoTeamsMsg) {
-				$player->sendMessage($this->arena->getMessages()->NoTeamsAvailable());
+			if (!is_null($onFail)) {
+				$onFail($this->arena->getMessages()->NoTeamsAvailable());
 			}
 			return;
 		}
 
-		$team->addPlayer($player);
+		$team->addPlayer($player, function (ArenaPlayer $player) use ($onSuccess, $team): void {
+			if (!is_null($onSuccess)) {
+				$onSuccess($player, $team);
+			}
+		});
 	}
 
 	/**
-	 * @param Player $player
+	 * @param string $bytes
 	 * @return bool
 	 */
-	public function isPlayerInATeam(Player $player): bool
+	public function isPlayerInATeamFromBytes(string $bytes): bool
 	{
+		$retVal = false;
+
 		foreach ($this->list as $teamName => $team) {
-			if (!$team->hasPlayer($player->getUniqueId()->getBytes())) {
-				return false;
-			}
+			if (!$team->hasPlayer($bytes)) continue;
+
+			$retVal = true;
 		}
-		return true;
+
+		return $retVal;
 	}
 
 	/**
-	 * @param Player $player
-	 * @return null|Team
+	 * @param string $bytes
+	 * @param Closure $onSuccess
+	 * @param null|Closure $onFail
+	 * @return void
 	 */
-	public function getTeamOf(Player $player): ?Team
+	public function getTeamOfPlayerFromBytes(string $bytes, Closure $onSuccess, ?Closure $onFail = null): void
 	{
+		$retVal = null;
+
 		foreach ($this->list as $teamName => $team) {
-			if ($team->hasPlayer($player->getUniqueId()->getBytes())) {
-				return $team;
-			}
+			if (!$team->hasPlayer($bytes)) continue;
+			
+			$retVal = $team;
 		}
-		return null;
+
+		if (is_null($retVal)) {
+			if (!is_null($onFail)) {
+				$onFail();
+			}
+			return;
+		}
+
+		$onSuccess($retVal);
 	}
 }
