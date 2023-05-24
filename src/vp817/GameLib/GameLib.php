@@ -60,6 +60,7 @@ use function is_dir;
 use function json_encode;
 use function is_null;
 use function strtolower;
+use function trim;
 use const DIRECTORY_SEPARATOR;
 
 final class GameLib
@@ -301,6 +302,14 @@ final class GameLib
 	public function getSetupManager(): SetupManager
 	{
 		return $this->setupManager;
+	}
+
+	/**
+	 * @return WaterdogManager
+	 */
+	public function getWaterdogManager(): WaterdogManager
+	{
+		return $this->waterdogManager;
 	}
 
 	/**
