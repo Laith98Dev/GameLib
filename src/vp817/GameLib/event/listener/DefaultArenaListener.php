@@ -34,7 +34,6 @@ namespace vp817\GameLib\event\listener;
 use pocketmine\event\Listener;
 use pocketmine\plugin\Plugin;
 use vp817\GameLib\arena\Arena;
-use vp817\GameLib\arena\states\ArenaStates;
 use vp817\GameLib\event\ArenaStateChangeEvent;
 use vp817\GameLib\GameLib;
 
