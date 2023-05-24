@@ -59,6 +59,7 @@ use function mkdir;
 use function is_dir;
 use function json_encode;
 use function is_null;
+use function strlen;
 use function strtolower;
 use function trim;
 use const DIRECTORY_SEPARATOR;

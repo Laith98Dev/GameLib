@@ -38,6 +38,8 @@ use vp817\GameLib\arena\Arena;
 use vp817\GameLib\arena\modes\ArenaMode;
 use vp817\GameLib\managers\TeamManager;
 use vp817\GameLib\player\ArenaPlayer;
+use function is_array;
+use function is_object;
 
 class DuoMode extends ArenaMode
 {
