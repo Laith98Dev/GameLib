@@ -42,7 +42,6 @@ use vp817\GameLib\event\PlayerQuitArenaEvent;
 use vp817\GameLib\managers\TeamManager;
 use vp817\GameLib\player\ArenaPlayer;
 use vp817\GameLib\util\Team;
-
 use function is_array;
 use function is_object;
 
