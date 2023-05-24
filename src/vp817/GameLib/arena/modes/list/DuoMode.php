@@ -44,6 +44,8 @@ use vp817\GameLib\player\ArenaPlayer;
 use vp817\GameLib\util\Team;
 use function is_array;
 use function is_object;
+use function str_replace;
+use function strtolower;
 
 class DuoMode extends ArenaMode
 {

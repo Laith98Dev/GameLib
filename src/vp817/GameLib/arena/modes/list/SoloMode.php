@@ -42,6 +42,7 @@ use vp817\GameLib\event\PlayerQuitArenaEvent;
 use vp817\GameLib\managers\PlayerManager;
 use vp817\GameLib\player\ArenaPlayer;
 use function is_null;
+use function str_replace;
 
 class SoloMode extends ArenaMode
 {
