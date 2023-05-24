@@ -42,9 +42,9 @@ final class SetupPlayer
 
 	/**
 	 * @param Player $player
-	 * @param string $setuppingArenaID
+	 * @param string $setupingArenaID
 	 */
-	public function __construct(private Player $player, private string $setuppingArenaID)
+	public function __construct(private Player $player, private string $setupingArenaID)
 	{
 		$this->setupSettings = new SetupSettings();
 	}
@@ -60,9 +60,9 @@ final class SetupPlayer
 	/**
 	 * @return string
 	 */
-	public function getSetuppingArenaID(): string
+	public function getSetupingArenaID(): string
 	{
-		return $this->setuppingArenaID;
+		return $this->setupingArenaID;
 	}
 
 	/**

@@ -566,7 +566,7 @@ final class GameLib
 
 		$setupManager->get($player->getUniqueId()->getBytes(), function (SetupPlayer $setupPlayer) use ($setupManager, $onSuccess, $onFail): void {
 			$setupSettings = $setupPlayer->getSetupSettings();
-			$arenaID = $setupPlayer->getSetuppingArenaID();
+			$arenaID = $setupPlayer->getSetupingArenaID();
 
 			$fail = function (SqlError $error) use ($onFail): void {
 				if (!is_null($onFail)) {
