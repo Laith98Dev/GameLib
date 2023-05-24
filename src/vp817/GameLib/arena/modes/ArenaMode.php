@@ -63,6 +63,14 @@ abstract class ArenaMode
 	}
 
 	/**
+	 * @return bool
+	 */
+	public function isTeamMode(): bool
+	{
+		return $this instanceof TeamModeAbstract;
+	}
+
+	/**
 	 * @param string $bytes
 	 * @return bool
 	 */

@@ -31,7 +31,9 @@ declare(strict_types=1);
 
 namespace vp817\GameLib\arena\modes\list;
 
-class TrioMode extends DuoMode
+use vp817\GameLib\arena\modes\TeamModeAbstract;
+
+class TrioMode extends TeamModeAbstract
 {
 
 	/**

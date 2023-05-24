@@ -80,9 +80,9 @@ class Arena
 		$this->state = ArenaStates::WAITING();
 		$mode = ArenaModes::fromString($dataParser->parse("mode"));
 		$arenaData = json_decode($dataParser->parse("arenaData"), true);
-		if ($mode->equals(ArenaModes::SOLO())) {
+		if (!$mode->isTeamMode()) {
 			$mode->init(intval($arenaData["slots"]));
-		} else if ($mode->equals(ArenaModes::DUO())) {
+		} else {
 			$mode->init(json_decode($arenaData["teams"], true), $this);
 		}
 		$this->mode = $mode;
