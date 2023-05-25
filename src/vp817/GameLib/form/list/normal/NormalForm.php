@@ -71,8 +71,6 @@ final class NormalForm extends FormInterface
 		}
 		$this->data["buttons"][] = $button;
 
-		if (!is_null($onUse)) {
-			$this->onUseList[] = $onUse;
-		}
+		if (!is_null($onUse)) $this->onUseList[] = $onUse;
 	}
 }

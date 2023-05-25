@@ -130,7 +130,7 @@ final class GameLib
 	 */
 	public static function init(PluginBase $plugin, array $sqlDatabase, array $waterdogData = ["enabled" => false]): GameLib
 	{
-		if (self::$plugin !== null) {
+		if (!is_null(self::$plugin)) {
 			throw new RuntimeException("GameLib is already initialized for this plugin");
 		}
 
@@ -325,11 +325,12 @@ final class GameLib
 	/**
 	 * @param Arena $arena
 	 * @return void
-	 * @throws RuntimeException
+	 * @throws TypeError
 	 */
 	public function registerArenaListener(Arena $arena): void
 	{
 		$class = $this->getArenaListenerClass();
+
 		if (strlen(trim($class)) < 1) {
 			return;
 		}
@@ -341,12 +342,12 @@ final class GameLib
 			$listener = null;
 		}
 
-		if ($listener === null) {
+		if (is_null($listener)) {
 			return;
 		}
 
 		if (!$listener instanceof DefaultArenaListener) {
-			throw new RuntimeException("The listener that you gave is not an instance of GameLib/DefaultArenaListener.php");
+			throw new TypeError("The listener that you gave is not an instance of GameLib/DefaultArenaListener.php");
 		}
 
 		self::$plugin->getServer()->getPluginManager()->registerEvents($listener, self::$plugin);
@@ -361,9 +362,7 @@ final class GameLib
 	{
 		self::$database->executeSelect(SqlQueries::GET_ALL_ARENAS, [], function($rows) use ($onSuccess, $onFail): void {
 			if (count($rows) < 1) {
-				if (!is_null($onFail)) {
-					$onFail("None", "no arenas to be loaded");
-				}
+				if (!is_null($onFail)) $onFail("None", "no arenas to be loaded");
 				return;
 			}
 
@@ -371,22 +370,16 @@ final class GameLib
 				$arenaID = $arenasData["arenaID"];
 				$this->arenaExistsInDB($arenaID, function(bool $arenaExists) use ($arenaID, $arenasData, $onSuccess, $onFail): void {
 					if (!$arenaExists) {
-						if (!is_null($onFail)) {
-							$onFail($arenaID, "Arena doesnt exists in db. this shouldnt happen");
-						}
+						if (!is_null($onFail)) $onFail($arenaID, "Arena doesnt exists in db. this shouldnt happen");
 						return;
 					}
 					if ($this->getArenasManager()->hasLoadedArena($arenaID)) {
-						if (!is_null($onFail)) {
-							$onFail($arenaID, "unable to load an already loaded arena");
-						}
+						if (!is_null($onFail)) $onFail($arenaID, "unable to load an already loaded arena");
 						return;
 					}
 
 					$this->getArenasManager()->signAsLoaded($arenaID, new Arena($this, new ArenaDataParser($arenasData)), function($arena) use ($onSuccess): void {
-						if (!is_null($onSuccess)) {
-							$onSuccess($arena);
-						}
+						if (!is_null($onSuccess)) $onSuccess($arena);
 					});
 				});
 			}
@@ -403,17 +396,13 @@ final class GameLib
 	{
 		$this->arenaExistsInDB($arenaID, function($arenaExists) use ($arenaID, $onSuccess, $onFail): void {
 			if (!$arenaExists) {
-				if (!is_null($onFail)) {
-					$onFail();
-				}
+				if (!is_null($onFail)) $onFail();
 				return;
 			}
 
 			self::$database->executeSelect(SqlQueries::GET_ARENA_DATA, ["arenaID" => $arenaID], function($rows) use ($onSuccess, $onFail): void {
 				if (count($rows) < 1) {
-					if (!is_null($onFail)) {
-						$onFail();
-					}
+					if (!is_null($onFail)) $onFail();
 					return;
 				}
 
@@ -426,9 +415,7 @@ final class GameLib
 					if (!array_key_exists("extraData", $arenaData)) $arenaData["extraData"] = json_encode([]);
 
 					$this->getArenasManager()->signAsLoaded($arenaID, new Arena($this, new ArenaDataParser($arenaData)), function($arena) use ($onSuccess): void {
-						if (!is_null($onSuccess)) {
-							$onSuccess($arena);
-						}
+						if (!is_null($onSuccess)) $onSuccess($arena);
 					});
 				}
 			});
@@ -450,9 +437,7 @@ final class GameLib
 	{
 		$this->arenaExistsInDB($arenaID, function(bool $arenaExists) use ($arenaID, $worldName, $mode, $countdownTime, $arenaTime, $restartingTime, $onSuccess, $onFail): void {
 			if ($arenaExists) {
-				if (!is_null($onFail)) {
-					$onFail($arenaID, "Arena already exists");
-				}
+				if (!is_null($onFail)) $onFail($arenaID, "Arena already exists");
 				return;
 			}
 
@@ -467,9 +452,7 @@ final class GameLib
 
 			self::$database->executeInsert(SqlQueries::ADD_ARENA, $data);
 
-			if (!is_null($onSuccess)) {
-				$onSuccess($data);
-			}
+			if (!is_null($onSuccess)) $onSuccess($data);
 		});
 	}
 
@@ -484,10 +467,7 @@ final class GameLib
 	{
 		$this->arenaExistsInDB($arenaID, function($arenaExists) use ($arenaID, $onSuccess, $onFail, $alertConsole): void {
 			if (!$arenaExists) {
-				$reason = "Arena does not exists";
-				if (!is_null($onFail)) {
-					$onFail($arenaID, $reason);
-				}
+				if (!is_null($onFail)) $onFail($arenaID, "Arena does not exists");
 				return;
 			}
 
@@ -496,33 +476,30 @@ final class GameLib
 			self::$database->executeChange(SqlQueries::REMOVE_ARENA, ["arenaID" => $arenaID], function($rows) use ($arenasManager, $arenaID, $onSuccess, $alertConsole): void {
 				if ($arenasManager->hasLoadedArena($arenaID)) {
 					$arenasManager->unsignFromBeingLoaded($arenaID, function() use ($arenaID, $onSuccess): void {
-						if (!is_null($onSuccess)) {
-							$onSuccess($arenaID);
-						}
+						if (!is_null($onSuccess)) $onSuccess($arenaID);
 					});
 				}
 
-				if ($alertConsole) {
-					self::$plugin->getLogger()->alert("Arena: $arenaID has been successfully removed");
-				}
+				if ($alertConsole) self::$plugin->getLogger()->alert("Arena: $arenaID has been successfully removed");
 			});
 		});
 	}
 
 	/**
 	 * @param string $arenaID
+	 * @param Closure $resultClosure
 	 * @return void
 	 */
-	public function arenaExistsInDB(string $arenaID, Closure $valueCallback): void
+	public function arenaExistsInDB(string $arenaID, Closure $resultClosure): void
 	{
-		self::$database->executeSelect(SqlQueries::GET_ALL_ARENAS, [], function($rows) use ($valueCallback, $arenaID): void {
+		self::$database->executeSelect(SqlQueries::GET_ALL_ARENAS, [], function($rows) use ($resultClosure, $arenaID): void {
 			foreach ($rows as $arenasData) {
 				if (strtolower($arenasData["arenaID"]) === strtolower($arenaID)) {
-					$valueCallback(true);
+					$resultClosure(true);
 					return;
 				}
 			}
-			$valueCallback(false);
+			$resultClosure(false);
 		});
 	}
 
@@ -537,27 +514,19 @@ final class GameLib
 	{
 		$this->arenaExistsInDB($arenaID, function($arenaExists) use ($player, $arenaID, $onSuccess, $onFail): void {
 			if (!$arenaExists) {
-				if (!is_null($onFail)) {
-					$onFail($arenaID, "arena doesnt exists in db");
-				}
+				if (!is_null($onFail)) $onFail($arenaID, "arena doesnt exists in db");
 				return;
 			}
 
 			if ($this->getArenasManager()->hasLoadedArena($arenaID)) {
-				if (!is_null($onFail)) {
-					$onFail($arenaID, "unable to add player to setup a loaded arena");
-				}
+				if (!is_null($onFail)) $onFail($arenaID, "unable to add player to setup a loaded arena");
 				return;
 			}
 
 			$this->getSetupManager()->add($player, $arenaID, function(SetupPlayer $player) use ($onSuccess): void {
-				if (!is_null($onSuccess)) {
-					$onSuccess($player);
-				}
+				if (!is_null($onSuccess)) $onSuccess($player);
 			}, function() use ($arenaID, $onFail): void {
-				if (!is_null($onFail)) {
-					$onFail($arenaID, "You are already inside the setup");
-				}
+				if (!is_null($onFail)) $onFail($arenaID, "You are already inside the setup");
 			});
 		});
 	}
@@ -572,9 +541,7 @@ final class GameLib
 	{
 		$setupManager = $this->getSetupManager();
 		if (!$setupManager->has($player->getUniqueId()->getBytes())) {
-			if (!is_null($onFail)) {
-				$onFail("The player is not inside the setup");
-			}
+			if (!is_null($onFail)) $onFail("The player is not inside the setup");
 			return;
 		}
 
@@ -583,9 +550,7 @@ final class GameLib
 			$arenaID = $setupPlayer->getSetupingArenaID();
 
 			$fail = function(SqlError $error) use ($onFail): void {
-				if (!is_null($onFail)) {
-					$onFail($error->getMessage());
-				}
+				if (!is_null($onFail)) $onFail($error->getMessage());
 			};
 
 			self::$database->executeChange(SqlQueries::UPDATE_ARENA_SPAWNS, ["arenaID" => $arenaID, "spawns" => json_encode($setupSettings->getSpawns())], null, $fail);
@@ -599,13 +564,9 @@ final class GameLib
 			$setupSettings->clear();
 
 			$this->loadArena($arenaID, function(Arena $arena) use ($onSuccess): void {
-				if (!is_null($onSuccess)) {
-					$onSuccess($arena);
-				}
+				if (!is_null($onSuccess)) $onSuccess($arena);
 			}, function() use ($onFail): void {
-				if (!is_null($onFail)) {
-					$onFail("unable to load arena");
-				}
+				if (!is_null($onFail)) $onFail("unable to load arena");
 			});
 
 			$setupManager->remove($setupPlayer->getCells());
@@ -651,13 +612,12 @@ final class GameLib
 			$retVal = $arena;
 		}
 
-		if (!is_null($retVal)) {
-			$onSuccess($arena);
-		} else {
-			if (!is_null($onFail)) {
-				$onFail();
-			}
+		if (is_null($retVal)) {
+			if (!is_null($onFail)) $onFail();
+			return;
 		}
+
+		$onSuccess($arena);
 	}
 
 	/**
@@ -671,9 +631,7 @@ final class GameLib
 	{
 		$this->getArenasManager()->getLoadedArena($arenaID, function(Arena $arena) use ($player, $onSuccess): void {
 			$arena->join($player, function() use ($onSuccess, $arena): void {
-				if (!is_null($onSuccess)) {
-					$onSuccess($arena);
-				}
+				if (!is_null($onSuccess)) $onSuccess($arena);
 			});
 		}, $onFail);
 	}
@@ -691,9 +649,7 @@ final class GameLib
 		$arenaMessages = $this->getArenaMessagesClass();
 
 		if (empty($allArenas)) {
-			if (!is_null($onFail)) {
-				$onFail($arenaMessages->NoArenasFound());
-			}
+			if (!is_null($onFail)) $onFail($arenaMessages->NoArenasFound());
 			return;
 		}
 
@@ -702,9 +658,7 @@ final class GameLib
 			$mode = $arena->getMode();
 
 			if (array_key_exists($player->getUniqueId()->getBytes(), $mode->getPlayers())) {
-				if (!is_null($onFail)) {
-					$onFail($arenaMessages->PlayerAlreadyInsideAnArena());
-				}
+				if (!is_null($onFail)) $onFail($arenaMessages->PlayerAlreadyInsideAnArena());
 				return;
 			}
 
@@ -721,9 +675,7 @@ final class GameLib
 
 		$plannedArena = $openedArenas[array_key_last($openedArenas)];
 		if (empty($openedArenas) || in_array($plannedArena, $closedArenas, true)) {
-			if (!is_null($onFail)) {
-				$onFail($arenaMessages->NoAvailableArenasFound());
-			}
+			if (!is_null($onFail)) $onFail($arenaMessages->NoAvailableArenasFound());
 			return;
 		}
 
@@ -744,9 +696,7 @@ final class GameLib
 
 		$plannedArena->sendPlayerToArena($player);
 
-		if (!is_null($onSuccess)) {
-			$onSuccess($plannedArena);
-		}
+		if (!is_null($onSuccess)) $onSuccess($plannedArena);
 	}
 
 	/**
@@ -757,19 +707,10 @@ final class GameLib
 	 */
 	public function leaveArena(Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
-		$arenasManager = $this->getArenasManager();
-		foreach ($arenasManager->getAll() as $arenaID => $value) {
-			if ($value->getMode()->hasPlayer($player->getUniqueId()->getBytes())) {
-				$value->quit($player, function() use ($onSuccess, $arenaID): void {
-					if (!is_null($onSuccess)) {
-						$onSuccess($arenaID);
-					}
-				});
-				break;
-			}
-		}
-		if (!is_null($onFail)) {
-			$onFail();
-		}
+		$this->getPlayerArena($player, function(Arena $arena) use ($player, $onSuccess): void {
+			$arena->quit($player, function() use ($onSuccess, $arena): void {
+				if (!is_null($onSuccess)) $onSuccess($arena->getID());
+			});
+		}, $onFail);
 	}
 }

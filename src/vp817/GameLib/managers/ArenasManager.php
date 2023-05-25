@@ -52,16 +52,12 @@ final class ArenasManager
 	public function signAsLoaded(string $arenaID, Arena $arena, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
 		if ($this->hasLoadedArena($arenaID)) {
-			if (!is_null($onFail)) {
-				$onFail($arenaID);
-			}
+			if (!is_null($onFail)) $onFail($arenaID);
 			return;
 		}
 
 		$this->loadedArenas[$arenaID] = $arena;
-		if (!is_null($onSuccess)) {
-			$onSuccess($arena);
-		}
+		if (!is_null($onSuccess)) $onSuccess($arena);
 	}
 
 	/**
@@ -73,16 +69,12 @@ final class ArenasManager
 	public function unsignFromBeingLoaded(string $arenaID, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
 		if (!$this->hasLoadedArena($arenaID)) {
-			if (!is_null($onFail)) {
-				$onFail($arenaID);
-			}
+			if (!is_null($onFail)) $onFail($arenaID);
 			return;
 		}
 
 		unset($this->loadedArenas[$arenaID]);
-		if (!is_null($onSuccess)) {
-			$onSuccess();
-		}
+		if (!is_null($onSuccess)) $onSuccess();
 	}
 
 	/**
@@ -94,11 +86,10 @@ final class ArenasManager
 	public function getLoadedArena(string $arenaID, Closure $onSuccess, ?Closure $onFail = null): void
 	{
 		if (!$this->hasLoadedArena($arenaID)) {
-			if (!is_null($onFail)) {
-				$onFail($arenaID);
-			}
+			if (!is_null($onFail)) $onFail($arenaID);
 			return;
 		}
+
 		$onSuccess($this->loadedArenas[$arenaID]);
 	}
 

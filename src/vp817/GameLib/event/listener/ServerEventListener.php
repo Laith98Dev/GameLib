@@ -33,7 +33,6 @@ namespace vp817\GameLib\event\listener;
 
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerQuitEvent;
-use vp817\GameLib\arena\Arena;
 use vp817\GameLib\event\PlayerQuitFromServerEvent;
 use vp817\GameLib\GameLib;
 
@@ -69,8 +68,6 @@ class ServerEventListener implements Listener
 
 		$event->setQuitMessage($quitEvent->getGlobalMessage());
 
-		$this->gamelib->getPlayerArena($player, function(Arena $arena) use ($player): void {
-			$arena->quit($player);
-		});
+		$this->gamelib->leaveArena($player);
 	}
 }

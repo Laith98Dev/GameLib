@@ -53,17 +53,13 @@ final class SetupManager
 	{
 		$bytes = $player->getUniqueId()->getBytes();
 		if ($this->has($bytes)) {
-			if (!is_null($onFail)) {
-				$onFail();
-			}
+			if (!is_null($onFail)) $onFail();
 			return;
 		}
 
 		$setupPlayer = new SetupPlayer($player, $arenaID);
 		$this->list[$bytes] = $setupPlayer;
-		if (!is_null($onSuccess)) {
-			$onSuccess($setupPlayer);
-		}
+		if (!is_null($onSuccess)) $onSuccess($setupPlayer);
 	}
 
 	/**
@@ -76,19 +72,16 @@ final class SetupManager
 	{
 		$bytes = $player->getUniqueId()->getBytes();
 		if (!$this->has($bytes)) {
-			if (!is_null($onFail)) {
-				$onFail();
-			}
+			if (!is_null($onFail)) $onFail();
 			return;
 		}
 
 		unset($this->list[$bytes]);
-		if (!is_null($onSuccess)) {
-			$onSuccess();
-		}
+		if (!is_null($onSuccess)) $onSuccess();
 	}
 
 	/**
+	 * @param string $bytes
 	 * @param Closure $onSuccess
 	 * @param null|Closure $onFail
 	 * @return void
@@ -96,9 +89,7 @@ final class SetupManager
 	public function get(string $bytes, Closure $onSuccess, ?Closure $onFail = null): void
 	{
 		if (!$this->has($bytes)) {
-			if (!is_null($onFail)) {
-				$onFail();
-			}
+			if (!is_null($onFail)) $onFail();
 			return;
 		}
 

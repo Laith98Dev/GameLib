@@ -69,17 +69,13 @@ final class TeamManager
 	{
 		$name = strtolower($team->getName());
 		if ($this->hasTeam($name)) {
-			if (!is_null($onFail)) {
-				$onFail();
-			}
+			if (!is_null($onFail)) $onFail();
 			return;
 		}
 
 		$this->list[strtolower($name)] = $team;
 
-		if (!is_null($onSuccess)) {
-			$onSuccess();
-		}
+		if (!is_null($onSuccess)) $onSuccess();
 	}
 
 	/**
@@ -91,17 +87,13 @@ final class TeamManager
 	public function removeTeam(string $name, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
 		if (!$this->hasTeam($name)) {
-			if (!is_null($onFail)) {
-				$onFail();
-			}
+			if (!is_null($onFail)) $onFail();
 			return;
 		}
 
 		unset($this->list[strtolower($name)]);
 
-		if (!is_null($onSuccess)) {
-			$onSuccess();
-		}
+		if (!is_null($onSuccess)) $onSuccess();
 	}
 
 	/**
@@ -113,9 +105,7 @@ final class TeamManager
 	public function getTeam(string $name, Closure $onSuccess, ?Closure $onFail = null): void
 	{
 		if (!$this->hasTeam($name)) {
-			if (!is_null($onFail)) {
-				$onFail();
-			}
+			if (!is_null($onFail)) $onFail();
 			return;
 		}
 
@@ -194,16 +184,12 @@ final class TeamManager
 		} else if ($availableTeamsCount > 1) {
 			$team = $availableTeams[array_rand($availableTeams)];
 		} else {
-			if (!is_null($onFail)) {
-				$onFail($this->arena->getMessages()->NoTeamsAvailable());
-			}
+			if (!is_null($onFail)) $onFail($this->arena->getMessages()->NoTeamsAvailable());
 			return;
 		}
 
 		$team->addPlayer($player, function (ArenaPlayer $player) use ($onSuccess, $team): void {
-			if (!is_null($onSuccess)) {
-				$onSuccess($player, $team);
-			}
+			if (!is_null($onSuccess)) $onSuccess($player, $team);
 		});
 	}
 
@@ -241,9 +227,7 @@ final class TeamManager
 		}
 
 		if (is_null($retVal)) {
-			if (!is_null($onFail)) {
-				$onFail();
-			}
+			if (!is_null($onFail)) $onFail();
 			return;
 		}
 

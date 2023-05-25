@@ -63,15 +63,11 @@ class FormInterface implements Form
 	public function handleResponse(Player $player, $data): void
 	{
 		if (is_null($data) || $data === "") {
-			if (!is_null($this->xButtonCallback)) {
-				($this->xButtonCallback)($player);
-			}
+			if (!is_null($this->xButtonCallback)) ($this->xButtonCallback)($player);
 			return;
 		}
 
-		if (count($this->onUseList) > 0) {
-			($this->onUseList[$data])($player, $data);
-		}
+		if (count($this->onUseList) > 0) ($this->onUseList[$data])($player, $data);
 	}
 
 	/**

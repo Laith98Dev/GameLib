@@ -39,9 +39,12 @@ use vp817\GameLib\arena\modes\ArenaMode;
 use vp817\GameLib\arena\states\ArenaStates;
 use vp817\GameLib\event\PlayerJoinArenaEvent;
 use vp817\GameLib\event\PlayerQuitArenaEvent;
+use vp817\GameLib\GameLib;
 use vp817\GameLib\managers\PlayerManager;
 use vp817\GameLib\player\ArenaPlayer;
 use function is_null;
+use function is_int;
+use function is_object;
 use function str_replace;
 
 class SoloMode extends ArenaMode
@@ -49,6 +52,8 @@ class SoloMode extends ArenaMode
 
 	/** @var PlayerManager $playerManager */
 	private PlayerManager $playerManager;
+	/** @var GameLib $gamelib */
+	private GameLib $gamelib;
 	/** @var int $slots */
 	private int $slots;
 
@@ -60,12 +65,22 @@ class SoloMode extends ArenaMode
 	public function init(mixed ...$arguments): void
 	{
 		$slots = $arguments[0];
+		$gamelib = $arguments[1];
 
 		if (!is_int($slots)) {
 			throw new TypeError("The slots is invalid");
 		}
 
+		if (!is_object($gamelib)) {
+			throw new TypeError("The arena is not an object");
+		}
+
+		if (!$gamelib instanceof GameLib) {
+			throw new TypeError("The gamelib is invalid");
+		}
+
 		$this->playerManager = new PlayerManager();
+		$this->gamelib = $gamelib;
 		$this->slots = $slots;
 	}
 
@@ -117,25 +132,19 @@ class SoloMode extends ArenaMode
 		if ($this->hasPlayer($bytes)) {
 			$player->sendMessage($arenaMessages->PlayerAlreadyInsideAnArena());
 
-			if (!is_null($onFail)) {
-				$onFail();
-			}
+			if (!is_null($onFail)) $onFail();
 			return;
 		}
 		if ($this->getPlayerCount() > $this->getMaxPlayers()) {
 			$player->sendMessage($arenaMessages->ArenaIsFull());
 
-			if (!is_null($onFail)) {
-				$onFail();
-			}
+			if (!is_null($onFail)) $onFail();
 			return;
 		}
 		if ($arena->getState()->equals(ArenaStates::INGAME())) {
 			$player->sendMessage($arenaMessages->ArenaIsAlreadyRunning());
 
-			if (!is_null($onFail)) {
-				$onFail();
-			}
+			if (!is_null($onFail)) $onFail();
 			return;
 		}
 
@@ -149,11 +158,9 @@ class SoloMode extends ArenaMode
 			$arenaPlayer->setAll();
 
 			$cells->teleport($arena->getLobbySettings()->getLocation());
-			$cells->sendMessage(str_replace(["%name%", "%current%", "%max%"], [$arenaPlayer->getDisplayName(), $this->getPlayerCount(), $this->getMaxPlayers()], $arenaMessages->SucessfullyJoinedArena()));
+			$arena->getMessageBroadcaster()->broadcastMessage(str_replace(["%name%", "%current%", "%max%"], [$arenaPlayer->getDisplayName(), $this->getPlayerCount(), $this->getMaxPlayers()], $arenaMessages->SucessfullyJoinedArena()));
 
-			if (!is_null($onSuccess)) {
-				$onSuccess();
-			}
+			if (!is_null($onSuccess)) $onSuccess();
 		});
 	}
 
@@ -172,18 +179,14 @@ class SoloMode extends ArenaMode
 		if (!$this->hasPlayer($bytes)) {
 			$player->sendMessage($arenaMessages->NotInsideAnArenaToLeave());
 
-			if (!is_null($onFail)) {
-				$onFail();
-			}
+			if (!is_null($onFail)) $onFail();
 			return;
 		}
 
 		if ($arena->getState()->equals(ArenaStates::INGAME()) || $arena->getState()->equals(ArenaStates::RESTARTING())) {
 			$player->sendMessage($arenaMessages->CantLeaveDueToState());
 
-			if (!is_null($onFail)) {
-				$onFail();
-			}
+			if (!is_null($onFail)) $onFail();
 			return;
 		}
 
@@ -198,12 +201,10 @@ class SoloMode extends ArenaMode
 			$this->playerManager->remove($bytes, function () use ($arena, $arenaMessages, $arenaPlayer, $onSuccess): void {
 				$cells = $arenaPlayer->getCells();
 
-				$cells->teleport($arena->getGameLib()->getWorldManager()->getDefaultWorld()->getSpawnLocation());
-				$cells->sendMessage(str_replace(["%name%", "%current%", "%max%"], [$arenaPlayer->getDisplayName(), $this->getPlayerCount(), $this->getMaxPlayers()], $arenaMessages->SucessfullyLeftArena()));
+				$cells->teleport($this->gamelib->getWorldManager()->getDefaultWorld()->getSpawnLocation());
+				$arena->getMessageBroadcaster()->broadcastMessage(str_replace(["%name%", "%current%", "%max%"], [$arenaPlayer->getDisplayName(), $this->getPlayerCount(), $this->getMaxPlayers()], $arenaMessages->SucessfullyLeftArena()));
 	
-				if (!is_null($onSuccess)) {
-					$onSuccess();
-				}
+				if (!is_null($onSuccess)) $onSuccess();
 			});
 		});
 	}

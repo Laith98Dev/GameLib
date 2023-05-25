@@ -53,17 +53,13 @@ trait ArenaPlayerTrait
 	{
 		$bytes = $player->getUniqueId()->getBytes();
 		if ($this->has($bytes)) {
-			if (!is_null($onFail)) {
-				$onFail();
-			}
+			if (!is_null($onFail)) $onFail();
 			return;
 		}
 
 		$this->list[$bytes] = new ArenaPlayer($player);
 
-		if (!is_null($onSuccess)) {
-			$onSuccess($this->list[$bytes]);
-		}
+		if (!is_null($onSuccess)) $onSuccess($this->list[$bytes]);
 	}
 
 	/**
@@ -75,17 +71,13 @@ trait ArenaPlayerTrait
 	public function remove(string $bytes, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
 		if (!$this->has($bytes)) {
-			if (!is_null($onFail)) {
-				$onFail();
-			}
+			if (!is_null($onFail)) $onFail();
 			return;
 		}
 
 		unset($this->list[$bytes]);
 
-		if (!is_null($onSuccess)) {
-			$onSuccess();
-		}
+		if (!is_null($onSuccess)) $onSuccess();
 	}
 
 	/**
@@ -97,15 +89,11 @@ trait ArenaPlayerTrait
 	public function get(string $bytes, Closure $onSuccess, ?Closure $onFail = null): void
 	{
 		if (!$this->has($bytes)) {
-			if (!is_null($onFail)) {
-				$onFail();
-			}
+			if (!is_null($onFail)) $onFail();
 			return;
 		}
 
-		if (!is_null($onSuccess)) {
-			$onSuccess($this->list[$bytes]);
-		}
+		$onSuccess($this->list[$bytes]);
 	}
 
 	/**

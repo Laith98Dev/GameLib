@@ -36,6 +36,7 @@ use pocketmine\entity\Location;
 use pocketmine\player\Player;
 use pocketmine\world\World;
 use vp817\GameLib\arena\message\ArenaMessages;
+use vp817\GameLib\arena\message\MessageBroadcaster;
 use vp817\GameLib\arena\modes\ArenaMode;
 use vp817\GameLib\arena\modes\ArenaModes;
 use vp817\GameLib\arena\parse\LobbySettings;
@@ -63,6 +64,8 @@ class Arena
 	protected LobbySettings $lobbySettings;
 	/**  @var ?World $world */
 	protected ?World $world = null;
+	/** @var MessageBroadcaster $messageBroadcaster */
+	protected MessageBroadcaster $messageBroadcaster;
 	/** @var array $spawns */
 	protected array $spawns;
 	/** @var string $worldName */
@@ -77,45 +80,24 @@ class Arena
 	public function __construct(private GameLib $gamelib, private ArenaDataParser $dataParser)
 	{
 		$this->id = $dataParser->parse("arenaID");
+		$this->messages = $gamelib->getArenaMessagesClass();
 		$this->state = ArenaStates::WAITING();
 		$mode = ArenaModes::fromString($dataParser->parse("mode"));
 		$arenaData = json_decode($dataParser->parse("arenaData"), true);
 		if ($mode->equals(ArenaModes::SOLO())) {
-			$mode->init(intval($arenaData["slots"]));
+			$mode->init(intval($arenaData["slots"]), $gamelib);
 		} else if ($mode->isTeamMode()) {
-			$mode->init(json_decode($arenaData["teams"], true), $this);
+			$mode->init(json_decode($arenaData["teams"], true), $this, $gamelib);
 		}
 		$this->mode = $mode;
-		$this->messages = $gamelib->getArenaMessagesClass();
 		$this->lobbySettings = new LobbySettings($gamelib->getWorldManager(), json_decode($dataParser->parse("lobbySettings"), true));
 		$this->spawns = json_decode($dataParser->parse("spawns"), true);
 		$this->worldName = $dataParser->parse("worldName");
-		$this->world = Utils::getWorldByName($this->gamelib->getWorldManager(), $this->worldName);
+		$this->world = Utils::getWorldByName($gamelib->getWorldManager(), $this->worldName);
+		$this->messageBroadcaster = new MessageBroadcaster($this);
 		$gamelib->registerArenaListener($this);
 		$this->arenaTickTask = new ArenaTickTask($this, intval($dataParser->parse("countdownTime")), intval($dataParser->parse("arenaTime")), intval($dataParser->parse("restartingTime")));
 		$gamelib->getScheduler()->scheduleRepeatingTask($this->arenaTickTask, 20);
-	}
-
-	/**
-	 * @return ArenaMessages
-	 */
-	public function getMessages(): ArenaMessages
-	{
-		return $this->messages;
-	}
-
-	/**
-	 * @return void
-	 */
-	private function lazyUpdateWorld(): void
-	{
-		$worldManager = $this->gamelib->getWorldManager();
-
-		if (!$worldManager->isWorldLoaded($this->worldName)) {
-			$worldManager->loadWorld($this->worldName);
-
-			$this->world = $worldManager->getWorldByName($this->worldName);
-		}
 	}
 
 	/**
@@ -141,20 +123,19 @@ class Arena
 	}
 
 	/**
-	 * @internal
-	 * @return GameLib
-	 */
-	public function getGameLib(): GameLib
-	{
-		return $this->gamelib;
-	}
-
-	/**
 	 * @return string
 	 */
 	public function getID(): string
 	{
 		return $this->id;
+	}
+
+	/**
+	 * @return ArenaMessages
+	 */
+	public function getMessages(): ArenaMessages
+	{
+		return $this->messages;
 	}
 
 	/**
@@ -198,6 +179,20 @@ class Arena
 	}
 
 	/**
+	 * @return void
+	 */
+	private function lazyUpdateWorld(): void
+	{
+		$worldManager = $this->gamelib->getWorldManager();
+
+		if (!$worldManager->isWorldLoaded($this->worldName)) {
+			$worldManager->loadWorld($this->worldName);
+
+			$this->world = $worldManager->getWorldByName($this->worldName);
+		}
+	}
+
+	/**
 	 * @return null|World
 	 */
 	public function getWorld(): ?World
@@ -205,6 +200,14 @@ class Arena
 		$this->lazyUpdateWorld();
 
 		return $this->world;
+	}
+
+	/**
+	 * @return MessageBroadcaster
+	 */
+	public function getMessageBroadcaster(): MessageBroadcaster
+	{
+		return $this->messageBroadcaster;
 	}
 
 	/**

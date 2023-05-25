@@ -39,6 +39,7 @@ use vp817\GameLib\arena\modes\ArenaMode;
 use vp817\GameLib\arena\states\ArenaStates;
 use vp817\GameLib\event\PlayerJoinArenaEvent;
 use vp817\GameLib\event\PlayerQuitArenaEvent;
+use vp817\GameLib\GameLib;
 use vp817\GameLib\managers\TeamManager;
 use vp817\GameLib\player\ArenaPlayer;
 use vp817\GameLib\util\Team;
@@ -52,6 +53,8 @@ abstract class TeamModeAbstract extends ArenaMode
 
 	/** @var TeamManager $teamManager */
 	private TeamManager $teamManager;
+	/** @var GameLib $gamelib */
+	private GameLib $gamelib;
 
 	/**
 	 * @param mixed ...$arguments
@@ -62,6 +65,7 @@ abstract class TeamModeAbstract extends ArenaMode
 	{
 		$teams = $arguments[0];
 		$arena = $arguments[1];
+		$gamelib = $arguments[2];
 
 		if (!is_array($teams)) {
 			throw new TypeError("The teams is invalid");
@@ -71,14 +75,24 @@ abstract class TeamModeAbstract extends ArenaMode
 			throw new TypeError("The arena is not an object");
 		}
 
+		if (!is_object($gamelib)) {
+			throw new TypeError("The arena is not an object");
+		}
+
 		if (!$arena instanceof Arena) {
 			throw new TypeError("The arena is invalid");
+		}
+
+		if (!$gamelib instanceof GameLib) {
+			throw new TypeError("The gamelib is invalid");
 		}
 
 		$this->teamManager = new TeamManager($arena);
 		foreach ($teams as $key => $value) {
 			$this->teamManager->addTeam($value);
 		}
+
+		$this->gamelib = $gamelib;
 	}
 
 	/**
@@ -121,29 +135,23 @@ abstract class TeamModeAbstract extends ArenaMode
 		if ($this->hasPlayer($bytes)) {
 			$player->sendMessage($arenaMessages->PlayerAlreadyInsideAnArena());
 
-			if (!is_null($onFail)) {
-				$onFail();
-			}
+			if (!is_null($onFail)) $onFail();
 			return;
 		}
 		if ($this->getPlayerCount() > $this->getMaxPlayers()) {
 			$player->sendMessage($arenaMessages->ArenaIsFull());
 
-			if (!is_null($onFail)) {
-				$onFail();
-			}
+			if (!is_null($onFail)) $onFail();
 			return;
 		}
 		if ($arena->getState()->equals(ArenaStates::INGAME())) {
 			$player->sendMessage($arenaMessages->ArenaIsAlreadyRunning());
 
-			if (!is_null($onFail)) {
-				$onFail();
-			}
+			if (!is_null($onFail)) $onFail();
 			return;
 		}
 
-		$this->teamManager->addPlayerToRandomTeam($player, function (ArenaPlayer $player, Team $team) use ($arena, $arenaMessages, $bytes, $onSuccess): void {
+		$this->teamManager->addPlayerToRandomTeam($player, function (ArenaPlayer $player, Team $team) use ($arena, $arenaMessages, $onSuccess): void {
 			$event = new PlayerJoinArenaEvent($player, $arena);
 			$event->call();
 
@@ -153,11 +161,10 @@ abstract class TeamModeAbstract extends ArenaMode
 			$arenaPlayer->setAll();
 
 			$cells->teleport($arena->getLobbySettings()->getLocation());
-			$cells->sendMessage(str_replace(["%name%", "%current%", "%max%"], [$arenaPlayer->getDisplayName(), $this->getPlayerCount(), $this->getMaxPlayers()], $arenaMessages->SucessfullyJoinedArena()));
 
-			if (!is_null($onSuccess)) {
-				$onSuccess();
-			}
+			$arena->getMessageBroadcaster()->broadcastMessage(str_replace(["%name%", "%current%", "%max%"], [$arenaPlayer->getDisplayName(), $this->getPlayerCount(), $this->getMaxPlayers()], $arenaMessages->SucessfullyJoinedArena()));
+
+			if (!is_null($onSuccess)) $onSuccess();
 		});
 	}
 
@@ -202,17 +209,14 @@ abstract class TeamModeAbstract extends ArenaMode
 				$team->removePlayer($bytes, function () use ($arena, $arenaMessages, $arenaPlayer, $onSuccess): void {
 					$cells = $arenaPlayer->getCells();
 
-					$cells->teleport($arena->getGameLib()->getWorldManager()->getDefaultWorld()->getSpawnLocation());
-					$cells->sendMessage(str_replace(["%name%", "%current%", "%max%"], [$arenaPlayer->getDisplayName(), $this->getPlayerCount(), $this->getMaxPlayers()], $arenaMessages->SucessfullyLeftArena()));
+					$cells->teleport($this->gamelib->getWorldManager()->getDefaultWorld()->getSpawnLocation());
+					$arena->getMessageBroadcaster()->broadcastMessage(str_replace(["%name%", "%current%", "%max%"], [$arenaPlayer->getDisplayName(), $this->getPlayerCount(), $this->getMaxPlayers()], $arenaMessages->SucessfullyLeftArena()));
 	
-					if (!is_null($onSuccess)) {
-						$onSuccess();
-					}
+					if (!is_null($onSuccess)) $onSuccess();
 				});
 			});
 		});
 	}
-
 
 	/**
 	 * @param Arena $arena

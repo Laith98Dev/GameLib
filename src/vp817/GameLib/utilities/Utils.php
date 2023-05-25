@@ -83,12 +83,15 @@ final class Utils
 	 */
 	public static function arrayKeysExist(array $keys, array $array): bool
 	{
+		$retVal = false;
+
 		foreach ($keys as $key) {
-			if (array_key_exists($key, $array)) {
-				return true;
-			}
+			if (!array_key_exists($key, $array)) continue;
+
+			$retVal = true;
 		}
-		return false;
+
+		return $retVal;
 	}
 
 	/**
@@ -255,7 +258,7 @@ final class Utils
 		foreach (is_string($sqlMap[$dialect]) ? [$sqlMap[$dialect]] : $sqlMap[$dialect] as $filePath) {
 			$realPath = realpath($filePath);
 			$pathFilename = basename($realPath);
-			$resource = static::getResource(str_replace($pathFilename, "", $realPath), $pathFilename);
+			$resource = self::getResource(str_replace($pathFilename, "", $realPath), $pathFilename);
 			if ($resource === null) {
 				throw new InvalidArgumentException("$realPath does not exist");
 			}
