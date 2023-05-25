@@ -106,7 +106,7 @@ final class WaterdogManager
 		}
 		$mode = strtolower($mode);
 
-		if (!in_array($mode, ["simple", "complex"])) {
+		if (!in_array($mode, ["simple", "complex"], true)) {
 			if (!is_null($onFail)) {
 				$onFail("the mode that you are using in waterdog settings is invalid");
 			}
