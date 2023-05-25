@@ -48,6 +48,7 @@ use vp817\GameLib\arena\message\ArenaMessages;
 use vp817\GameLib\arena\message\DefaultArenaMessages;
 use vp817\GameLib\arena\states\ArenaStates;
 use vp817\GameLib\event\listener\DefaultArenaListener;
+use vp817\GameLib\event\listener\ServerEventListener;
 use vp817\GameLib\managers\ArenasManager;
 use vp817\GameLib\managers\SetupManager;
 use vp817\GameLib\managers\WaterdogManager;
@@ -203,6 +204,8 @@ final class GameLib
 		$this->setupManager = new SetupManager();
 		$this->waterdogManager = new WaterdogManager($waterdogData);
 		$this->arenaListenerClass = DefaultArenaListener::class;
+
+		self::$plugin->getServer()->getPluginManager()->registerEvents(new ServerEventListener($this), self::$plugin);
 	}
 
 	/**
@@ -322,10 +325,11 @@ final class GameLib
 	/**
 	 * @param Arena $arena
 	 * @return void
+	 * @throws RuntimeException
 	 */
 	public function registerArenaListener(Arena $arena): void
 	{
-		$class = $this->arenaListenerClass;
+		$class = $this->getArenaListenerClass();
 		if (strlen(trim($class)) < 1) {
 			return;
 		}
@@ -339,6 +343,10 @@ final class GameLib
 
 		if ($listener === null) {
 			return;
+		}
+
+		if (!$listener instanceof DefaultArenaListener) {
+			throw new RuntimeException("The listener that you gave is not an instance of GameLib/DefaultArenaListener.php");
 		}
 
 		self::$plugin->getServer()->getPluginManager()->registerEvents($listener, self::$plugin);
@@ -602,6 +610,56 @@ final class GameLib
 
 			$setupManager->remove($setupPlayer->getCells());
 		});
+	}
+
+	/**
+	 * @param Player $player
+	 * @return void
+	 */
+	public function isPlayerInsideAnArena(Player $player): bool
+	{
+		$arenasManager = $this->getArenasManager();
+		$allArenas = $arenasManager->getAll();
+
+		$retVal = false;
+
+		foreach ($allArenas as $arenaID => $arena) {
+			if (!array_key_exists($player->getUniqueId()->getBytes(), $arena->getMode()->getPlayers())) continue;
+
+			$retVal = true;
+		}
+
+		return $retVal;
+	}
+
+	/**
+	 * @param Player $player
+	 * @param Closure $onSuccess
+	 * @param null|Closure $onFail
+	 * @return void
+	 */
+	public function getPlayerArena(Player $player, Closure $onSuccess, ?Closure $onFail = null): void
+	{
+		$arenasManager = $this->getArenasManager();
+		$allArenas = $arenasManager->getAll();
+
+		$retVal = null;
+
+		foreach ($allArenas as $arenaID => $arena) {
+			if (!array_key_exists($player->getUniqueId()->getBytes(), $arena->getMode()->getPlayers())) continue;
+
+			$retVal = $arena;
+		}
+
+		if (!is_null($retVal)) {
+			if (!is_null($onSuccess)) {
+				$onSuccess($arena);
+			}
+		} else {
+			if (!is_null($onFail)) {
+				$onFail();
+			}
+		}
 	}
 
 	/**
