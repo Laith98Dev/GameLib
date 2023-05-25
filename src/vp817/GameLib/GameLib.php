@@ -652,9 +652,7 @@ final class GameLib
 		}
 
 		if (!is_null($retVal)) {
-			if (!is_null($onSuccess)) {
-				$onSuccess($arena);
-			}
+			$onSuccess($arena);
 		} else {
 			if (!is_null($onFail)) {
 				$onFail();

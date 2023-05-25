@@ -37,6 +37,7 @@ use pocketmine\player\Player;
 class PlayerQuitFromServerEvent extends Event
 {
 
+	/** @var string $globalMessage */
 	protected string $globalMessage = "";
 
 	/**
