@@ -113,16 +113,17 @@ abstract class ArenaMode
 	 * @param Player $player
 	 * @param null|Closure $onSuccess
 	 * @param null|Closure $onFail
+	 * @param bool $notifyPlayers
 	 * @return void
 	 */
-	abstract public function onQuit(Arena $arena, Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null): void;
+	abstract public function onQuit(Arena $arena, Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null, bool $notifyPlayers = true): void;
 
 	/**
 	 * @param Arena $arena
 	 * @param array $spawns
 	 * @return void
 	 */
-	abstract public function setupSpawns(Arena $arena, array $spawns): void;
+	abstract public function sendPlayersToTheirSpawn(Arena $arena, array $spawns): void;
 
 	/**
 	 * @param Arena $arena

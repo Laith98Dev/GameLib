@@ -114,38 +114,14 @@ class ArenaTickTask extends Task
 	}
 
 	/**
-	 * @return void
-	 */
-	public function resetArenaTime(): void
-	{
-		$this->arenaTime = $this->savedTimes["arenaTime"];
-	}
-
-	/**
-	 * @return void
-	 */
-	public function resetRestartingTime(): void
-	{
-		$this->restartingTime = $this->savedTimes["restartingTime"];
-	}
-
-	/**
 	 * @param ArenaState $oldState
 	 * @param ArenaState $newState
 	 * @return void
 	 */
-	public function checkForTimerReset(ArenaState $oldState, ArenaState $newState): void
+	public function checkForCountdownTimerReset(ArenaState $oldState, ArenaState $newState): void
 	{
 		if ($oldState->equals(ArenaStates::COUNTDOWN()) && $newState->equals(ArenaStates::WAITING())) {
 			$this->resetCountdownTime();
-		}
-
-		if ($oldState->equals(ArenaStates::INGAME()) && $newState->equals(ArenaStates::RESTARTING())) {
-			$this->resetArenaTime();
-		}
-
-		if ($oldState->equals(ArenaStates::RESTARTING()) && $newState->equals(ArenaStates::RESETTING())) {
-			$this->resetRestartingTime();
 		}
 	}
 
@@ -155,8 +131,8 @@ class ArenaTickTask extends Task
 	public function reload(): void
 	{
 		$this->resetCountdownTime();
-		$this->resetArenaTime();
-		$this->resetRestartingTime();
+		$this->arenaTime = $this->savedTimes["arenaTime"];
+		$this->restartingTime = $this->savedTimes["restartingTime"];
 	}
 
 	/**

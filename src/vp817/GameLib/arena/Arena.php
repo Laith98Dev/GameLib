@@ -44,6 +44,7 @@ use vp817\GameLib\arena\states\ArenaState;
 use vp817\GameLib\arena\states\ArenaStates;
 use vp817\GameLib\event\ArenaStateChangeEvent;
 use vp817\GameLib\GameLib;
+use vp817\GameLib\player\ArenaPlayer;
 use vp817\GameLib\tasks\ArenaTickTask;
 use vp817\GameLib\utilities\Utils;
 use function intval;
@@ -72,6 +73,8 @@ class Arena
 	protected string $worldName;
 	/** @var ArenaTickTask $arenaTickTask */
 	protected ArenaTickTask $arenaTickTask;
+	/** @var ArenaPlayer[] */
+	protected array $winners = [];
 
 	/**
 	 * @param GameLib $gamelib
@@ -115,11 +118,12 @@ class Arena
 	 * @param Player $player
 	 * @param null|Closure $onSuccess
 	 * @param null|Closure $onFail
+	 * @param bool $notifyPlayers
 	 * @return void
 	 */
-	public function quit(Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null): void
+	public function quit(Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null, bool $notifyPlayers = true): void
 	{
-		$this->mode->onQuit($this, $player, $onSuccess, $onFail);
+		$this->mode->onQuit($this, $player, $onSuccess, $onFail, $notifyPlayers);
 	}
 
 	/**
@@ -234,6 +238,22 @@ class Arena
 	}
 
 	/**
+	 * @return ArenaPlayer[]
+	 */
+	public function getWinners(): array
+	{
+		return $this->winners;
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function hasWinners(): bool
+	{
+		return !empty($this->winners);
+	}
+
+	/**
 	 * @param ArenaState $state
 	 * @return void
 	 */
@@ -243,5 +263,14 @@ class Arena
 		$event->call();
 
 		$this->state = $event->getNewState();
+	}
+
+	/**
+	 * @param ArenaPlayer[] $value
+	 * @return void
+	 */
+	public function setWinners(array $value): void
+	{
+		$this->winners = $value;
 	}
 }

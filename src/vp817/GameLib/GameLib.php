@@ -629,11 +629,13 @@ final class GameLib
 	 */
 	public function joinArena(Player $player, string $arenaID, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
-		$this->getArenasManager()->getLoadedArena($arenaID, function(Arena $arena) use ($player, $onSuccess): void {
+		$this->getArenasManager()->getLoadedArena($arenaID, function(Arena $arena) use ($player, $onSuccess, $onFail): void {
 			$arena->join($player, function() use ($onSuccess, $arena): void {
 				if (!is_null($onSuccess)) $onSuccess($arena);
-			});
-		}, $onFail);
+			}, $onFail);
+		}, function ($arenaID) use ($onFail): void {
+			if (!is_null($onFail)) $onFail("Arena not found");
+		});
 	}
 
 	/**
@@ -654,7 +656,7 @@ final class GameLib
 		}
 
 		$sortedArenas = [];
-		foreach ($arenasManager->getAll() as $gameID => $arena) {
+		foreach ($arenasManager->getAll() as $arenaID => $arena) {
 			$mode = $arena->getMode();
 
 			if (array_key_exists($player->getUniqueId()->getBytes(), $mode->getPlayers())) {
@@ -694,23 +696,24 @@ final class GameLib
 			}
 		}
 
-		$plannedArena->sendPlayerToArena($player);
-
-		if (!is_null($onSuccess)) $onSuccess($plannedArena);
+		$plannedArena->join($player, function() use ($onSuccess, $plannedArena): void {
+			if (!is_null($onSuccess)) $onSuccess($plannedArena);
+		}, $onFail);
 	}
 
 	/**
 	 * @param Player $player
 	 * @param null|Closure $onSuccess
 	 * @param null|Closure $onFail
+	 * @param bool $notifyPlayers
 	 * @return void
 	 */
-	public function leaveArena(Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null): void
+	public function leaveArena(Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null, bool $notifyPlayers = true): void
 	{
 		$this->getPlayerArena($player, function(Arena $arena) use ($player, $onSuccess): void {
 			$arena->quit($player, function() use ($onSuccess, $arena): void {
 				if (!is_null($onSuccess)) $onSuccess($arena->getID());
 			});
-		}, $onFail);
+		}, $onFail, $notifyPlayers);
 	}
 }

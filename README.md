@@ -212,7 +212,7 @@ $gamelib->removeArena(arenaID, onSuccess(arenaID), onFail(arenaID, reason));
  * 
  * This can be used in everywhere and it wont break
  */
-$gamelib->joinArena(player, arenaID, onSuccess(arena), onFail(arenaID));
+$gamelib->joinArena(player, arenaID, onSuccess(arena), onFail(reason));
 
 ?>
 ```

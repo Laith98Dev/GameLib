@@ -37,6 +37,8 @@ use TypeError;
 use vp817\GameLib\arena\Arena;
 use vp817\GameLib\arena\modes\ArenaMode;
 use vp817\GameLib\arena\states\ArenaStates;
+use vp817\GameLib\event\ArenaEndEvent;
+use vp817\GameLib\event\PlayerArenaWinEvent;
 use vp817\GameLib\event\PlayerJoinArenaEvent;
 use vp817\GameLib\event\PlayerQuitArenaEvent;
 use vp817\GameLib\GameLib;
@@ -130,21 +132,15 @@ class SoloMode extends ArenaMode
 		$arenaMessages = $arena->getMessages();
 
 		if ($this->hasPlayer($bytes)) {
-			$player->sendMessage($arenaMessages->PlayerAlreadyInsideAnArena());
-
-			if (!is_null($onFail)) $onFail();
+			if (!is_null($onFail)) $onFail($arenaMessages->PlayerAlreadyInsideAnArena());
 			return;
 		}
 		if ($this->getPlayerCount() > $this->getMaxPlayers()) {
-			$player->sendMessage($arenaMessages->ArenaIsFull());
-
-			if (!is_null($onFail)) $onFail();
+			if (!is_null($onFail)) $onFail($arenaMessages->ArenaIsFull());
 			return;
 		}
 		if ($arena->getState()->equals(ArenaStates::INGAME())) {
-			$player->sendMessage($arenaMessages->ArenaIsAlreadyRunning());
-
-			if (!is_null($onFail)) $onFail();
+			if (!is_null($onFail)) $onFail($arenaMessages->ArenaIsAlreadyRunning());
 			return;
 		}
 
@@ -169,28 +165,25 @@ class SoloMode extends ArenaMode
 	 * @param Player $player
 	 * @param null|Closure $onSuccess
 	 * @param null|Closure $onFail
+	 * @param bool $notifyPlayers
 	 * @return void
 	 */
-	public function onQuit(Arena $arena, Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null): void
+	public function onQuit(Arena $arena, Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null, bool $notifyPlayers = true): void
 	{
 		$bytes = $player->getUniqueId()->getBytes();
 		$arenaMessages = $arena->getMessages();
 
 		if (!$this->hasPlayer($bytes)) {
-			$player->sendMessage($arenaMessages->NotInsideAnArenaToLeave());
-
-			if (!is_null($onFail)) $onFail();
+			if (!is_null($onFail)) $onFail($arenaMessages->NotInsideAnArenaToLeave());
 			return;
 		}
 
 		if ($arena->getState()->equals(ArenaStates::INGAME()) || $arena->getState()->equals(ArenaStates::RESTARTING())) {
-			$player->sendMessage($arenaMessages->CantLeaveDueToState());
-
-			if (!is_null($onFail)) $onFail();
+			if (!is_null($onFail)) $onFail($arenaMessages->CantLeaveDueToState());
 			return;
 		}
 
-		$this->playerManager->get($bytes, function (ArenaPlayer $player) use ($arena, $arenaMessages, $bytes, $onSuccess): void {
+		$this->playerManager->get($bytes, function (ArenaPlayer $player) use ($arena, $arenaMessages, $bytes, $onSuccess, $notifyPlayers): void {
 			$event = new PlayerQuitArenaEvent($player, $arena);
 			$event->call();
 
@@ -198,11 +191,11 @@ class SoloMode extends ArenaMode
 
 			$arenaPlayer->setAll(true);
 
-			$this->playerManager->remove($bytes, function () use ($arena, $arenaMessages, $arenaPlayer, $onSuccess): void {
+			$this->playerManager->remove($bytes, function () use ($arena, $arenaMessages, $arenaPlayer, $onSuccess, $notifyPlayers): void {
 				$cells = $arenaPlayer->getCells();
 
 				$cells->teleport($this->gamelib->getWorldManager()->getDefaultWorld()->getSpawnLocation());
-				$arena->getMessageBroadcaster()->broadcastMessage(str_replace(["%name%", "%current%", "%max%"], [$arenaPlayer->getDisplayName(), $this->getPlayerCount(), $this->getMaxPlayers()], $arenaMessages->SucessfullyLeftArena()));
+				if ($notifyPlayers) $arena->getMessageBroadcaster()->broadcastMessage(str_replace(["%name%", "%current%", "%max%"], [$arenaPlayer->getDisplayName(), $this->getPlayerCount(), $this->getMaxPlayers()], $arenaMessages->SucessfullyLeftArena()));
 	
 				if (!is_null($onSuccess)) $onSuccess();
 			});
@@ -214,7 +207,7 @@ class SoloMode extends ArenaMode
 	 * @param array $spawns
 	 * @return void
 	 */
-	public function setupSpawns(Arena $arena, array $spawns): void
+	public function sendPlayersToTheirSpawn(Arena $arena, array $spawns): void
 	{
 		$players = $this->playerManager->getAll(true);
 		for ($i = 1; $i <= $this->getMaxPlayers(); ++$i) {
@@ -230,6 +223,17 @@ class SoloMode extends ArenaMode
 	 */
 	public function endGame(Arena $arena): void
 	{
-		// TODO
+		$players = $this->playerManager->getAll(true);
+		foreach ($players as $bytes => $arenaPlayer) {
+			$cells = $arenaPlayer->getCells();
+
+			(new ArenaEndEvent($arena))->call();
+
+			if ($arena->hasWinners()) {
+				(new PlayerArenaWinEvent($arena, $arena->getWinners()))->call();
+			}
+
+			$arena->quit($cells, null, null, false);
+		}
 	}
 }
