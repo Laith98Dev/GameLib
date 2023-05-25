@@ -54,6 +54,7 @@ use vp817\GameLib\managers\WaterdogManager;
 use vp817\GameLib\player\SetupPlayer;
 use vp817\GameLib\utilities\SqlQueries;
 use vp817\GameLib\utilities\Utils;
+use function array_filter;
 use function array_key_last;
 use function array_rand;
 use function basename;
@@ -656,10 +657,10 @@ final class GameLib
 		ksort($sortedArenas);
 
 		$closedArenas = array_filter($sortedArenas, function(Arena $value) {
-			return (!$value->getState()->equals(ArenaStates::WAITING()) || !$value->getState()->equals(ArenaStates::COUNTDOWN())) && $value->getMode()->getPlayerCount() > $value->getMode()->getMaxPlayers() - 1;
+			return (!$value->getState()->equals(ArenaStates::WAITING()) || !$value->getState()->equals(ArenaStates::COUNTDOWN())) && $value->getMode()->getPlayerCount() >= $value->getMode()->getMaxPlayers();
 		});
 		$openedArenas = array_filter($sortedArenas, function(Arena $value) {
-			return ($value->getState()->equals(ArenaStates::WAITING()) || $value->getState()->equals(ArenaStates::COUNTDOWN())) && $value->getMode()->getPlayerCount() > $value->getMode()->getMaxPlayers() - 1;
+			return ($value->getState()->equals(ArenaStates::WAITING()) || $value->getState()->equals(ArenaStates::COUNTDOWN())) && $value->getMode()->getPlayerCount() < $value->getMode()->getMaxPlayers();
 		});
 
 		$plannedArena = $openedArenas[array_key_last($openedArenas)];

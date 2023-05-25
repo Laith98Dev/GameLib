@@ -50,7 +50,7 @@ class RestartingState extends ArenaState
 
 		(new ArenaTickEvent($arena, $this, $time))->call();
 
-		if ($time === 0) {
+		if ($time < 1) {
 			$arena->setState(ArenaStates::RESETTING());
 			return;
 		}

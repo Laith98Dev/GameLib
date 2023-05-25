@@ -56,7 +56,7 @@ class CountdownState extends ArenaState
 			return;
 		}
 
-		if ($time === 0) {
+		if ($time < 1) {
 			$mode->setupSpawns($arena, $arena->getSpawns());
 			$arena->setState(ArenaStates::INGAME());
 			return;

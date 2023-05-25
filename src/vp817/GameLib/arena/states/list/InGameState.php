@@ -50,7 +50,7 @@ class InGameState extends ArenaState
 
 		(new ArenaTickEvent($arena, $this, $time))->call();
 
-		if ($time === 0) {
+		if ($time < 1) {
 			$arena->getMode()->endGame($arena);
 			$arena->setState(ArenaStates::RESTARTING());
 			return;
