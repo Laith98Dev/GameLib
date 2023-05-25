@@ -666,11 +666,14 @@ final class GameLib
 
 		if (count($openedArenas) >= 2) {
 			foreach ($openedArenas as $key => $value) {
-				if ($plannedArena->getMode()->getPlayerCount() < $value->getMode()->getMaxPlayers()) {
+				$plannedArenaMode = $plannedArena->getMode();
+				$valueMode = $value->getMode();
+
+				if ($plannedArenaMode->getPlayerCount() < $valueMode->getMaxPlayers()) {
 					$plannedArena = $value;
-				} elseif ($plannedArena->getMode()->getPlayerCount() === $value->getMode()->getMaxPlayers()) {
+				} elseif ($plannedArenaMode->getPlayerCount() === $valueMode->getMaxPlayers()) {
 					$plannedArena = $openedArenas[mt_rand((count($openedArenas) - count($openedArenas)) + 1, (count($openedArenas) + count($openedArenas)) - 1) % count($openedArenas)];
-				} elseif (count($plannedArena->getPSMPlayers()) === 0 && $value->getMode()->getMaxPlayers() === 0) {
+				} elseif ($plannedArenaMode->getPlayerCount() === 0 && $valueMode->getMaxPlayers() === 0) {
 					$plannedArena = $openedArenas[array_rand($openedArenas)];
 				}
 			}
