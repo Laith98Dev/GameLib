@@ -630,7 +630,15 @@ final class GameLib
 	public function joinRandomArena(Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
 		$arenasManager = $this->getArenasManager();
+		$allArenas = $arenasManager->getAll();
 		$arenaMessages = $this->getArenaMessagesClass();
+
+		if (empty($allArenas)) {
+			if (!is_null($onFail)) {
+				$onFail($arenaMessages->NoArenasFound());
+			}
+			return;
+		}
 
 		$sortedArenas = [];
 		foreach ($arenasManager->getAll() as $gameID => $arena) {
@@ -642,16 +650,10 @@ final class GameLib
 				}
 				return;
 			}
+
 			$sortedArenas[$mode->getPlayerCount()] = $arena;
 		}
 		ksort($sortedArenas);
-
-		if (empty($sortedArenas)) {
-			if (!is_null($onFail)) {
-				$onFail($arenaMessages->NoArenasFound());
-			}
-			return;
-		}
 
 		$closedArenas = array_filter($sortedArenas, function(Arena $value) {
 			return (!$value->getState()->equals(ArenaStates::WAITING()) || !$value->getState()->equals(ArenaStates::COUNTDOWN())) && $value->getMode()->getPlayerCount() > $value->getMode()->getMaxPlayers() - 1;
@@ -663,7 +665,7 @@ final class GameLib
 		$plannedArena = $openedArenas[array_key_last($openedArenas)];
 		if (empty($openedArenas) || in_array($plannedArena, $closedArenas, true)) {
 			if (!is_null($onFail)) {
-				$onFail($arenaMessages->NoArenasFound());
+				$onFail($arenaMessages->NoAvailableArenasFound());
 			}
 			return;
 		}

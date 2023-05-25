@@ -41,6 +41,11 @@ class DefaultArenaMessages extends ArenaMessages
 		return TextFormat::RED . "No arenas found";
 	}
 
+	public function NoAvailableArenasFound(): string
+	{
+		return TextFormat::RED . "No available arenas found";
+	}
+
 	public function NoTeamsFound(): string
 	{
 		return TextFormat::RED . "No teams found";

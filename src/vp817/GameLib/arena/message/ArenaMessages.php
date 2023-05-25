@@ -34,6 +34,7 @@ namespace vp817\GameLib\arena\message;
 abstract class ArenaMessages
 {
 	abstract public function NoArenasFound(): string;
+	abstract public function NoAvailableArenasFound(): string;
 	abstract public function NoTeamsFound(): string;
 	abstract public function NoTeamsAvailable(): string;
 	abstract public function PlayerAlreadyInsideAnArena(): string;
