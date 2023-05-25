@@ -34,6 +34,7 @@ namespace vp817\GameLib\form;
 use Closure;
 use pocketmine\form\Form;
 use pocketmine\player\Player;
+use function count;
 use function is_null;
 
 class FormInterface implements Form

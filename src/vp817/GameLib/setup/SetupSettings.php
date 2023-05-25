@@ -32,6 +32,8 @@ declare(strict_types=1);
 namespace vp817\GameLib\setup;
 
 use pocketmine\entity\Location;
+use function array_key_exists;
+use function json_encode;
 
 final class SetupSettings
 {

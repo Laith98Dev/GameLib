@@ -43,7 +43,7 @@ final class NormalForm extends FormInterface
 	 * @param string $contents
 	 * @param Closure $xButtonCallback
 	 */
-	public function __construct(string $title, string $content, ?callable $xButtonCallback = null)
+	public function __construct(string $title, string $content, Closure $xButtonCallback = null)
 	{
 		parent::__construct($xButtonCallback);
 

@@ -46,6 +46,7 @@ use vp817\GameLib\arena\Arena;
 use vp817\GameLib\arena\ArenaDataParser;
 use vp817\GameLib\arena\message\ArenaMessages;
 use vp817\GameLib\arena\message\DefaultArenaMessages;
+use vp817\GameLib\arena\states\ArenaStates;
 use vp817\GameLib\event\listener\DefaultArenaListener;
 use vp817\GameLib\managers\ArenasManager;
 use vp817\GameLib\managers\SetupManager;
@@ -189,7 +190,7 @@ final class GameLib
 		self::$database->executeGeneric(SqlQueries::INIT, [], null, static function (SqlError $error) use ($plugin): void {
 			$plugin->getLogger()->error($error->getMessage());
 		});
-	
+
 		self::$database->waitAll();
 
 		$this->arenasManager = new ArenasManager();
@@ -468,7 +469,7 @@ final class GameLib
 	 */
 	public function removeArena(string $arenaID, ?Closure $onSuccess = null, ?Closure $onFail = null, bool $alertConsole = true): void
 	{
-		$this->arenaExistsInDB($arenaID, function($arenaExists) use ($arenaID, $onSuccess, $onFail, $alertConsole): void {
+		$this->arenaExistsInDB($arenaID, function ($arenaExists) use ($arenaID, $onSuccess, $onFail, $alertConsole): void {
 			if (!$arenaExists) {
 				$reason = "Arena does not exists";
 				if (!is_null($onFail)) {
@@ -536,11 +537,11 @@ final class GameLib
 				return;
 			}
 
-			$this->getSetupManager()->add($player, $arenaID, function(SetupPlayer $player) use ($onSuccess): void {
+			$this->getSetupManager()->add($player, $arenaID, function (SetupPlayer $player) use ($onSuccess): void {
 				if (!is_null($onSuccess)) {
 					$onSuccess($player);
 				}
-			}, function() use ($arenaID, $onFail): void {
+			}, function () use ($arenaID, $onFail): void {
 				if (!is_null($onFail)) {
 					$onFail($arenaID, "You are already inside the setup");
 				}
@@ -608,12 +609,78 @@ final class GameLib
 	public function joinArena(Player $player, string $arenaID, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
 		$this->getArenasManager()->getLoadedArena($arenaID, function (Arena $arena) use ($player, $onSuccess): void {
-			$arena->join($player, function() use ($onSuccess, $arena): void {
+			$arena->join($player, function () use ($onSuccess, $arena): void {
 				if (!is_null($onSuccess)) {
 					$onSuccess($arena);
 				}
 			});
 		}, $onFail);
+	}
+
+	/**
+	 * @param Player $player
+	 * @param null|Closure $onSuccess
+	 * @param null|Closure $onFail
+	 * @return void
+	 */
+	public function joinRandomArena(Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null): void
+	{
+		$arenasManager = $this->getArenasManager();
+		$arenaMessages = $this->getArenaMessagesClass();
+
+		$sortedArenas = [];
+		foreach ($arenasManager->getAll() as $gameID => $arena) {
+			$mode = $arena->getMode();
+
+			if (array_key_exists($player->getUniqueId()->getBytes(), $mode->getPlayers())) {
+				if (!is_null($onFail)) {
+					$onFail($arenaMessages->PlayerAlreadyInsideAnArena());
+				}
+				return;
+			}
+			$sortedArenas[$mode->getPlayerCount()] = $arena;
+		}
+		ksort($sortedArenas);
+
+		if (empty($sortedArenas)) {
+			if (!is_null($onFail)) {
+				$onFail($arenaMessages->NoArenasFound());
+			}
+			return;
+		}
+
+		$closedArenas = array_filter($sortedArenas, function (Arena $value) {
+			return (!$value->getState()->equals(ArenaStates::WAITING()) || !$value->getState()->equals(ArenaStates::COUNTDOWN())) && $value->getMode()->getPlayerCount() > $value->getMode()->getMaxPlayers() - 1;
+		});
+		$openedArenas = array_filter($sortedArenas, function (Arena $value) {
+			return ($value->getState()->equals(ArenaStates::WAITING()) || $value->getState()->equals(ArenaStates::COUNTDOWN())) && $value->getMode()->getPlayerCount() > $value->getMode()->getMaxPlayers() - 1;
+		});
+
+		$plannedArena = $openedArenas[array_key_last($openedArenas)];
+		if (empty($openedArenas) || in_array($plannedArena, $closedArenas, true)) {
+			if (!is_null($onFail)) {
+				$onFail($arenaMessages->NoArenasFound());
+			}
+			return;
+		}
+
+		if (count($openedArenas) >= 2) {
+			foreach ($openedArenas as $key => $value) {
+				if ($plannedArena->getMode()->getPlayerCount() < $value->getMode()->getMaxPlayers()) {
+					$plannedArena = $value;
+				} elseif ($plannedArena->getMode()->getPlayerCount() === $value->getMode()->getMaxPlayers()) {
+					$plannedArena = $openedArenas[mt_rand((count($openedArenas) - count($openedArenas)) + 1, (count($openedArenas) + count($openedArenas)) - 1) % count($openedArenas)];
+				} elseif (count($plannedArena->getPSMPlayers()) === 0 && $value->getMode()->getMaxPlayers() === 0) {
+					$plannedArena = $openedArenas[array_rand($openedArenas)];
+				}
+			}
+		}
+
+		$plannedArena->sendPlayerToArena($player);
+
+		if (!is_null($onSuccess)) {
+			$onSuccess($plannedArena);
+		}
 	}
 
 	/**
