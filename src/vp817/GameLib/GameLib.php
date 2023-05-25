@@ -59,6 +59,7 @@ use function array_rand;
 use function basename;
 use function count;
 use function mkdir;
+use function mt_rand;
 use function in_array;
 use function is_dir;
 use function json_encode;

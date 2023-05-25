@@ -217,6 +217,25 @@ $gamelib->joinArena(player, arenaID, onSuccess(arena), onFail(arenaID));
 ?>
 ```
 
+### joining a random arena
+```php
+<?php
+
+/**
+ * joining an arena
+ * 
+ * player = \pocketmine\player\Player.php
+ * arenaID = string
+ * onSuccess = callback
+ * onFail = callback
+ * 
+ * This can be used in everywhere and it wont break
+ */
+$gamelib->joinRandomArena(player, arenaID, onSuccess(arena), onFail(reason));
+
+?>
+```
+
 ### leaving an arena
 ```php
 <?php
