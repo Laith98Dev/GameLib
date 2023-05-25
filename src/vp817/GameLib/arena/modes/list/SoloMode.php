@@ -148,7 +148,7 @@ class SoloMode extends ArenaMode
 			return;
 		}
 
-		$this->playerManager->add($player, function (ArenaPlayer $player) use ($arena, $arenaMessages, $bytes, $onSuccess): void {
+		$this->playerManager->add($player, function (ArenaPlayer $player) use ($arena, $arenaMessages, $onSuccess): void {
 			$event = new PlayerJoinArenaEvent($player, $arena);
 			$event->call();
 
