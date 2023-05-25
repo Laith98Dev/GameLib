@@ -71,68 +71,50 @@ final class WaterdogManager
 	public function transfer(Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
 		if (!$this->isEnabled()) {
-			if (!is_null($onFail)) {
-				$onFail("Waterdog is not enabled");
-			}
+			if (!is_null($onFail)) $onFail("Waterdog is not enabled");
 			return;
 		}
 
 		if (!array_key_exists("settings", $this->data)) {
-			if (!is_null($onFail)) {
-				$onFail("waterdog settings inside data not found");
-			}
+			if (!is_null($onFail)) $onFail("waterdog settings inside data not found");
 			return;
 		}
 
 		$settings = $this->data["settings"];
 		if (!is_array($settings)) {
-			if (!is_null($onFail)) {
-				$onFail("waterdog settings is not an array");
-			}
+			if (!is_null($onFail)) $onFail("waterdog settings is not an array");
 			return;
 		}
 		if (!array_key_exists("mode", $settings)) {
-			if (!is_null($onFail)) {
-				$onFail("mode not found in waterdog settings");
-			}
+			if (!is_null($onFail)) $onFail("mode not found in waterdog settings");
 			return;
 		}
 		$mode = $settings["mode"];
 		if (!is_string($mode)) {
-			if (!is_null($onFail)) {
-				$onFail("waterdog settings mode is not string");
-			}
+			if (!is_null($onFail)) $onFail("waterdog settings mode is not string");
 			return;
 		}
 		$mode = strtolower($mode);
 
 		if (!in_array($mode, ["simple", "complex"], true)) {
-			if (!is_null($onFail)) {
-				$onFail("the mode that you are using in waterdog settings is invalid");
-			}
+			if (!is_null($onFail)) $onFail("the mode that you are using in waterdog settings is invalid");
 			return;
 		}
 
 		if (!array_key_exists("lobby", $settings)) {
-			if (!is_null($onFail)) {
-				$onFail("the lobby address not found in waterdog settings");
-			}
+			if (!is_null($onFail)) $onFail("the lobby address not found in waterdog settings");
 			return;
 		}
 
 		$lobbyIpAndPort = $settings["lobby"];
 
 		if (!is_string($lobbyIpAndPort)) {
-			if (!is_null($onFail)) {
-				$onFail("the lobby address that is inside the waterdog settings is not string");
-			}
+			if (!is_null($onFail)) $onFail("the lobby address that is inside the waterdog settings is not string");
 			return;
 		}
 
 		if (!str_contains($lobbyIpAndPort, ":")) {
-			if (!is_null($onFail)) {
-				$onFail("invalid format used for the waterdog lobby address, default: ip:port");
-			}
+			if (!is_null($onFail)) $onFail("invalid format used for the waterdog lobby address, default: ip:port");
 			return;
 		}
 
