@@ -66,6 +66,7 @@ use function in_array;
 use function is_dir;
 use function json_encode;
 use function is_null;
+use function shuffle;
 use function strlen;
 use function strtolower;
 use function trim;
@@ -690,7 +691,8 @@ final class GameLib
 					$plannedArena = $value;
 				} else if ($plannedArenaMode->getPlayerCount() === $valueMode->getMaxPlayers()) {
 					$plannedArena = $openedArenas[mt_rand((count($openedArenas) - count($openedArenas)) + 1, (count($openedArenas) + count($openedArenas)) - 1) % $valueMode->getMaxPlayers()];
-				} else if ($plannedArenaMode->getPlayerCount() === 0 && $valueMode->getMaxPlayers() === 0) {
+				} else if ($plannedArenaMode->getPlayerCount() === 0 && $valueMode->getMaxPlayers() === 0) {				
+					shuffle($openedArenas);
 					$plannedArena = $openedArenas[array_rand($openedArenas)];
 				}
 			}
