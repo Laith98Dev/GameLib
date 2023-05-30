@@ -199,8 +199,8 @@ abstract class TeamModeAbstract extends ArenaMode
 			return;
 		}
 
-		$this->teamManager->getTeamOfPlayerFromBytes($bytes, function (Team $team) use ($arena, $arenaMessages, $bytes, $onSuccess, $notifyPlayers): void {
-			$team->getPlayer($bytes, function (ArenaPlayer $player) use ($team, $arena, $arenaMessages, $bytes, $onSuccess, $notifyPlayers): void {
+		$this->teamManager->getTeamOfPlayerFromBytes($bytes, function (Team $team) use ($arena, $arenaMessages, $bytes, $onSuccess, $onFail, $notifyPlayers): void {
+			$team->getPlayer($bytes, function (ArenaPlayer $player) use ($team, $arena, $arenaMessages, $bytes, $onSuccess, $onFail, $notifyPlayers): void {
 				$event = new PlayerQuitArenaEvent($player, $arena);
 				$event->call();
 
@@ -208,13 +208,20 @@ abstract class TeamModeAbstract extends ArenaMode
 
 				$arenaPlayer->setAll(true);
 
-				$team->removePlayer($bytes, function () use ($arena, $arenaMessages, $arenaPlayer, $onSuccess, $notifyPlayers): void {
+				$team->removePlayer($bytes, function () use ($arena, $arenaMessages, $arenaPlayer, $onSuccess, $onFail, $notifyPlayers): void {
 					$cells = $arenaPlayer->getCells();
 
-					$cells->teleport($this->gamelib->getWorldManager()->getDefaultWorld()->getSpawnLocation());
-					if ($notifyPlayers) $arena->getMessageBroadcaster()->broadcastMessage(str_replace(["%name%", "%current%", "%max%"], [$arenaPlayer->getDisplayName(), $this->getPlayerCount(), $this->getMaxPlayers()], $arenaMessages->SucessfullyLeftArena()));
+					if ($this->gamelib->getWaterdogManager()->isEnabled()) {
+						$this->gamelib->getWaterdogManager()->transfer($cells, function () use ($cells, $notifyPlayers, $arena, $arenaPlayer, $arenaMessages, $onSuccess): void {
+							if ($notifyPlayers) $arena->getMessageBroadcaster()->broadcastMessage(str_replace(["%name%", "%current%", "%max%"], [$arenaPlayer->getDisplayName(), $this->getPlayerCount(), $this->getMaxPlayers()], $arenaMessages->SucessfullyLeftArena()));
+							if (!is_null($onSuccess)) $onSuccess();
+						}, $onFail);
+					} else {
+						$cells->teleport($this->gamelib->getWorldManager()->getDefaultWorld()->getSpawnLocation());
+						if ($notifyPlayers) $arena->getMessageBroadcaster()->broadcastMessage(str_replace(["%name%", "%current%", "%max%"], [$arenaPlayer->getDisplayName(), $this->getPlayerCount(), $this->getMaxPlayers()], $arenaMessages->SucessfullyLeftArena()));
 	
-					if (!is_null($onSuccess)) $onSuccess();
+						if (!is_null($onSuccess)) $onSuccess();
+					}
 				});
 			});
 		});

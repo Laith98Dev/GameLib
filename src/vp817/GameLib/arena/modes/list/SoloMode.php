@@ -183,7 +183,7 @@ class SoloMode extends ArenaMode
 			return;
 		}
 
-		$this->playerManager->get($bytes, function (ArenaPlayer $player) use ($arena, $arenaMessages, $bytes, $onSuccess, $notifyPlayers): void {
+		$this->playerManager->get($bytes, function (ArenaPlayer $player) use ($arena, $arenaMessages, $bytes, $onSuccess, $onFail, $notifyPlayers): void {
 			$event = new PlayerQuitArenaEvent($player, $arena);
 			$event->call();
 
@@ -191,13 +191,20 @@ class SoloMode extends ArenaMode
 
 			$arenaPlayer->setAll(true);
 
-			$this->playerManager->remove($bytes, function () use ($arena, $arenaMessages, $arenaPlayer, $onSuccess, $notifyPlayers): void {
+			$this->playerManager->remove($bytes, function () use ($arena, $arenaMessages, $arenaPlayer, $onSuccess, $onFail, $notifyPlayers): void {
 				$cells = $arenaPlayer->getCells();
 
-				$cells->teleport($this->gamelib->getWorldManager()->getDefaultWorld()->getSpawnLocation());
-				if ($notifyPlayers) $arena->getMessageBroadcaster()->broadcastMessage(str_replace(["%name%", "%current%", "%max%"], [$arenaPlayer->getDisplayName(), $this->getPlayerCount(), $this->getMaxPlayers()], $arenaMessages->SucessfullyLeftArena()));
-	
-				if (!is_null($onSuccess)) $onSuccess();
+				if ($this->gamelib->getWaterdogManager()->isEnabled()) {
+					$this->gamelib->getWaterdogManager()->transfer($cells, function () use ($cells, $notifyPlayers, $arena, $arenaPlayer, $arenaMessages, $onSuccess): void {
+						if ($notifyPlayers) $arena->getMessageBroadcaster()->broadcastMessage(str_replace(["%name%", "%current%", "%max%"], [$arenaPlayer->getDisplayName(), $this->getPlayerCount(), $this->getMaxPlayers()], $arenaMessages->SucessfullyLeftArena()));
+						if (!is_null($onSuccess)) $onSuccess();
+					}, $onFail);
+				} else {
+					$cells->teleport($this->gamelib->getWorldManager()->getDefaultWorld()->getSpawnLocation());
+					if ($notifyPlayers) $arena->getMessageBroadcaster()->broadcastMessage(str_replace(["%name%", "%current%", "%max%"], [$arenaPlayer->getDisplayName(), $this->getPlayerCount(), $this->getMaxPlayers()], $arenaMessages->SucessfullyLeftArena()));
+
+					if (!is_null($onSuccess)) $onSuccess();
+				}
 			});
 		});
 	}

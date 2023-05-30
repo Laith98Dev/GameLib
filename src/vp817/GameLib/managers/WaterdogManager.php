@@ -126,9 +126,7 @@ final class WaterdogManager
 			$packet->port = intval($lobbyAddress[1]);
 			$player->getNetworkSession()->sendDataPacket($packet);
 
-			if (!is_null($onSuccess)) {
-				$onSuccess();
-			}
+			if (!is_null($onSuccess)) $onSuccess();
 		} else if ($mode == "complex") {
 			// TODO
 		}
