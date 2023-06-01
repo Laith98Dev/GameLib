@@ -144,9 +144,14 @@ final class GameLib
 
 	/**
 	 * @return void
+	 * @throws GameLib
 	 */
 	public static function uninit(): void
 	{
+		if (is_null(self::$plugin)) {
+			throw new RuntimeException("There is no instance to uninitialize for gamelib");
+		}
+
 		if (isset(self::$database)) {
 			self::$database->close();
 		}
@@ -157,7 +162,7 @@ final class GameLib
 	 * @param array $waterdogData
 	 * @param array $sqlDatabase
 	 */
-	public function __construct(PluginBase $plugin, array $sqlDatabase = [], array $waterdogData = [])
+	private function __construct(PluginBase $plugin, array $sqlDatabase = [], array $waterdogData = [])
 	{
 		self::$plugin = $plugin;
 
@@ -379,9 +384,7 @@ final class GameLib
 						return;
 					}
 
-					$this->getArenasManager()->signAsLoaded($arenaID, new Arena($this, new ArenaDataParser($arenasData)), function ($arena) use ($onSuccess): void {
-						if (!is_null($onSuccess)) $onSuccess($arena);
-					});
+					$this->getArenasManager()->signAsLoaded($arenaID, new Arena($this, new ArenaDataParser($arenasData)), fn (Arena $arena) => !is_null($onSuccess) ? $onSuccess($arena) : null);
 				});
 			}
 		});
@@ -415,9 +418,7 @@ final class GameLib
 					if (!array_key_exists("arenaData", $arenaData)) $arenaData["arenaData"] = json_encode([]);
 					if (!array_key_exists("extraData", $arenaData)) $arenaData["extraData"] = json_encode([]);
 
-					$this->getArenasManager()->signAsLoaded($arenaID, new Arena($this, new ArenaDataParser($arenaData)), function ($arena) use ($onSuccess): void {
-						if (!is_null($onSuccess)) $onSuccess($arena);
-					});
+					$this->getArenasManager()->signAsLoaded($arenaID, new Arena($this, new ArenaDataParser($arenaData)), fn (Arena $arena) => !is_null($onSuccess) ? $onSuccess($arena) : null);
 				}
 			});
 		});
@@ -476,9 +477,7 @@ final class GameLib
 
 			self::$database->executeChange(SqlQueries::REMOVE_ARENA, ["arenaID" => $arenaID], function ($rows) use ($arenasManager, $arenaID, $onSuccess, $alertConsole): void {
 				if ($arenasManager->hasLoadedArena($arenaID)) {
-					$arenasManager->unsignFromBeingLoaded($arenaID, function () use ($arenaID, $onSuccess): void {
-						if (!is_null($onSuccess)) $onSuccess($arenaID);
-					});
+					$arenasManager->unsignFromBeingLoaded($arenaID, fn () => !is_null($onSuccess) ? $onSuccess($arenaID) : null);
 				}
 
 				if ($alertConsole) self::$plugin->getLogger()->alert("Arena: $arenaID has been successfully removed");
@@ -524,11 +523,7 @@ final class GameLib
 				return;
 			}
 
-			$this->getSetupManager()->add($player, $arenaID, function (SetupPlayer $player) use ($onSuccess): void {
-				if (!is_null($onSuccess)) $onSuccess($player);
-			}, function () use ($arenaID, $onFail): void {
-				if (!is_null($onFail)) $onFail($arenaID, "You are already inside the setup");
-			});
+			$this->getSetupManager()->add($player, $arenaID, fn (SetupPlayer $player) => !is_null($onSuccess) ? $onSuccess($player) : null, fn ()  => !is_null($onFail) ? $onFail($arenaID, "You are already inside the setup") : null);
 		});
 	}
 
@@ -550,9 +545,7 @@ final class GameLib
 			$setupSettings = $setupPlayer->getSetupSettings();
 			$arenaID = $setupPlayer->getSetupingArenaID();
 
-			$fail = function (SqlError $error) use ($onFail): void {
-				if (!is_null($onFail)) $onFail($error->getMessage());
-			};
+			$fail = fn (SqlError $error) => !is_null($onFail) ? $onFail($error->getMessage()) : null;
 
 			self::$database->executeChange(SqlQueries::UPDATE_ARENA_SPAWNS, ["arenaID" => $arenaID, "spawns" => json_encode($setupSettings->getSpawns())], null, $fail);
 			self::$database->executeChange(SqlQueries::UPDATE_ARENA_LOBBY_SETTINGS, ["arenaID" => $arenaID, "settings" => $setupSettings->getLobbySettings()], null, $fail);
@@ -564,11 +557,7 @@ final class GameLib
 
 			$setupSettings->clear();
 
-			$this->loadArena($arenaID, function (Arena $arena) use ($onSuccess): void {
-				if (!is_null($onSuccess)) $onSuccess($arena);
-			}, function () use ($onFail): void {
-				if (!is_null($onFail)) $onFail("unable to load arena");
-			});
+			$this->loadArena($arenaID, fn (Arena $arena) => !is_null($onSuccess) ? $onSuccess($arena) : null, fn () => !is_null($onFail) ? $onFail("unable to load arena") : null);
 
 			$setupManager->remove($setupPlayer->getCells());
 		});

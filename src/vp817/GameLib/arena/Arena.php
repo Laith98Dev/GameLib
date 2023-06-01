@@ -96,7 +96,7 @@ class Arena
 		$this->lobbySettings = new LobbySettings($gamelib->getWorldManager(), json_decode($dataParser->parse("lobbySettings"), true));
 		$this->spawns = json_decode($dataParser->parse("spawns"), true);
 		$this->worldName = $dataParser->parse("worldName");
-		$this->world = Utils::getWorldByName($gamelib->getWorldManager(), $this->worldName);
+		$this->world = $gamelib->getWorldManager()->getWorldByName($this->worldName);
 		$this->messageBroadcaster = new MessageBroadcaster($this);
 		$gamelib->registerArenaListener($this);
 		$this->arenaTickTask = new ArenaTickTask($this, intval($dataParser->parse("countdownTime")), intval($dataParser->parse("arenaTime")), intval($dataParser->parse("restartingTime")));

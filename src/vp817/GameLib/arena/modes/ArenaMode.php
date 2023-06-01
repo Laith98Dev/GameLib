@@ -34,6 +34,8 @@ namespace vp817\GameLib\arena\modes;
 use Closure;
 use pocketmine\player\Player;
 use vp817\GameLib\arena\Arena;
+use vp817\GameLib\event\ArenaEndEvent;
+use vp817\GameLib\event\PlayerArenaWinEvent;
 use vp817\GameLib\player\ArenaPlayer;
 
 abstract class ArenaMode
@@ -129,5 +131,19 @@ abstract class ArenaMode
 	 * @param Arena $arena
 	 * @return void
 	 */
-	abstract public function endGame(Arena $arena): void;
+	public function endGame(Arena $arena): void
+	{
+		$players = $this->getPlayers();
+		foreach ($players as $bytes => $arenaPlayer) {
+			$cells = $arenaPlayer->getCells();
+
+			(new ArenaEndEvent($arena))->call();
+
+			if ($arena->hasWinners()) {
+				(new PlayerArenaWinEvent($arena, $arena->getWinners()))->call();
+			}
+
+			$arena->quit($cells, null, null, false);
+		}
+	}
 }

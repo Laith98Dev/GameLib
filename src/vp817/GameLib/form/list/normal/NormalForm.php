@@ -41,9 +41,9 @@ final class NormalForm extends FormInterface
 	/**
 	 * @param string $title
 	 * @param string $contents
-	 * @param Closure $xButtonCallback
+	 * @param null|Closure $xButtonCallback
 	 */
-	public function __construct(string $title, string $content, Closure $xButtonCallback = null)
+	public function __construct(string $title, string $content, ?Closure $xButtonCallback = null)
 	{
 		parent::__construct($xButtonCallback);
 
@@ -62,7 +62,7 @@ final class NormalForm extends FormInterface
 	 * @param string $imagePath
 	 * @return void
 	 */
-	public function pushButton(string $text, ?callable $onUse = null, ?FormButtonImageType $imageType = null, string $imagePath = ""): void
+	public function pushButton(string $text, Closure $onUse, ?FormButtonImageType $imageType = null, string $imagePath = ""): void
 	{
 		$button = ["text" => $text];
 		if (!is_null($imageType)) {

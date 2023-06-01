@@ -41,7 +41,7 @@ abstract class ArenaState
 	 */
 	public function name(): string
 	{
-		return str_replace("mode", "", basename(strtolower(static::class), ";"));
+		return str_replace("state", "", basename(strtolower(static::class), ";"));
 	}
 
 	/**

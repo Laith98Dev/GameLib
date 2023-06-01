@@ -37,15 +37,16 @@ use TypeError;
 use vp817\GameLib\arena\Arena;
 use vp817\GameLib\arena\modes\ArenaMode;
 use vp817\GameLib\arena\states\ArenaStates;
+use vp817\GameLib\event\ArenaPlayerTpToSpawnEvent;
 use vp817\GameLib\event\PlayerJoinArenaEvent;
 use vp817\GameLib\event\PlayerQuitArenaEvent;
 use vp817\GameLib\GameLib;
 use vp817\GameLib\managers\TeamManager;
 use vp817\GameLib\player\ArenaPlayer;
 use vp817\GameLib\util\Team;
+use vp817\GameLib\utilities\Utils;
 use function is_array;
 use function is_object;
-use function str_replace;
 use function strtolower;
 
 abstract class TeamModeAbstract extends ArenaMode
@@ -158,11 +159,16 @@ abstract class TeamModeAbstract extends ArenaMode
 			$arenaPlayer = $event->getPlayer();
 			$cells = $arenaPlayer->getCells();
 
+			$arenaPlayer->setTeam($team);
 			$arenaPlayer->setAll();
 
 			$cells->teleport($arena->getLobbySettings()->getLocation());
 
-			$arena->getMessageBroadcaster()->broadcastMessage(str_replace(["%name%", "%current%", "%max%"], [$arenaPlayer->getDisplayName(), $this->getPlayerCount(), $this->getMaxPlayers()], $arenaMessages->SucessfullyJoinedArena()));
+			Utils::replaceMessageContent([
+				"%name%" => $arenaPlayer->getDisplayName(),
+				"%current%" => $this->getPlayerCount(),
+				"%max%" => $this->getMaxPlayers()
+			], $arenaMessages->SucessfullyJoinedArena());
 
 			if (!is_null($onSuccess)) $onSuccess();
 		});
@@ -206,20 +212,26 @@ abstract class TeamModeAbstract extends ArenaMode
 
 				$arenaPlayer = $event->getPlayer();
 
+				$arenaPlayer->setTeam(null);
 				$arenaPlayer->setAll(true);
 
-				$team->removePlayer($bytes, function () use ($arena, $arenaMessages, $arenaPlayer, $onSuccess, $onFail, $notifyPlayers): void {
+				$team->removePlayer($bytes, function () use ($arenaMessages, $arenaPlayer, $onSuccess, $onFail, $notifyPlayers): void {
 					$cells = $arenaPlayer->getCells();
 
+					$notifyCB = fn () => Utils::replaceMessageContent([
+						"%name%" => $arenaPlayer->getDisplayName(),
+						"%current%" => $this->getPlayerCount(),
+						"%max%" => $this->getMaxPlayers()
+					], $arenaMessages->SucessfullyLeftArena());
+
 					if ($this->gamelib->getWaterdogManager()->isEnabled()) {
-						$this->gamelib->getWaterdogManager()->transfer($cells, function () use ($cells, $notifyPlayers, $arena, $arenaPlayer, $arenaMessages, $onSuccess): void {
-							if ($notifyPlayers) $arena->getMessageBroadcaster()->broadcastMessage(str_replace(["%name%", "%current%", "%max%"], [$arenaPlayer->getDisplayName(), $this->getPlayerCount(), $this->getMaxPlayers()], $arenaMessages->SucessfullyLeftArena()));
+						$this->gamelib->getWaterdogManager()->transfer($cells, function () use ($notifyCB, $notifyPlayers, $onSuccess): void {
+							if ($notifyPlayers) $notifyCB();
 							if (!is_null($onSuccess)) $onSuccess();
 						}, $onFail);
 					} else {
 						$cells->teleport($this->gamelib->getWorldManager()->getDefaultWorld()->getSpawnLocation());
-						if ($notifyPlayers) $arena->getMessageBroadcaster()->broadcastMessage(str_replace(["%name%", "%current%", "%max%"], [$arenaPlayer->getDisplayName(), $this->getPlayerCount(), $this->getMaxPlayers()], $arenaMessages->SucessfullyLeftArena()));
-	
+						if ($notifyPlayers) $notifyCB;
 						if (!is_null($onSuccess)) $onSuccess();
 					}
 				});
@@ -237,18 +249,15 @@ abstract class TeamModeAbstract extends ArenaMode
 		$players = $this->getPlayers();
 		foreach ($players as $key => $player) {
 			$this->teamManager->getTeamOfPlayerFromBytes($player->getCells()->getUniqueId()->getBytes(), function (Team $team) use ($arena, $spawns, $player): void {
-				// TODO: EVENT?
-				$player->getCells()->teleport($arena->getLocationOfSpawn($spawns[strtolower($team->getName())]));
+				$event = new ArenaPlayerTpToSpawnEvent($player, $arena, $spawns[strtolower($team->getName())]);
+				$event->call();
+
+				$eventPlayer = $event->getPlayer();
+				$eventArena = $event->getArena();
+				$eventSpawn = $event->getSpawn();
+
+				$eventPlayer->getCells()->teleport($eventArena->getLocationOfSpawn($eventSpawn));
 			});
 		}
-	}
-
-	/**
-	 * @param Arena $arena
-	 * @return void
-	 */
-	public function endGame(Arena $arena): void
-	{
-		// TODO
 	}
 }

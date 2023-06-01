@@ -36,6 +36,7 @@ use pocketmine\inventory\ArmorInventory;
 use pocketmine\inventory\PlayerInventory;
 use pocketmine\player\GameMode;
 use pocketmine\player\Player;
+use vp817\GameLib\util\Team;
 
 final class ArenaPlayer
 {
@@ -45,6 +46,8 @@ final class ArenaPlayer
     /** @var Player $cells */
     private Player $cells;
 
+    /** @var null|Team $team */
+    private ?Team $team = null;
     /** @var string $displayName */
     private string $displayName;
     /** @var string $nameTag */
@@ -96,6 +99,15 @@ final class ArenaPlayer
             "maxFood" => $this->maxFood,
             "gamemode" => $this->gamemode
         ];
+    }
+
+    /**
+     * @param null|Team $team
+     * @return void
+     */
+    public function setTeam(?Team $team): void
+    {
+        $this->team = $team;
     }
 
     /**
@@ -159,6 +171,14 @@ final class ArenaPlayer
     public function setGamemode(GameMode $value): void
     {
         $this->gamemode = $value;
+    }
+
+    /**
+     * @return null|Team
+     */
+    public function getTeam(): ?Team
+    {
+        return $this->team;
     }
 
     /**

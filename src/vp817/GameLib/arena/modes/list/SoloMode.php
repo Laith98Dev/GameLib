@@ -37,17 +37,16 @@ use TypeError;
 use vp817\GameLib\arena\Arena;
 use vp817\GameLib\arena\modes\ArenaMode;
 use vp817\GameLib\arena\states\ArenaStates;
-use vp817\GameLib\event\ArenaEndEvent;
-use vp817\GameLib\event\PlayerArenaWinEvent;
+use vp817\GameLib\event\ArenaPlayerTpToSpawnEvent;
 use vp817\GameLib\event\PlayerJoinArenaEvent;
 use vp817\GameLib\event\PlayerQuitArenaEvent;
 use vp817\GameLib\GameLib;
 use vp817\GameLib\managers\PlayerManager;
 use vp817\GameLib\player\ArenaPlayer;
+use vp817\GameLib\utilities\Utils;
 use function is_null;
 use function is_int;
 use function is_object;
-use function str_replace;
 
 class SoloMode extends ArenaMode
 {
@@ -154,7 +153,11 @@ class SoloMode extends ArenaMode
 			$arenaPlayer->setAll();
 
 			$cells->teleport($arena->getLobbySettings()->getLocation());
-			$arena->getMessageBroadcaster()->broadcastMessage(str_replace(["%name%", "%current%", "%max%"], [$arenaPlayer->getDisplayName(), $this->getPlayerCount(), $this->getMaxPlayers()], $arenaMessages->SucessfullyJoinedArena()));
+			$arena->getMessageBroadcaster()->broadcastMessage(Utils::replaceMessageContent([
+				"%name%" => $arenaPlayer->getDisplayName(),
+				"%current%" => $this->getPlayerCount(),
+				"%max%" => $this->getMaxPlayers()
+			], $arenaMessages->SucessfullyJoinedArena()));
 
 			if (!is_null($onSuccess)) $onSuccess();
 		});
@@ -191,18 +194,23 @@ class SoloMode extends ArenaMode
 
 			$arenaPlayer->setAll(true);
 
-			$this->playerManager->remove($bytes, function () use ($arena, $arenaMessages, $arenaPlayer, $onSuccess, $onFail, $notifyPlayers): void {
+			$this->playerManager->remove($bytes, function () use ($arenaMessages, $arenaPlayer, $onSuccess, $onFail, $notifyPlayers): void {
 				$cells = $arenaPlayer->getCells();
 
+				$notifyCB = fn () => Utils::replaceMessageContent([
+					"%name%" => $arenaPlayer->getDisplayName(),
+					"%current%" => $this->getPlayerCount(),
+					"%max%" => $this->getMaxPlayers()
+				], $arenaMessages->SucessfullyLeftArena());
+
 				if ($this->gamelib->getWaterdogManager()->isEnabled()) {
-					$this->gamelib->getWaterdogManager()->transfer($cells, function () use ($cells, $notifyPlayers, $arena, $arenaPlayer, $arenaMessages, $onSuccess): void {
-						if ($notifyPlayers) $arena->getMessageBroadcaster()->broadcastMessage(str_replace(["%name%", "%current%", "%max%"], [$arenaPlayer->getDisplayName(), $this->getPlayerCount(), $this->getMaxPlayers()], $arenaMessages->SucessfullyLeftArena()));
+					$this->gamelib->getWaterdogManager()->transfer($cells, function () use ($notifyCB, $notifyPlayers, $onSuccess): void {
+						if ($notifyPlayers) $notifyCB();
 						if (!is_null($onSuccess)) $onSuccess();
 					}, $onFail);
 				} else {
 					$cells->teleport($this->gamelib->getWorldManager()->getDefaultWorld()->getSpawnLocation());
-					if ($notifyPlayers) $arena->getMessageBroadcaster()->broadcastMessage(str_replace(["%name%", "%current%", "%max%"], [$arenaPlayer->getDisplayName(), $this->getPlayerCount(), $this->getMaxPlayers()], $arenaMessages->SucessfullyLeftArena()));
-
+					if ($notifyPlayers) $notifyCB;
 					if (!is_null($onSuccess)) $onSuccess();
 				}
 			});
@@ -217,30 +225,17 @@ class SoloMode extends ArenaMode
 	public function sendPlayersToTheirSpawn(Arena $arena, array $spawns): void
 	{
 		$players = $this->playerManager->getAll(true);
-		for ($i = 1; $i <= $this->getMaxPlayers(); ++$i) {
+		for ($i = 1; $i <= count($players); ++$i) {
 			$player = $players[$i - 1];
-			// TODO: EVENT?
-			$player->getCells()->teleport($arena->getLocationOfSpawn($spawns[$i]));
-		}
-	}
 
-	/**
-	 * @param Arena $arena
-	 * @return void
-	 */
-	public function endGame(Arena $arena): void
-	{
-		$players = $this->playerManager->getAll(true);
-		foreach ($players as $bytes => $arenaPlayer) {
-			$cells = $arenaPlayer->getCells();
+			$event = new ArenaPlayerTpToSpawnEvent($player, $arena, $spawns[$i]);
+			$event->call();
 
-			(new ArenaEndEvent($arena))->call();
+			$eventPlayer = $event->getPlayer();
+			$eventArena = $event->getArena();
+			$eventSpawn = $event->getSpawn();
 
-			if ($arena->hasWinners()) {
-				(new PlayerArenaWinEvent($arena, $arena->getWinners()))->call();
-			}
-
-			$arena->quit($cells, null, null, false);
+			$eventPlayer->getCells()->teleport($eventArena->getLocationOfSpawn($eventSpawn));
 		}
 	}
 }

@@ -50,7 +50,7 @@ class FormInterface implements Form
 	/**
 	 * @param null|Closure $xButtonCallback
 	 */
-	public function __construct(?callable $xButtonCallback = null)
+	public function __construct(?Closure $xButtonCallback = null)
 	{
 		$this->xButtonCallback = $xButtonCallback;
 	}

@@ -29,69 +29,45 @@
 
 declare(strict_types=1);
 
-namespace vp817\GameLib\arena\parse;
+namespace vp817\GameLib\event;
 
-use pocketmine\entity\Location;
-use pocketmine\world\World;
-use pocketmine\world\WorldManager;
-use vp817\GameLib\utilities\Utils;
+use pocketmine\event\Event;
+use vp817\GameLib\arena\Arena;
+use vp817\GameLib\player\ArenaPlayer;
 
-final class LobbySettings
+class ArenaPlayerTpToSpawnEvent extends Event
 {
 
-	/** @var string $worldName */
-	private string $worldName;
-	/** @var null|World $world */
-	private ?World $world = null;
-
 	/**
-	 * @param WorldManager $worldManager
-	 * @param array $settings
+	 * @param ArenaPlayer $player
+	 * @param Arena $arena
+	 * @param array $spawn
 	 */
-	public function __construct(private WorldManager $worldManager, private array $settings)
+	public function __construct(protected ArenaPlayer $player, protected Arena $arena, protected array $spawn)
 	{
-		$this->worldName = $settings["worldName"];
-		$this->world = $this->worldManager->getWorldByName($this->worldName);
 	}
 
 	/**
-	 * @return void
+	 * @return ArenaPlayer
 	 */
-	private function lazyUpdateWorld(): void
+	public function getPlayer(): ArenaPlayer
 	{
-		$worldManager = $this->worldManager;
-
-		if (!$worldManager->isWorldLoaded($this->worldName)) {
-			$worldManager->loadWorld($this->worldName);
-
-			$this->world = $worldManager->getWorldByName($this->worldName);
-		}
+		return $this->player;
 	}
 
 	/**
-	 * @return null|World
+	 * @return Arena
 	 */
-	public function getWorld(): ?World
+	public function getArena(): Arena
 	{
-		$this->lazyUpdateWorld();
-
-		return $this->world;
+		return $this->arena;
 	}
 
 	/**
-	 * @return Location
+	 * @return array
 	 */
-	public function getLocation(): Location
+	public function getSpawn(): array
 	{
-		$world = $this->getWorld();
-
-		$location = $this->settings["location"];
-		$x = $location["x"];
-		$y = $location["y"];
-		$z = $location["z"];
-		$yaw = $location["yaw"];
-		$pitch = $location["pitch"];
-
-		return new Location($x, $y, $z, $world, $yaw, $pitch);
+		return $this->spawn;
 	}
 }
