@@ -119,11 +119,12 @@ class Arena
 	 * @param null|Closure $onSuccess
 	 * @param null|Closure $onFail
 	 * @param bool $notifyPlayers
+	 * @param bool $force
 	 * @return void
 	 */
-	public function quit(Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null, bool $notifyPlayers = true): void
+	public function quit(Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null, bool $notifyPlayers = true, bool $force = false): void
 	{
-		$this->mode->onQuit($this, $player, $onSuccess, $onFail, $notifyPlayers);
+		$this->mode->onQuit($this, $player, $onSuccess, $onFail, $notifyPlayers, $force);
 	}
 
 	/**

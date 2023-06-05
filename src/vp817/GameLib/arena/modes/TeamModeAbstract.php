@@ -134,21 +134,15 @@ abstract class TeamModeAbstract extends ArenaMode
 		$arenaMessages = $arena->getMessages();
 
 		if ($this->hasPlayer($bytes)) {
-			$player->sendMessage($arenaMessages->PlayerAlreadyInsideAnArena());
-
-			if (!is_null($onFail)) $onFail();
+			if (!is_null($onFail)) $onFail($arenaMessages->PlayerAlreadyInsideAnArena());
 			return;
 		}
 		if ($this->getPlayerCount() > $this->getMaxPlayers()) {
-			$player->sendMessage($arenaMessages->ArenaIsFull());
-
-			if (!is_null($onFail)) $onFail();
+			if (!is_null($onFail)) $onFail($arenaMessages->ArenaIsFull());
 			return;
 		}
 		if ($arena->getState()->equals(ArenaStates::INGAME())) {
-			$player->sendMessage($arenaMessages->ArenaIsAlreadyRunning());
-
-			if (!is_null($onFail)) $onFail();
+			if (!is_null($onFail)) $onFail($arenaMessages->ArenaIsAlreadyRunning());
 			return;
 		}
 
@@ -180,28 +174,21 @@ abstract class TeamModeAbstract extends ArenaMode
 	 * @param null|Closure $onSuccess
 	 * @param null|Closure $onFail
 	 * @param bool $notifyPlayers
+	 * @param bool $force
 	 * @return void
 	 */
-	public function onQuit(Arena $arena, Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null, bool $notifyPlayers = true): void
+	public function onQuit(Arena $arena, Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null, bool $notifyPlayers = true, bool $force = false): void
 	{
 		$bytes = $player->getUniqueId()->getBytes();
 		$arenaMessages = $arena->getMessages();
 
 		if (!$this->hasPlayer($bytes)) {
-			$player->sendMessage($arenaMessages->NotInsideAnArenaToLeave());
-
-			if (!is_null($onFail)) {
-				$onFail();
-			}
+			if (!is_null($onFail)) $onFail($arenaMessages->NotInsideAnArenaToLeave());
 			return;
 		}
 
-		if ($arena->getState()->equals(ArenaStates::INGAME()) || $arena->getState()->equals(ArenaStates::RESTARTING())) {
-			$player->sendMessage($arenaMessages->CantLeaveDueToState());
-
-			if (!is_null($onFail)) {
-				$onFail();
-			}
+		if (!$force && ($arena->getState()->equals(ArenaStates::INGAME()) || $arena->getState()->equals(ArenaStates::RESTARTING()))) {
+			if (!is_null($onFail)) $onFail($arenaMessages->CantLeaveDueToState());
 			return;
 		}
 

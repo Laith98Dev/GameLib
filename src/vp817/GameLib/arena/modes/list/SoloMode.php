@@ -169,9 +169,10 @@ class SoloMode extends ArenaMode
 	 * @param null|Closure $onSuccess
 	 * @param null|Closure $onFail
 	 * @param bool $notifyPlayers
+	 * @param bool $force
 	 * @return void
 	 */
-	public function onQuit(Arena $arena, Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null, bool $notifyPlayers = true): void
+	public function onQuit(Arena $arena, Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null, bool $notifyPlayers = true, bool $force = false): void
 	{
 		$bytes = $player->getUniqueId()->getBytes();
 		$arenaMessages = $arena->getMessages();
@@ -181,7 +182,7 @@ class SoloMode extends ArenaMode
 			return;
 		}
 
-		if ($arena->getState()->equals(ArenaStates::INGAME()) || $arena->getState()->equals(ArenaStates::RESTARTING())) {
+		if (!$force && (($arena->getState()->equals(ArenaStates::INGAME()) || $arena->getState()->equals(ArenaStates::RESTARTING())))) {
 			if (!is_null($onFail)) $onFail($arenaMessages->CantLeaveDueToState());
 			return;
 		}

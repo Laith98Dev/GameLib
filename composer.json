@@ -1,0 +1,26 @@
+{
+    "name": "vp817/game-lib",
+    "description": "gamelib virion for pocketmine",
+    "type": "library",
+    "license": "GPl-3.0",
+    "autoload": {
+        "psr-4": {
+            "vp817\\GameLib\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "vp817",
+            "email": "vaxpex11@gmail.com"
+        }
+    ],
+    "require": {
+        "symfony/filesystem": "^6.2"
+    },
+    "extra":{
+        "virion": {
+            "spec": "3.0",
+            "namespace-root": "vp817\\GameLib"
+        }
+    }
+}

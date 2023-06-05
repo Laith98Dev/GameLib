@@ -139,6 +139,13 @@ final class GameLib
 			throw new RuntimeException("libasyql virion not found. unable to use gamelib");
 		}
 
+		$autoload = __DIR__ . "/../../../vendor/autoload.php";
+		if (!file_exists($autoload)) {
+			throw new RuntimeException("Composer autoloader for gamelib not found.");
+		}
+
+		require_once $autoload;
+
 		return new GameLib($plugin, $sqlDatabase, $waterdogData);
 	}
 

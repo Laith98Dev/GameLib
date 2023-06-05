@@ -34,6 +34,7 @@ namespace vp817\GameLib\arena\modes;
 use Closure;
 use pocketmine\player\Player;
 use vp817\GameLib\arena\Arena;
+use vp817\GameLib\arena\states\ArenaStates;
 use vp817\GameLib\event\ArenaEndEvent;
 use vp817\GameLib\event\PlayerArenaWinEvent;
 use vp817\GameLib\player\ArenaPlayer;
@@ -116,9 +117,10 @@ abstract class ArenaMode
 	 * @param null|Closure $onSuccess
 	 * @param null|Closure $onFail
 	 * @param bool $notifyPlayers
+	 * @param bool $force
 	 * @return void
 	 */
-	abstract public function onQuit(Arena $arena, Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null, bool $notifyPlayers = true): void;
+	abstract public function onQuit(Arena $arena, Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null, bool $notifyPlayers = true, bool $force = false): void;
 
 	/**
 	 * @param Arena $arena
@@ -129,21 +131,17 @@ abstract class ArenaMode
 
 	/**
 	 * @param Arena $arena
+	 * @param bool $changeState
 	 * @return void
 	 */
-	public function endGame(Arena $arena): void
+	public function endGame(Arena $arena, bool $changeState = true): void
 	{
-		$players = $this->getPlayers();
-		foreach ($players as $bytes => $arenaPlayer) {
-			$cells = $arenaPlayer->getCells();
+		(new ArenaEndEvent($arena))->call();
 
-			(new ArenaEndEvent($arena))->call();
-
-			if ($arena->hasWinners()) {
-				(new PlayerArenaWinEvent($arena, $arena->getWinners()))->call();
-			}
-
-			$arena->quit($cells, null, null, false);
+		if ($arena->hasWinners()) {
+			(new PlayerArenaWinEvent($arena, $arena->getWinners()))->call();
 		}
+
+		if ($changeState) $arena->setState(ArenaStates::RESTARTING());
 	}
 }

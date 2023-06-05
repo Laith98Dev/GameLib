@@ -51,7 +51,8 @@ class RestartingState extends ArenaState
 		(new ArenaTickEvent($arena, $this, $time))->call();
 
 		if ($time < 1) {
-			$arena->getMode()->endGame($arena);
+			$arena->setWinners([]);
+			$arena->getMode()->endGame($arena, false);
 			$arena->setState(ArenaStates::RESETTING());
 			return;
 		}
