@@ -709,6 +709,6 @@ final class GameLib
 	 */
 	public function leaveArena(Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null, bool $notifyPlayers = true, bool $force = false): void
 	{
-		$this->getPlayerArena($player, fn (Arena $arena) => $arena->quit($player, fn () => !is_null($onSuccess) ? $onSuccess($arena->getID()) : null, $onFail, $notifyPlayers, $force), fn () => $onFail($this->getArenaMessagesClass()->NotInsideAnArenaToLeave()));
+		$this->getPlayerArena($player, fn (Arena $arena) => $arena->quit($player, fn () => !is_null($onSuccess) ? $onSuccess($arena->getID()) : null, $onFail, $notifyPlayers, $force), fn () => !is_null($onFail) ? $onFail($this->getArenaMessagesClass()->NotInsideAnArenaToLeave()) : null);
 	}
 }
