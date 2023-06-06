@@ -549,20 +549,20 @@ final class GameLib
 		}
 
 		$setupManager->get($player->getUniqueId()->getBytes(), function (SetupPlayer $setupPlayer) use ($setupManager, $onSuccess, $onFail): void {
-			$setupSettings = $setupPlayer->getSetupSettings();
+			$setupSettingsQueue = $setupPlayer->getSetupSettingsQueue();
 			$arenaID = $setupPlayer->getSetupingArenaID();
 
 			$fail = fn (SqlError $error) => !is_null($onFail) ? $onFail($error->getMessage()) : null;
 
-			self::$database->executeChange(SqlQueries::UPDATE_ARENA_SPAWNS, ["arenaID" => $arenaID, "spawns" => json_encode($setupSettings->getSpawns())], null, $fail);
-			self::$database->executeChange(SqlQueries::UPDATE_ARENA_LOBBY_SETTINGS, ["arenaID" => $arenaID, "settings" => $setupSettings->getLobbySettings()], null, $fail);
-			self::$database->executeChange(SqlQueries::UPDATE_ARENA_DATA, ["arenaID" => $arenaID, "arenaData" => $setupSettings->getArenaData()], null, $fail);
+			self::$database->executeChange(SqlQueries::UPDATE_ARENA_SPAWNS, ["arenaID" => $arenaID, "spawns" => json_encode($setupSettingsQueue->getSpawns())], null, $fail);
+			self::$database->executeChange(SqlQueries::UPDATE_ARENA_LOBBY_SETTINGS, ["arenaID" => $arenaID, "settings" => $setupSettingsQueue->getLobbySettings()], null, $fail);
+			self::$database->executeChange(SqlQueries::UPDATE_ARENA_DATA, ["arenaID" => $arenaID, "arenaData" => $setupSettingsQueue->getArenaData()], null, $fail);
 
-			if ($setupSettings->hasExtraData()) {
-				self::$database->executeChange(SqlQueries::UPDATE_ARENA_EXTRA_DATA, ["arenaID" => $arenaID, "extraData" => $setupSettings->getExtraData()], null, $fail);
+			if ($setupSettingsQueue->hasExtraData()) {
+				self::$database->executeChange(SqlQueries::UPDATE_ARENA_EXTRA_DATA, ["arenaID" => $arenaID, "extraData" => $setupSettingsQueue->getExtraData()], null, $fail);
 			}
 
-			$setupSettings->clear();
+			$setupSettingsQueue->clear();
 
 			$this->loadArena($arenaID, fn (Arena $arena) => !is_null($onSuccess) ? $onSuccess($arena) : null, fn () => !is_null($onFail) ? $onFail("unable to load arena") : null);
 
@@ -704,14 +704,11 @@ final class GameLib
 	 * @param null|Closure $onSuccess
 	 * @param null|Closure $onFail
 	 * @param bool $notifyPlayers
+	 * @param bool $force
 	 * @return void
 	 */
-	public function leaveArena(Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null, bool $notifyPlayers = true): void
+	public function leaveArena(Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null, bool $notifyPlayers = true, bool $force = false): void
 	{
-		$this->getPlayerArena($player, function (Arena $arena) use ($player, $onSuccess): void {
-			$arena->quit($player, function () use ($onSuccess, $arena): void {
-				if (!is_null($onSuccess)) $onSuccess($arena->getID());
-			});
-		}, $onFail, $notifyPlayers);
+		$this->getPlayerArena($player, fn (Arena $arena) => $arena->quit($player, fn () => !is_null($onSuccess) ? $onSuccess($arena->getID()) : null, $onFail, $notifyPlayers, $force), fn () => $onFail($this->getArenaMessagesClass()->NotInsideAnArenaToLeave()));
 	}
 }

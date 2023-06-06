@@ -32,6 +32,7 @@ declare(strict_types=1);
 namespace vp817\GameLib\arena\message;
 
 use vp817\GameLib\arena\Arena;
+use function is_null;
 
 class MessageBroadcaster
 {
@@ -44,16 +45,35 @@ class MessageBroadcaster
 	}
 
 	/**
+	 * @param string $function
+	 * @param string $argument
+	 * @return void
+	 */
+	public function broadcast(string $function, string $argument = ""): void
+	{
+		$players = $this->arena->getMode()->getPlayers();
+
+		foreach ($players as $bytes => $arenaPlayer) {
+			$cells = $arenaPlayer->getCells();
+			if (is_null($cells)) return;
+			if (!$cells->isOnline()) return;
+
+			if (strlen(trim($argument)) <= 0) {
+				$cells->$function();
+				return;
+			}
+
+			$cells->$function($argument);
+		}
+	}
+
+	/**
 	 * @param string $value
 	 * @return void
 	 */
 	public function broadcastMessage(string $value): void
 	{
-		$players = $this->arena->getMode()->getPlayers();
-
-		foreach ($players as $bytes => $arenaPlayer) {
-			$arenaPlayer->getCells()->sendMessage($value);
-		}
+		$this->broadcast("sendMessage", $value);
 	}
 
 	/**
@@ -62,11 +82,7 @@ class MessageBroadcaster
 	 */
 	public function broadcastPopup(string $value): void
 	{
-		$players = $this->arena->getMode()->getPlayers();
-
-		foreach ($players as $bytes => $arenaPlayer) {
-			$arenaPlayer->getCells()->sendPopup($value);
-		}
+		$this->broadcast("sendPopup", $value);
 	}
 
 	/**
@@ -75,11 +91,7 @@ class MessageBroadcaster
 	 */
 	public function broadcastTip(string $value): void
 	{
-		$players = $this->arena->getMode()->getPlayers();
-
-		foreach ($players as $bytes => $arenaPlayer) {
-			$arenaPlayer->getCells()->sendTip($value);
-		}
+		$this->broadcast("sendTip", $value);
 	}
 
 	/**
@@ -88,11 +100,7 @@ class MessageBroadcaster
 	 */
 	public function broadcastTitle(string $value): void
 	{
-		$players = $this->arena->getMode()->getPlayers();
-
-		foreach ($players as $bytes => $arenaPlayer) {
-			$arenaPlayer->getCells()->sendTitle($value);
-		}
+		$this->broadcast("sendTitle", $value);
 	}
 
 	/**
@@ -101,11 +109,7 @@ class MessageBroadcaster
 	 */
 	public function broadcastSubTitle(string $value): void
 	{
-		$players = $this->arena->getMode()->getPlayers();
-
-		foreach ($players as $bytes => $arenaPlayer) {
-			$arenaPlayer->getCells()->sendSubTitle($value);
-		}
+		$this->broadcast("sendSubTitle", $value);
 	}
 
 	/**
@@ -114,11 +118,7 @@ class MessageBroadcaster
 	 */
 	public function broadcastActionBarMessage(string $value): void
 	{
-		$players = $this->arena->getMode()->getPlayers();
-
-		foreach ($players as $bytes => $arenaPlayer) {
-			$arenaPlayer->getCells()->sendActionBarMessage($value);
-		}
+		$this->broadcast("sendActionBarMessage", $value);
 	}
 
 	/**
@@ -126,11 +126,7 @@ class MessageBroadcaster
 	 */
 	public function broadcastTitlesClear(): void
 	{
-		$players = $this->arena->getMode()->getPlayers();
-
-		foreach ($players as $bytes => $arenaPlayer) {
-			$arenaPlayer->getCells()->removeTitles();
-		}
+		$this->broadcast("removeTitles");
 	}
 
 	/**
@@ -138,10 +134,6 @@ class MessageBroadcaster
 	 */
 	public function broadcastTitlesReset(): void
 	{
-		$players = $this->arena->getMode()->getPlayers();
-
-		foreach ($players as $bytes => $arenaPlayer) {
-			$arenaPlayer->getCells()->resetTitles();
-		}
+		$this->broadcast("resetTitles");
 	}
 }

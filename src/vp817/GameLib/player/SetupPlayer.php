@@ -32,13 +32,13 @@ declare(strict_types=1);
 namespace vp817\GameLib\player;
 
 use pocketmine\player\Player;
-use vp817\GameLib\setup\SetupSettings;
+use vp817\GameLib\setup\SetupSettingsQueue;
 
 final class SetupPlayer
 {
 
-	/** @var SetupSettings $setupSettings */
-	private SetupSettings $setupSettings;
+	/** @var SetupSettingsQueue $setupSettingsQueue */
+	private SetupSettingsQueue $setupSettingsQueue;
 
 	/**
 	 * @param Player $player
@@ -46,7 +46,7 @@ final class SetupPlayer
 	 */
 	public function __construct(private Player $player, private string $setupingArenaID)
 	{
-		$this->setupSettings = new SetupSettings();
+		$this->setupSettingsQueue = new SetupSettingsQueue();
 	}
 
 	/**
@@ -66,10 +66,10 @@ final class SetupPlayer
 	}
 
 	/**
-	 * @return SetupSettings
+	 * @return SetupSettingsQueue
 	 */
-	public function getSetupSettings(): SetupSettings
+	public function getSetupSettingsQueue(): SetupSettingsQueue
 	{
-		return $this->setupSettings;
+		return $this->setupSettingsQueue;
 	}
 }

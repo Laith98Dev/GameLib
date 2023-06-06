@@ -61,11 +61,18 @@ final class LobbySettings
 	{
 		$worldManager = $this->worldManager;
 
-		if (!$worldManager->isWorldLoaded($this->worldName)) {
-			$worldManager->loadWorld($this->worldName);
+		$loadWorld = function () use ($worldManager): void {
+			if (!$worldManager->isWorldLoaded($this->worldName)) $worldManager->loadWorld($this->worldName);
 
 			$this->world = $worldManager->getWorldByName($this->worldName);
+		};
+
+		if (is_null($this->world)) {
+			$loadWorld();
+			return;
 		}
+
+		$loadWorld();
 	}
 
 	/**

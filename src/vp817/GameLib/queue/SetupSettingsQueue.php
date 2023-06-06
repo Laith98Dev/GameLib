@@ -35,7 +35,7 @@ use pocketmine\entity\Location;
 use function array_key_exists;
 use function json_encode;
 
-final class SetupSettings
+final class SetupSettingsQueue
 {
 
 	/** @var array $queue */

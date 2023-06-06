@@ -182,7 +182,7 @@ class SoloMode extends ArenaMode
 			return;
 		}
 
-		if (!$force && (($arena->getState()->equals(ArenaStates::INGAME()) || $arena->getState()->equals(ArenaStates::RESTARTING())))) {
+		if (!$force && ($arena->getState()->equals(ArenaStates::INGAME()) || $arena->getState()->equals(ArenaStates::RESTARTING()))) {
 			if (!is_null($onFail)) $onFail($arenaMessages->CantLeaveDueToState());
 			return;
 		}

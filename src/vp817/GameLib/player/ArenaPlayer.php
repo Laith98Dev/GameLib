@@ -64,8 +64,6 @@ final class ArenaPlayer
     private int $maxHealth;
     /** @var float $food */
     private float $food;
-    /** @var float $maxFood */
-    private float $maxFood;
     /** @var GameMode $gamemode */
     private GameMode $gamemode;
 
@@ -84,7 +82,6 @@ final class ArenaPlayer
         $this->health = $player->getHealth();
         $this->maxHealth = $player->getMaxHealth();
         $this->food = $player->getHungerManager()->getFood();
-        $this->maxFood = $player->getHungerManager()->getMaxFood();
         $this->gamemode = $player->getGamemode();
 
         $this->savedCells = [
@@ -96,7 +93,6 @@ final class ArenaPlayer
             "health" => $this->health,
             "maxHealth" => $this->maxHealth,
             "food" => $this->food,
-            "maxFood" => $this->maxFood,
             "gamemode" => $this->gamemode
         ];
     }
@@ -153,15 +149,6 @@ final class ArenaPlayer
     public function setFood(float $value): void
     {
         $this->food = $value;
-    }
-
-    /**
-     * @param float $value
-     * @return void
-     */
-    public function setMaxFood(float $value): void
-    {
-        $this->maxFood = $value;
     }
 
     /**
@@ -246,14 +233,6 @@ final class ArenaPlayer
     }
 
     /**
-     * @return float
-     */
-    public function getMaxFood(): float
-    {
-        return $this->maxFood;
-    }
-
-    /**
      * @return GameMode
      */
     public function getGamemode(): GameMode
@@ -269,8 +248,17 @@ final class ArenaPlayer
         $this->getInventory()->clearAll();
         $this->getArmorInventory()->clearAll();
         $this->getEffectManager()->clear();
-        $this->setHealth($this->getMaxHealth());
-        $this->setFood($this->getMaxFood());
+
+        $effects = $this->savedCells["effects"];
+        if (!empty($effects)) {
+            foreach ($effects as $key => $value) {
+                $this->getEffectManager()->add($value);
+            }
+        }
+
+        $this->setHealth($this->getHealth());
+        $this->setMaxHealth($this->getMaxHealth());
+        $this->setFood($this->getFood());
         $this->setGamemode(GameMode::ADVENTURE());
     }
 
@@ -284,14 +272,15 @@ final class ArenaPlayer
         $this->getEffectManager()->clear();
 
         $effects = $this->savedCells["effects"];
-        foreach ($effects as $key => $value) {
-            $this->getEffectManager()->add($value);
+        if (!empty($effects)) {
+            foreach ($effects as $key => $value) {
+                $this->getEffectManager()->add($value);
+            }
         }
 
         $this->setHealth($this->savedCells["health"]);
         $this->setMaxHealth($this->savedCells["maxHealth"]);
         $this->setFood($this->savedCells["food"]);
-        $this->setMaxFood($this->savedCells["maxFood"]);
         $this->setGamemode($this->savedCells["gamemode"]);
     }
 
@@ -316,6 +305,11 @@ final class ArenaPlayer
         foreach ($effects as $key => $value) {
             $this->getCells()->getEffects()->add($value);
         }
+
+        $this->getCells()->setHealth($this->getHealth());
+        $this->getCells()->setMaxHealth($this->getMaxHealth());
+        $this->getCells()->getHungerManager()->setFood($this->getFood());
+        $this->getCells()->setGamemode($this->getGamemode());
 
         if ($unsetSavedCells) {
             unset($this->savedCells);

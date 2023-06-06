@@ -122,7 +122,7 @@ $gamelib->createArena(arenaID, worldName, mode, countdownTime, arenaTime, restar
 ?>
 ```
 
-### setupping an arena
+### setuping an arena
 ```php
 <?php
 
@@ -249,7 +249,7 @@ $gamelib->joinRandomArena(player, arenaID, onSuccess(arena), onFail(reason));
  * 
  * This can be used in everywhere and it wont break
  */
-$gamelib->leaveArena(player, onSuccess(arenaID), onFail());
+$gamelib->leaveArena(player, onSuccess(arenaID), onFail(reason));
 
 ?>
 ```

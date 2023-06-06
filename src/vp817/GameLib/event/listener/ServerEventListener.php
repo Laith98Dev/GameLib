@@ -66,8 +66,10 @@ class ServerEventListener implements Listener
 		$quitEvent = new PlayerQuitFromServerEvent($player);
 		$quitEvent->call();
 
-		$event->setQuitMessage($quitEvent->getGlobalMessage());
+		$notifyPlayers = strlen(trim($quitEvent->getGlobalMessage())) < 1 ? true : false;
 
-		$this->gamelib->leaveArena($player);
+		$event->setQuitMessage($event->getQuitMessage());
+
+		$this->gamelib->leaveArena($player, null, null, $notifyPlayers, true);
 	}
 }
