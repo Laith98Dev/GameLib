@@ -32,7 +32,7 @@ declare(strict_types=1);
 namespace vp817\GameLib\player;
 
 use pocketmine\player\Player;
-use vp817\GameLib\setup\SetupSettingsQueue;
+use vp817\GameLib\queue\SetupSettingsQueue;
 
 final class SetupPlayer
 {
