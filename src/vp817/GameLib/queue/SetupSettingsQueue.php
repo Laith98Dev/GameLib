@@ -29,7 +29,7 @@
 
 declare(strict_types=1);
 
-namespace vp817\GameLib\setup;
+namespace vp817\GameLib\queue;
 
 use pocketmine\entity\Location;
 use function array_key_exists;
