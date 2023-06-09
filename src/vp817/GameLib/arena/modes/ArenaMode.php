@@ -103,6 +103,14 @@ abstract class ArenaMode
 	abstract public function getMaxPlayers(): int;
 
 	/**
+	 * @param string $bytes
+	 * @param null|Closure $onSuccess
+	 * @param null|Closure $onFail
+	 * @return void
+	 */
+	abstract public function removePlayer(string $bytes, ?Closure $onSuccess = null, ?Closure $onFail = null): void;
+
+	/**
 	 * @param Arena $arena
 	 * @param Player $player
 	 * @param null|Closure $onSuccess

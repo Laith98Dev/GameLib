@@ -120,6 +120,17 @@ abstract class TeamModeAbstract extends ArenaMode
 	{
 		return count($this->teamManager->getTeams()) * $this->getMaxPlayersPerTeam();
 	}
+	
+	/**
+	 * @param string $bytes
+	 * @param null|Closure $onSuccess
+	 * @param null|Closure $onFail
+	 * @return void
+	 */
+	public function removePlayer(string $bytes, ?Closure $onSuccess = null, ?Closure $onFail = null): void
+	{
+		$this->teamManager->getTeamOfPlayerFromBytes($bytes, fn (Team $team) => $team->removePlayer($bytes, fn () => !is_null($onSuccess) ? $onSuccess() : null), $onFail);
+	}
 
 	/**
 	 * @param Arena $arena

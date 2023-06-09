@@ -119,6 +119,17 @@ class SoloMode extends ArenaMode
 	}
 
 	/**
+	 * @param string $bytes
+	 * @param null|Closure $onSuccess
+	 * @param null|Closure $onFail
+	 * @return void
+	 */
+	public function removePlayer(string $bytes, ?Closure $onSuccess = null, ?Closure $onFail = null): void
+	{
+		$this->playerManager->remove($bytes, $onSuccess, $onFail);
+	}
+
+	/**
 	 * @param Arena $arena
 	 * @param Player $player
 	 * @param null|Closure $onSuccess
@@ -195,7 +206,7 @@ class SoloMode extends ArenaMode
 
 			$arenaPlayer->setAll(true);
 
-			$this->playerManager->remove($bytes, function () use ($arenaMessages, $arenaPlayer, $onSuccess, $onFail, $notifyPlayers): void {
+			$this->removePlayer($bytes, function () use ($arenaMessages, $arenaPlayer, $onSuccess, $onFail, $notifyPlayers): void {
 				$cells = $arenaPlayer->getCells();
 
 				$notifyCB = fn () => Utils::replaceMessageContent([
