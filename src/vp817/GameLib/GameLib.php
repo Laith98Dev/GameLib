@@ -35,6 +35,7 @@ use Closure;
 use pocketmine\player\Player;
 use pocketmine\plugin\PluginBase;
 use pocketmine\plugin\PluginLogger;
+use pocketmine\scheduler\AsyncPool;
 use pocketmine\scheduler\TaskScheduler;
 use pocketmine\world\WorldManager;
 use poggit\libasynql\DataConnector;
@@ -54,22 +55,21 @@ use vp817\GameLib\managers\SetupManager;
 use vp817\GameLib\player\SetupPlayer;
 use vp817\GameLib\utilities\SqlQueries;
 use vp817\GameLib\utilities\Utils;
+use const DIRECTORY_SEPARATOR;
 use function array_filter;
 use function array_key_last;
 use function array_rand;
 use function basename;
 use function count;
-use function mkdir;
-use function mt_rand;
 use function in_array;
 use function is_dir;
-use function json_encode;
 use function is_null;
+use function json_encode;
+use function mkdir;
 use function shuffle;
 use function strlen;
 use function strtolower;
 use function trim;
-use const DIRECTORY_SEPARATOR;
 
 final class GameLib
 {
@@ -231,6 +231,15 @@ final class GameLib
 
 	/**
 	 * @internal
+	 * @return AsyncPool
+	 */
+	public function getAsyncPool(): AsyncPool
+	{
+		return self::$plugin->getServer()->getAsyncPool();
+	}
+
+	/**
+	 * @internal
 	 * @return TaskScheduler
 	 */
 	public function getScheduler(): TaskScheduler
@@ -279,6 +288,14 @@ final class GameLib
 	public function getArenasBackupPath(): string
 	{
 		return $this->arenasBackupPath;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getServerWorldsPath(): string
+	{
+		return Path::join(self::$plugin->getServer()->getDataPath(), "worlds");
 	}
 
 	/**
@@ -430,6 +447,26 @@ final class GameLib
 			];
 
 			self::$database->executeInsert(SqlQueries::ADD_ARENA, $data);
+
+			$zipFileFullPath = Path::join($this->getArenasBackupPath(), $arenaID) . ".zip";
+			$worldManager = $this->getWorldManager();
+
+			if ($worldManager->isWorldLoaded($worldName)) {
+				$worldManager->unloadWorld($worldManager->getWorldByName($worldName));
+			}
+
+			// $this->getAsyncPool()->submitTask(
+			// 	new CreateZipAsyncTask(
+			// 		Path::join($this->getServerWorldsPath(), $worldName),
+			// 		$zipFileFullPath,
+			// 		null,
+			// 		$onFail
+			// 	)
+			// );
+
+			Utils::zipDirectory(Path::join($this->getServerWorldsPath(), $worldName), $zipFileFullPath);
+
+			$worldManager->loadWorld($worldName);
 
 			if (!is_null($onSuccess)) $onSuccess($data);
 		});
@@ -642,10 +679,16 @@ final class GameLib
 			return ($value->getState()->equals(ArenaStates::WAITING()) || $value->getState()->equals(ArenaStates::COUNTDOWN())) && $value->getMode()->getPlayerCount() < $value->getMode()->getMaxPlayers();
 		});
 
-		$plannedArena = $openedArenas[array_key_last($openedArenas)];
-		if (empty($openedArenas) || in_array($plannedArena, $closedArenas, true)) {
+		$lastKey = array_key_last($openedArenas);
+		if (empty($openedArenas) || is_null($lastKey)) {
 			if (!is_null($onFail)) $onFail($arenaMessages->NoAvailableArenasFound());
 			return;
+		}
+		$plannedArena = $openedArenas[$lastKey];
+
+		if (in_array($plannedArena, $closedArenas, true)) {
+			shuffle($openedArenas);
+			$plannedArena = $openedArenas[array_rand($openedArenas)];
 		}
 
 		if (count($openedArenas) >= 2) {
@@ -656,7 +699,7 @@ final class GameLib
 				if ($plannedArenaMode->getPlayerCount() < $valueMode->getMaxPlayers()) {
 					$plannedArena = $value;
 				} else if ($plannedArenaMode->getPlayerCount() === $valueMode->getMaxPlayers()) {
-					$plannedArena = $openedArenas[mt_rand((count($openedArenas) - count($openedArenas)) + 1, (count($openedArenas) + count($openedArenas)) - 1) % $valueMode->getMaxPlayers()];
+					$plannedArena = $openedArenas[array_rand($openedArenas)];
 				} else if ($plannedArenaMode->getPlayerCount() === 0 && $valueMode->getMaxPlayers() === 0) {
 					shuffle($openedArenas);
 					$plannedArena = $openedArenas[array_rand($openedArenas)];
@@ -664,9 +707,7 @@ final class GameLib
 			}
 		}
 
-		$plannedArena->join($player, function () use ($onSuccess, $plannedArena): void {
-			if (!is_null($onSuccess)) $onSuccess($plannedArena);
-		}, $onFail);
+		$plannedArena->join($player, fn () => !is_null($onSuccess) ? $onSuccess($plannedArena) : null, $onFail);
 	}
 
 	/**

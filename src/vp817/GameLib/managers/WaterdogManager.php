@@ -36,8 +36,8 @@ use pocketmine\player\Player;
 use function array_key_exists;
 use function boolval;
 use function explode;
-use function is_null;
 use function is_array;
+use function is_null;
 use function is_string;
 use function str_contains;
 

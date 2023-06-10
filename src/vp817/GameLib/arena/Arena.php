@@ -35,6 +35,7 @@ use Closure;
 use pocketmine\entity\Location;
 use pocketmine\player\Player;
 use pocketmine\world\World;
+use Symfony\Component\Filesystem\Path;
 use vp817\GameLib\arena\message\ArenaMessages;
 use vp817\GameLib\arena\message\MessageBroadcaster;
 use vp817\GameLib\arena\modes\ArenaMode;
@@ -46,7 +47,10 @@ use vp817\GameLib\event\ArenaStateChangeEvent;
 use vp817\GameLib\GameLib;
 use vp817\GameLib\player\ArenaPlayer;
 use vp817\GameLib\tasks\ArenaTickTask;
+use vp817\GameLib\tasks\async\DeleteDirectoryAsyncTask;
+use vp817\GameLib\tasks\async\ExtractZipAsyncTask;
 use vp817\GameLib\utilities\Utils;
+use function file_exists;
 use function intval;
 use function json_decode;
 
@@ -184,32 +188,11 @@ class Arena
 	}
 
 	/**
-	 * @return void
-	 */
-	private function lazyUpdateWorld(): void
-	{
-		$worldManager = $this->gamelib->getWorldManager();
-
-		$loadWorld = function () use ($worldManager): void {
-			if (!$worldManager->isWorldLoaded($this->worldName)) $worldManager->loadWorld($this->worldName);
-
-			$this->world = $worldManager->getWorldByName($this->worldName);
-		};
-
-		if (is_null($this->world)) {
-			$loadWorld();
-			return;
-		}
-
-		$loadWorld();
-	}
-
-	/**
 	 * @return null|World
 	 */
 	public function getWorld(): ?World
 	{
-		$this->lazyUpdateWorld();
+		Utils::lazyUpdateWorld($this->gamelib->getWorldManager(), $this->worldName, $this->world);
 
 		return $this->world;
 	}
@@ -259,6 +242,56 @@ class Arena
 	public function hasWinners(): bool
 	{
 		return !empty($this->winners);
+	}
+
+	/**
+	 * @param null|Closure $onSuccess
+	 * @param null|Closure $onFail
+	 * @return void
+	 */
+	public function resetWorld(?Closure $onSuccess, ?Closure $onFail): void
+	{
+		$zipFileFullPath = Path::join($this->gamelib->getArenasBackupPath(), $this->getID() . ".zip");
+		$extractionFullPath = $this->gamelib->getServerWorldsPath();
+		$worldDirectoryFullPath = Path::join($extractionFullPath, $this->worldName);
+		$asyncPool = $this->gamelib->getAsyncPool();
+
+		if (!file_exists($zipFileFullPath)) {
+			$onFail();
+			return;
+		}
+
+		if (!is_file($zipFileFullPath)) {
+			$onFail();
+			return;
+		}
+
+		if (!is_dir($worldDirectoryFullPath)) {
+			return;
+		}
+
+		$worldManager = $this->gamelib->getWorldManager();
+
+		if ($worldManager->isWorldLoaded($this->worldName)) {
+			$worldManager->unloadWorld($worldManager->getWorldByName($this->worldName));
+		}
+
+		$asyncPool->submitTask(new DeleteDirectoryAsyncTask(
+			$worldDirectoryFullPath,
+			function () use ($asyncPool, $zipFileFullPath, $extractionFullPath, $worldManager, $onSuccess, $onFail): void {
+				$asyncPool->submitTask(new ExtractZipAsyncTask(
+					$zipFileFullPath,
+					$extractionFullPath,
+					function () use ($worldManager, $onSuccess): void {
+						$worldManager->loadWorld($this->worldName);
+
+						if (!is_null($onSuccess)) $onSuccess();
+					},
+					$onFail
+				));
+			},
+			$onFail
+		));
 	}
 
 	/**

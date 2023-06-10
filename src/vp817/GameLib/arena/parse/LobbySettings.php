@@ -55,32 +55,11 @@ final class LobbySettings
 	}
 
 	/**
-	 * @return void
-	 */
-	private function lazyUpdateWorld(): void
-	{
-		$worldManager = $this->worldManager;
-
-		$loadWorld = function () use ($worldManager): void {
-			if (!$worldManager->isWorldLoaded($this->worldName)) $worldManager->loadWorld($this->worldName);
-
-			$this->world = $worldManager->getWorldByName($this->worldName);
-		};
-
-		if (is_null($this->world)) {
-			$loadWorld();
-			return;
-		}
-
-		$loadWorld();
-	}
-
-	/**
 	 * @return null|World
 	 */
 	public function getWorld(): ?World
 	{
-		$this->lazyUpdateWorld();
+		Utils::lazyUpdateWorld($this->worldManager, $this->worldName, $this->world);
 
 		return $this->world;
 	}
@@ -90,8 +69,6 @@ final class LobbySettings
 	 */
 	public function getLocation(): Location
 	{
-		$world = $this->getWorld();
-
 		$location = $this->settings["location"];
 		$x = $location["x"];
 		$y = $location["y"];
@@ -99,6 +76,6 @@ final class LobbySettings
 		$yaw = $location["yaw"];
 		$pitch = $location["pitch"];
 
-		return new Location($x, $y, $z, $world, $yaw, $pitch);
+		return new Location($x, $y, $z, $this->getWorld(), $yaw, $pitch);
 	}
 }

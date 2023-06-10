@@ -29,27 +29,59 @@
 
 declare(strict_types=1);
 
-namespace vp817\GameLib\arena\states\list;
+namespace vp817\GameLib\tasks\async;
 
-use vp817\GameLib\arena\Arena;
-use vp817\GameLib\arena\states\ArenaState;
-use vp817\GameLib\arena\states\ArenaStates;
+use Closure;
+use pocketmine\scheduler\AsyncTask;
+use vp817\GameLib\utilities\Utils;
+use function is_bool;
+use function is_null;
 
-class ResettingState extends ArenaState
+class CreateZipAsyncTask extends AsyncTask
 {
 
+	public const ON_SUCCESS_KEY = "OnSuccess";
+	public const ON_FAIL_KEY = "OnFail";
+
 	/**
-	 * @param int $time
+	 * @param string $directoryFullPath
+	 * @param string $zipFileFullPath
+	 * @param null|Closure $onSuccess
+	 * @param null|Closure $onFail
+	 */
+	public function __construct(private string $directoryFullPath, private string $zipFileFullPath, ?Closure $onSuccess, ?Closure $onFail)
+	{
+		$this->storeLocal(self::ON_SUCCESS_KEY, $onSuccess);
+		$this->storeLocal(self::ON_FAIL_KEY, $onFail);
+	}
+
+	/**
 	 * @return void
 	 */
-	public function tick(Arena $arena): void
+	public function onRun(): void
 	{
-		$arena->resetWorld(
-			function () use ($arena): void {
-				$arena->getTickTask()->reload();
-				$arena->setState(ArenaStates::WAITING());
-			},
-			null
-		);
+		$result = Utils::zipDirectory($this->directoryFullPath, $this->zipFileFullPath);
+		$this->setResult($result);
+	}
+
+	/**
+	 * @return void
+	 */
+	public function onCompletion(): void
+	{
+		$onSuccess = $this->fetchLocal(self::ON_SUCCESS_KEY);
+		$onFail = $this->fetchLocal(self::ON_FAIL_KEY);
+		$noError = $this->getResult();
+
+		if (!is_bool($noError)) {
+			if (!is_null($onFail)) ($onFail)();
+			return;
+		}
+
+		if ($noError) {
+			if (!is_null($onSuccess)) ($onSuccess)();
+		} else {
+			if (!is_null($onFail)) ($onFail)();
+		}
 	}
 }

@@ -36,13 +36,13 @@ use pocketmine\player\Player;
 use vp817\GameLib\arena\Arena;
 use vp817\GameLib\player\ArenaPlayer;
 use vp817\GameLib\util\Team;
+use function array_filter;
+use function array_key_exists;
+use function array_rand;
+use function array_shift;
+use function count;
 use function is_null;
 use function strtolower;
-use function array_key_exists;
-use function array_filter;
-use function count;
-use function array_shift;
-use function array_rand;
 
 final class TeamManager
 {

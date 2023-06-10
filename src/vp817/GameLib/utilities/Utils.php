@@ -36,6 +36,8 @@ use pocketmine\plugin\PluginBase;
 use pocketmine\plugin\ResourceProvider;
 use pocketmine\utils\AssumptionFailedError;
 use pocketmine\utils\Utils as PMUtils;
+use pocketmine\world\World;
+use pocketmine\world\WorldManager;
 use poggit\libasynql\base\DataConnectorImpl;
 use poggit\libasynql\base\SqlThreadPool;
 use poggit\libasynql\ConfigException;
@@ -46,10 +48,14 @@ use poggit\libasynql\mysqli\MysqlCredentials;
 use poggit\libasynql\mysqli\MysqliThread;
 use poggit\libasynql\SqlError;
 use poggit\libasynql\sqlite3\Sqlite3Thread;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use ReflectionProperty;
 use Symfony\Component\Filesystem\Path;
+use ZipArchive;
 use function array_key_exists;
 use function array_keys;
+use function array_values;
 use function basename;
 use function count;
 use function dirname;
@@ -57,18 +63,23 @@ use function extension_loaded;
 use function fclose;
 use function file_exists;
 use function fopen;
-use function is_array;
-use function is_dir;
 use function implode;
+use function is_array;
+use function is_bool;
+use function is_dir;
+use function is_file;
 use function is_string;
-use function realpath;
-use function rtrim;
-use function stream_copy_to_stream;
-use function str_replace;
 use function mkdir;
+use function realpath;
+use function rmdir;
+use function rtrim;
+use function scandir;
+use function str_replace;
+use function stream_copy_to_stream;
 use function strlen;
 use function substr;
 use function trim;
+use function unlink;
 use function usleep;
 
 final class Utils
@@ -94,13 +105,22 @@ final class Utils
 
 	/**
 	 * @param string $path
+	 * @return string
+	 */
+	public static function removeLastSlashFromPath(string $path): string
+	{
+		return rtrim(str_replace(DIRECTORY_SEPARATOR, "/", $path), "/");
+	}
+
+	/**
+	 * @param string $path
 	 * @param string $filename
 	 * @return resource|null
 	 * @throws AssumptionFailedError
 	 */
 	private static function getResource(string $path, string $filename)
 	{
-		$filename = rtrim(str_replace(DIRECTORY_SEPARATOR, "/", $filename), "/");
+		$filename = self::removeLastSlashFromPath($filename);
 		if (file_exists($path . $filename)) {
 			$resource = fopen($path . $filename, "rb");
 			if ($resource === false) throw new AssumptionFailedError("fopen() should not fail on a file which exists");
@@ -163,7 +183,7 @@ final class Utils
 		$property2 = new ReflectionProperty($resourceProvider, "file");
 		$property2->setAccessible(true);
 		$resourcePath = $property2->getValue($resourceProvider);
-		$resourcePathNoSl = substr($resourcePath, 0, strlen($resourcePath) - 1);
+		$resourcePathNoSl = self::removeLastSlashFromPath($resourcePath);
 		if (!is_dir($resourcePathNoSl)) {
 			@mkdir($resourcePathNoSl);
 		}
@@ -292,5 +312,115 @@ final class Utils
 	public static function replaceMessageContent(array $replacement, string $message): string
 	{
 		return str_replace(array_keys($replacement), array_values($replacement), $message);
+	}
+
+	/**
+	 * @param WorldManager $manager
+	 * @param string $worldName
+	 * @param null|World &$world
+	 * @return void
+	 */
+	public static function lazyUpdateWorld(WorldManager $worldManager, string $worldName, ?World &$world): void
+	{
+		$fn = static function () use ($worldManager, $worldName): ?World {
+			if (!$worldManager->isWorldLoaded($worldName)) $worldManager->loadWorld($worldName);
+
+			return $worldManager->getWorldByName($worldName);
+		};
+
+		$world = $fn();
+	}
+
+	/**
+	 * @param string $directoryFullPath
+	 * @return bool
+	 */
+	public static function deleteDirectory(string $directoryFullPath): bool
+	{
+		if (!file_exists($directoryFullPath)) {
+			return false;
+		}
+
+		if (!is_dir($directoryFullPath)) {
+			return unlink($directoryFullPath);;
+		}
+
+		foreach (scandir($directoryFullPath) as $item) {
+			if ($item == "." || $item == "..") {
+				continue;
+			}
+
+			if (!self::deleteDirectory(Path::join($directoryFullPath, $item))) {
+				return true;
+			}
+		}
+
+		return rmdir($directoryFullPath);
+	}
+
+	/**
+	 * @param string $directoryFullPath
+	 * @param string $zipFileFullPath
+	 * @return bool
+	 */
+	public static function zipDirectory(string $directoryFullPath, string $zipFileFullPath): bool
+	{
+		if (!file_exists($directoryFullPath)) {
+			return false;
+		}
+		if (!is_dir($directoryFullPath)) {
+			return false;
+		}
+
+		if (is_file($zipFileFullPath)) {
+			unlink($zipFileFullPath);
+		}
+
+		$directoryFullPath = realpath($directoryFullPath);
+
+		$recursiveIterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directoryFullPath), RecursiveIteratorIterator::LEAVES_ONLY);
+
+		$zip = new ZipArchive;
+		$zip->open($zipFileFullPath, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+
+		foreach ($recursiveIterator as $fileInfo) {
+			if (!$fileInfo->isDir()) {
+				$realPath = $fileInfo->getRealPath();
+				if (is_bool($realPath)) {
+					continue;
+				}
+				$filePath = $fileInfo->getPath() . "/" . $fileInfo->getBasename();
+				$zip->addFile($realPath, substr($filePath, strlen($directoryFullPath) + 1));
+			}
+		}
+
+		$zip->close();
+
+		unset($zip);
+		return true;
+	}
+
+	/**
+	 * @param string $zipFileFullPath
+	 * @param string $extractionFullPath
+	 * @return bool
+	 */
+	public static function extractZipFile(string $zipFileFullPath, string $extractionFullPath): bool
+	{
+		if (!file_exists($zipFileFullPath)) {
+			return false;
+		}
+
+		if (!is_file($zipFileFullPath)) {
+			return false;
+		}
+
+		$zip = new ZipArchive;
+		$zip->open($zipFileFullPath);
+		$zip->extractTo($extractionFullPath);
+		$zip->close();
+
+		unset($zip);
+		return true;
 	}
 }

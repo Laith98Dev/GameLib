@@ -34,8 +34,8 @@ namespace vp817\GameLib\managers;
 use Closure;
 use pocketmine\player\Player;
 use vp817\GameLib\player\SetupPlayer;
-use function is_null;
 use function array_key_exists;
+use function is_null;
 
 final class SetupManager
 {
