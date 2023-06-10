@@ -58,7 +58,7 @@ class MessageBroadcaster
 			if (is_null($cells)) return;
 			if (!$cells->isOnline()) return;
 
-			if (strlen(trim($argument)) <= 0) {
+			if (strlen(trim($argument)) < 1) {
 				$cells->$function();
 				return;
 			}
