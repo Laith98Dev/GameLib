@@ -51,7 +51,6 @@ use vp817\GameLib\event\listener\DefaultArenaListener;
 use vp817\GameLib\event\listener\ServerEventListener;
 use vp817\GameLib\managers\ArenasManager;
 use vp817\GameLib\managers\SetupManager;
-use vp817\GameLib\managers\WaterdogManager;
 use vp817\GameLib\player\SetupPlayer;
 use vp817\GameLib\utilities\SqlQueries;
 use vp817\GameLib\utilities\Utils;
@@ -89,8 +88,6 @@ final class GameLib
 	private string $arenasBackupPath;
 	/** @var SetupManager $setupManager */
 	private SetupManager $setupManager;
-	/** @var WaterdogManager $waterdogManager */
-	private WaterdogManager $waterdogManager;
 
 	/**
 	 * initialize a new gamelib
@@ -107,29 +104,12 @@ final class GameLib
 	 * 		"schema" => "schema"
 	 * ]
 	 * 
-	 * waterdogData usage example:
-	 * 
-	 * example for not using:
-	 * 
-	 * duel: ["enabled" => false]
-	 * 
-	 * example for using:
-	 * 
-	 * duel: [
-	 * 		"enabled" => true,
-	 * 		"settings" => [
-	 * 			"mode" => "simple",
-	 * 			"lobby" => "127.0.0.1:19133"
-	 * 		]
-	 * ]
-	 * 
 	 * @param PluginBase $plugin
 	 * @param array $sqlDatabase
-	 * @param array $waterdogData
 	 * @return GameLib
 	 * @throws RuntimeException
 	 */
-	public static function init(PluginBase $plugin, array $sqlDatabase, array $waterdogData = ["enabled" => false]): GameLib
+	public static function init(PluginBase $plugin, array $sqlDatabase): GameLib
 	{
 		if (!is_null(self::$plugin)) {
 			throw new RuntimeException("GameLib is already initialized for this plugin");
@@ -146,7 +126,7 @@ final class GameLib
 
 		require_once $autoload;
 
-		return new GameLib($plugin, $sqlDatabase, $waterdogData);
+		return new GameLib($plugin, $sqlDatabase);
 	}
 
 	/**
@@ -166,10 +146,9 @@ final class GameLib
 
 	/**
 	 * @param PluginBase $plugin
-	 * @param array $waterdogData
 	 * @param array $sqlDatabase
 	 */
-	private function __construct(PluginBase $plugin, array $sqlDatabase = [], array $waterdogData = [])
+	private function __construct(PluginBase $plugin, array $sqlDatabase = [])
 	{
 		self::$plugin = $plugin;
 
@@ -215,7 +194,6 @@ final class GameLib
 		$this->arenasManager = new ArenasManager();
 		$this->arenaMessages = new DefaultArenaMessages();
 		$this->setupManager = new SetupManager();
-		$this->waterdogManager = new WaterdogManager($waterdogData);
 		$this->arenaListenerClass = DefaultArenaListener::class;
 
 		self::$plugin->getServer()->getPluginManager()->registerEvents(new ServerEventListener($this), self::$plugin);
@@ -325,14 +303,6 @@ final class GameLib
 	public function getSetupManager(): SetupManager
 	{
 		return $this->setupManager;
-	}
-
-	/**
-	 * @return WaterdogManager
-	 */
-	public function getWaterdogManager(): WaterdogManager
-	{
-		return $this->waterdogManager;
 	}
 
 	/**

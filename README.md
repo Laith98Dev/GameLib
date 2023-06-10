@@ -41,18 +41,6 @@ $gamelib = \vp817\GameLib\GameLib::init($this, [
 	"password" => "", // your mysql password
 	"schema" => "" // schema for storing data for the plugin using the lib
 ]);
-/**
- * using waterdog
- * 
- * Note: currently there is only the simple system and the complex one would be added after the gamelib has been finished
- */
-$gamelib = \vp817\GameLib\GameLib::init($this, [...], [
-	"enabled" => true, // this is true or false
-	"settings" => [ // only reached if enabled
-		"mode" => "simple", // simple or complex
-		"lobby" => "127.0.0.1:19133" // this is the ip and port where the player will be sent after finishing the game
-	]
-]);
 
 // this is the place for saving the world of the arenas
 $gamelib->setArenasBackupPath("GameLibMapsBackup"); // prefer the plugin data

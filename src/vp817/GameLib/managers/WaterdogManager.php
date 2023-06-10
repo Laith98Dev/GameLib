@@ -32,7 +32,6 @@ declare(strict_types=1);
 namespace vp817\GameLib\managers;
 
 use Closure;
-use pocketmine\network\mcpe\protocol\TransferPacket;
 use pocketmine\player\Player;
 use function array_key_exists;
 use function boolval;
@@ -40,8 +39,6 @@ use function explode;
 use function is_null;
 use function is_array;
 use function is_string;
-use function in_array;
-use function strtolower;
 use function str_contains;
 
 final class WaterdogManager
@@ -85,21 +82,6 @@ final class WaterdogManager
 			if (!is_null($onFail)) $onFail("waterdog settings is not an array");
 			return;
 		}
-		if (!array_key_exists("mode", $settings)) {
-			if (!is_null($onFail)) $onFail("mode not found in waterdog settings");
-			return;
-		}
-		$mode = $settings["mode"];
-		if (!is_string($mode)) {
-			if (!is_null($onFail)) $onFail("waterdog settings mode is not string");
-			return;
-		}
-		$mode = strtolower($mode);
-
-		if (!in_array($mode, ["simple", "complex"], true)) {
-			if (!is_null($onFail)) $onFail("the mode that you are using in waterdog settings is invalid");
-			return;
-		}
 
 		if (!array_key_exists("lobby", $settings)) {
 			if (!is_null($onFail)) $onFail("the lobby address not found in waterdog settings");
@@ -119,16 +101,8 @@ final class WaterdogManager
 		}
 
 		$lobbyAddress = explode(":", $lobbyIpAndPort);
+		$player->getNetworkSession()->transfer(strval($lobbyAddress[0]), intval(strval($lobbyAddress[1])), "transfered from waterdog");
 
-		if ($mode == "simple") {
-			$packet = new TransferPacket();
-			$packet->address = strval($lobbyAddress[0]);
-			$packet->port = intval($lobbyAddress[1]);
-			$player->getNetworkSession()->sendDataPacket($packet);
-
-			if (!is_null($onSuccess)) $onSuccess();
-		} else if ($mode == "complex") {
-			// TODO
-		}
+		if (!is_null($onSuccess)) $onSuccess();
 	}
 }

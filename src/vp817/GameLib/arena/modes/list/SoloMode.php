@@ -215,16 +215,9 @@ class SoloMode extends ArenaMode
 					"%max%" => $this->getMaxPlayers()
 				], $arenaMessages->SucessfullyLeftArena());
 
-				if ($this->gamelib->getWaterdogManager()->isEnabled()) {
-					$this->gamelib->getWaterdogManager()->transfer($cells, function () use ($notifyCB, $notifyPlayers, $onSuccess): void {
-						if ($notifyPlayers) $notifyCB();
-						if (!is_null($onSuccess)) $onSuccess();
-					}, $onFail);
-				} else {
-					$cells->teleport($this->gamelib->getWorldManager()->getDefaultWorld()->getSpawnLocation());
-					if ($notifyPlayers) $notifyCB;
-					if (!is_null($onSuccess)) $onSuccess();
-				}
+				$cells->teleport($this->gamelib->getWorldManager()->getDefaultWorld()->getSpawnLocation());
+				if ($notifyPlayers) $notifyCB;
+				if (!is_null($onSuccess)) $onSuccess();
 			});
 		});
 	}
