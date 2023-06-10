@@ -69,10 +69,8 @@ class ExtractZipAsyncTask extends AsyncTask
 	 */
 	public function onCompletion(): void
 	{
-		// $onSuccess = $this->fetchLocal(self::ON_SUCCESS_KEY);
-		// $onFail = $this->fetchLocal(self::ON_FAIL_KEY);
-		$onSuccess = $this->onSuccess;
-		$onFail = $this->onFail;
+		$onSuccess = $this->fetchLocal(self::ON_SUCCESS_KEY);
+		$onFail = $this->fetchLocal(self::ON_FAIL_KEY);
 		$noError = $this->getResult();
 
 		if (!is_bool($noError)) {

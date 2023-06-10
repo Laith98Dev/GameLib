@@ -48,10 +48,10 @@ class DeleteDirectoryAsyncTask extends AsyncTask
 	 * @param null|Closure $onSuccess
 	 * @param null|Closure $onFail
 	 */
-	public function __construct(private string $directoryFullPath, private ?Closure $onSuccess, private ?Closure $onFail)
+	public function __construct(private string $directoryFullPath, ?Closure $onSuccess, ?Closure $onFail)
 	{
-		// $this->storeLocal(self::ON_SUCCESS_KEY, $onSuccess);
-		// $this->storeLocal(self::ON_FAIL_KEY, $onFail);
+		$this->storeLocal(self::ON_SUCCESS_KEY, $onSuccess);
+		$this->storeLocal(self::ON_FAIL_KEY, $onFail);
 	}
 
 	/**
@@ -68,10 +68,8 @@ class DeleteDirectoryAsyncTask extends AsyncTask
 	 */
 	public function onCompletion(): void
 	{
-		// $onSuccess = $this->fetchLocal(self::ON_SUCCESS_KEY);
-		// $onFail = $this->fetchLocal(self::ON_FAIL_KEY);
-		$onSuccess = $this->onSuccess;
-		$onFail = $this->onFail;
+		$onSuccess = $this->fetchLocal(self::ON_SUCCESS_KEY);
+		$onFail = $this->fetchLocal(self::ON_FAIL_KEY);
 		$noError = $this->getResult();
 
 		if (!is_bool($noError)) {
