@@ -33,6 +33,7 @@ namespace vp817\GameLib\tasks\async;
 
 use Closure;
 use pocketmine\scheduler\AsyncTask;
+use pocketmine\thread\NonThreadSafeValue;
 use vp817\GameLib\utilities\Utils;
 use function is_bool;
 use function is_null;
@@ -51,8 +52,8 @@ class ExtractZipAsyncTask extends AsyncTask
 	 */
 	public function __construct(private string $zipFileFullPath, private string $extractionFullPath, private ?Closure $onSuccess, private ?Closure $onFail)
 	{
-		$this->storeLocal(self::ON_SUCCESS_KEY, $onSuccess);
-		$this->storeLocal(self::ON_FAIL_KEY, $onFail);
+		$this->storeLocal(self::ON_SUCCESS_KEY, new NonThreadSafeValue($onSuccess));
+		$this->storeLocal(self::ON_FAIL_KEY, new NonThreadSafeValue($onFail));
 	}
 
 	/**
@@ -69,8 +70,8 @@ class ExtractZipAsyncTask extends AsyncTask
 	 */
 	public function onCompletion(): void
 	{
-		$onSuccess = $this->fetchLocal(self::ON_SUCCESS_KEY);
-		$onFail = $this->fetchLocal(self::ON_FAIL_KEY);
+		$onSuccess = $this->fetchLocal(self::ON_SUCCESS_KEY)?->deserialize();
+		$onFail = $this->fetchLocal(self::ON_FAIL_KEY)?->deserialize();
 		$noError = $this->getResult();
 
 		if (!is_bool($noError)) {

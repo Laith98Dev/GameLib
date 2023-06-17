@@ -177,11 +177,9 @@ final class Utils
 	public static function saveResourceToPluginResources(PluginBase $plugin, string $fromPath, string $filename): bool
 	{
 		$property = new ReflectionProperty(PluginBase::class, "resourceProvider");
-		$property->setAccessible(true);
 		/** @var ResourceProvider $resourceProvider */
 		$resourceProvider = $property->getValue($plugin);
 		$property2 = new ReflectionProperty($resourceProvider, "file");
-		$property2->setAccessible(true);
 		$resourcePath = $property2->getValue($resourceProvider);
 		$resourcePathNoSl = self::removeLastSlashFromPath($resourcePath);
 		if (!is_dir($resourcePathNoSl)) {
