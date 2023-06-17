@@ -4,7 +4,7 @@
 
 ## Rquirements
 
-> You will need the "libasynql" virion to use this virion
+> You will need the <a href="https://github.com/poggit/libasynql">"libasynql"</a> virion to use this virion
 
 ## What is GameLib?
 
