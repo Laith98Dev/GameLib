@@ -10,8 +10,8 @@ CREATE TABLE IF NOT EXISTS arenas(
 	restartingTime INTEGER NOT NULL,
 	lobbySettings TEXT,
 	spawns TEXT,
-	arenaData MEDIUMTEXT,
-	extraData LARGETEXT
+	arenaData TEXT,
+	extraData TEXT
 );
 -- # }
 -- # { add-arena
