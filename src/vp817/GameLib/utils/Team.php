@@ -29,26 +29,72 @@
 
 declare(strict_types=1);
 
-namespace vp817\GameLib\form\list\normal;
+namespace vp817\GameLib\utils;
 
-use pocketmine\utils\EnumTrait;
+use vp817\GameLib\traits\ArenaPlayerTrait;
 
-/**
- * @method static FormButtonImageType PATH()
- * @method static FormButtonImageType URL()
- */
-final class FormButtonImageType
+final class Team
 {
-	use EnumTrait;
+	use ArenaPlayerTrait {
+		add as public addPlayer;
+		remove as public removePlayer;
+		get as public getPlayer;
+		has as public hasPlayer;
+		getAll as public getPlayers;
+		add as private add;
+		remove as private remove;
+		get as private get;
+		has as private has;
+		getAll as private getAll;
+	}
+
+	/** @var string $name */
+	private string $name;
+	/** @var string $color */
+	private string $color;
+	/** @var int $maxPlayers */
+	private int $maxPlayers = -1;
 
 	/**
+	 * @param string $name
+	 * @param string $color
+	 */
+	public function __construct(string $name, string $color)
+	{
+		$this->name = $name;
+		$this->color = $color;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getName(): string
+	{
+		return $this->name;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getColor(): string
+	{
+		return $this->color;
+	}
+
+	/**
+	 * @param int $value
 	 * @return void
 	 */
-	protected static function setup(): void
+	public function setMaxPlayers(int $value): void
 	{
-		self::registerAll(
-			new self("path"),
-			new self("url")
-		);
+		$this->maxPlayers = $value;
+	}
+
+	/**
+	 * @return int
+	 */
+	public function getMaxPlayers(): int
+	{
+		return $this->maxPlayers;
 	}
 }

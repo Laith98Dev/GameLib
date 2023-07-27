@@ -49,7 +49,7 @@ use vp817\GameLib\player\ArenaPlayer;
 use vp817\GameLib\tasks\ArenaTickTask;
 use vp817\GameLib\tasks\async\DeleteDirectoryAsyncTask;
 use vp817\GameLib\tasks\async\ExtractZipAsyncTask;
-use vp817\GameLib\utilities\Utils;
+use vp817\GameLib\utils\Utils;
 use function file_exists;
 use function intval;
 use function json_decode;

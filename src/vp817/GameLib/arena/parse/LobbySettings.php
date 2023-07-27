@@ -34,7 +34,7 @@ namespace vp817\GameLib\arena\parse;
 use pocketmine\entity\Location;
 use pocketmine\world\World;
 use pocketmine\world\WorldManager;
-use vp817\GameLib\utilities\Utils;
+use vp817\GameLib\utils\Utils;
 
 final class LobbySettings
 {
@@ -50,7 +50,7 @@ final class LobbySettings
 	 */
 	public function __construct(private WorldManager $worldManager, private array $settings)
 	{
-		$this->worldName = $settings["worldName"];
+		$this->worldName = $settings["worldName"] ?? "";
 		$this->world = $this->worldManager->getWorldByName($this->worldName);
 	}
 

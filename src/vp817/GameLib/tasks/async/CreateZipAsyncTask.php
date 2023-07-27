@@ -34,7 +34,7 @@ namespace vp817\GameLib\tasks\async;
 use Closure;
 use pocketmine\scheduler\AsyncTask;
 use pocketmine\thread\NonThreadSafeValue;
-use vp817\GameLib\utilities\Utils;
+use vp817\GameLib\utils\Utils;
 use function is_bool;
 use function is_null;
 

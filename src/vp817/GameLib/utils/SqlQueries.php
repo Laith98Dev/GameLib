@@ -29,48 +29,17 @@
 
 declare(strict_types=1);
 
-namespace vp817\GameLib\form\list\normal;
+namespace vp817\GameLib\utils;
 
-use Closure;
-use vp817\GameLib\form\FormInterface;
-use function is_null;
-
-final class NormalForm extends FormInterface
+final class SqlQueries
 {
-
-	/**
-	 * @param string $title
-	 * @param string $contents
-	 * @param null|Closure $xButtonCallback
-	 */
-	public function __construct(string $title, string $content, ?Closure $xButtonCallback = null)
-	{
-		parent::__construct($xButtonCallback);
-
-		$this->data = [
-			"type" => "form",
-			"title" => $title,
-			"content" => $content,
-			"buttons" => []
-		];
-	}
-
-	/**
-	 * @param string $text
-	 * @param Closure $onUse
-	 * @param null|FormButtonImageType $imageType
-	 * @param string $imagePath
-	 * @return void
-	 */
-	public function pushButton(string $text, Closure $onUse, ?FormButtonImageType $imageType = null, string $imagePath = ""): void
-	{
-		$button = ["text" => $text];
-		if (!is_null($imageType)) {
-			$button["image"]["type"] = $imageType->name();
-			$button["image"]["data"] = $imagePath;
-		}
-		$this->data["buttons"][] = $button;
-
-		if (!is_null($onUse)) $this->onUseList[] = $onUse;
-	}
+	public const INIT = "gl-queries.init";
+	public const ADD_ARENA = "gl-queries.add-arena";
+	public const UPDATE_ARENA_SPAWNS = "gl-queries.update-arena-spawns";
+	public const UPDATE_ARENA_LOBBY_SETTINGS = "gl-queries.update-arena-lobby-settings";
+	public const UPDATE_ARENA_DATA = "gl-queries.update-arena-data";
+	public const UPDATE_ARENA_EXTRA_DATA = "gl-queries.update-arena-extra-data";
+	public const GET_ARENA_DATA = "gl-queries.get-arena-data";
+	public const REMOVE_ARENA = "gl-queries.remove-arena";
+	public const GET_ALL_ARENAS = "gl-queries.get-all-arenas";
 }

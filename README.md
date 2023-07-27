@@ -54,7 +54,7 @@ $gamelib->setArenasBackupPath("GameLibMapsBackup"); // prefer the plugin data
  * 
  * Note: this is optional
  */
-$gamelib->setArenaMessagesClass(new Class());
+$gamelib->setArenaMessagesClass(new CustomArenaMessagesClass());
 
 /**
  * setting the arena messages that will be sent when joining the arena or doing anything related to arena
@@ -133,7 +133,7 @@ $gamelib->addPlayerToSetupArena(player, arenaID, onSuccess(player), onFail(arena
 ?>
 ```
 
-### setupping an arena
+### setuping an arena
 ```php
 <?php
 
@@ -152,7 +152,7 @@ $gamelib->addPlayerToSetupArena(player, arenaID, onSuccess(player), onFail(arena
 ?>
 ```
 
-### finishing setupping an arena
+### finishing setuping an arena
 ```php
 <?php
 
@@ -163,7 +163,7 @@ $gamelib->addPlayerToSetupArena(player, arenaID, onSuccess(player), onFail(arena
  * onSuccess = callback
  * onFail = callback
  * 
- * Note: use this after finishing setupping an arena or you will mess it up when u put it at the wrong place
+ * Note: use this after finishing setuping an arena or you will mess it up when u put it at the wrong place
  * 
  * Another Note: it can only be used when you are in setup mode
  */
@@ -172,7 +172,7 @@ $gamelib->finishArenaSetup(player, onSuccess(arena), onFail(reason));
 ?>
 ```
 
-### finishing setupping an arena
+### finishing setuping an arena
 ```php
 <?php
 

@@ -32,7 +32,7 @@ declare(strict_types=1);
 namespace vp817\GameLib\arena;
 
 use RuntimeException;
-use vp817\GameLib\utilities\Utils;
+use vp817\GameLib\utils\Utils;
 use function array_keys;
 use function json_encode;
 
