@@ -249,7 +249,7 @@ final class ArenaPlayer
         $this->getArmorInventory()->clearAll();
         $this->getEffectManager()->clear();
 
-        $effects = $this->savedCells["effects"];
+        $effects = $this->getEffectManager()->all();
         if (!empty($effects)) {
             foreach ($effects as $key => $value) {
                 $this->getEffectManager()->add($value);
