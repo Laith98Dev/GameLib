@@ -50,24 +50,24 @@ $gamelib->setArenasBackupPath("GameLibMapsBackup"); // prefer the plugin data
  * 
  * \arenaMessagesPath\ = \vp817\GameLib\arena\message\
  * 
- * "new Class()" is a class that extends \arenaMessagesPath\ArenaMessages.php or can extends \arenaMessagesPath\DefaultArenaMessages.php
+ * "new \your_path\CustomArenaMessagesClass()" is a class that extends \arenaMessagesPath\ArenaMessages.php or can extends \arenaMessagesPath\DefaultArenaMessages.php
  * 
  * Note: this is optional
  */
-$gamelib->setArenaMessagesClass(new CustomArenaMessagesClass());
+$gamelib->setArenaMessagesClass(new \your_path\CustomArenaMessagesClass());
 
 /**
  * setting the arena messages that will be sent when joining the arena or doing anything related to arena
  * 
  * \eventsPath\ = \vp817\GameLib\event\
  * 
- * "Class::class" is the name of the class that extends \eventsPath\listener\DefaultArenaListener.php
+ * "CustomArenaListenerClass::class" is the name of the class that extends \eventsPath\listener\DefaultArenaListener.php
  * 
  * Note: this is also optional but you will need to put a class in time
  */
-$gamelib->setArenaListenerClass(Class::class);
+$gamelib->setArenaListenerClass(\your_path\CustomArenaListenerClass::class);
 // if you didnt get what was written up there then this is a tip
-$gamelib->setArenaListenerClass(\your_path\CustomArenaListener::class);
+$gamelib->setArenaListenerClass(\your_path\CustomArenaListenerClass::class);
 
 ?>
 
