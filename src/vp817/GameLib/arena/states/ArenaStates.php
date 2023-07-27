@@ -55,10 +55,25 @@ final class ArenaStates
 	 */
 	public static function setup(): void
 	{
-		self::_registryRegister("waiting", new WaitingState());
-		self::_registryRegister("countdown", new CountdownState());
-		self::_registryRegister("ingame", new InGameState());
-		self::_registryRegister("restarting", new RestartingState());
-		self::_registryRegister("resetting", new ResettingState());
+		self::_registryRegister(
+			name: "waiting",
+			member: new WaitingState()
+		);
+		self::_registryRegister(
+			name: "countdown",
+			member: new CountdownState()
+		);
+		self::_registryRegister(
+			name: "ingame",
+			member: new InGameState()
+		);
+		self::_registryRegister(
+			name: "restarting",
+			member: new RestartingState()
+		);
+		self::_registryRegister(
+			name: "resetting",
+			member: new ResettingState()
+		);
 	}
 }

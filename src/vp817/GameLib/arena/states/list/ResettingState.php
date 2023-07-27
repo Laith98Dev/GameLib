@@ -45,11 +45,11 @@ class ResettingState extends ArenaState
 	public function tick(Arena $arena): void
 	{
 		$arena->resetWorld(
-			function () use ($arena): void {
+			onSuccess: static function () use ($arena): void {
 				$arena->getTickTask()->reload();
-				$arena->setState(ArenaStates::WAITING());
+				$arena->setState(state: ArenaStates::WAITING());
 			},
-			null
+			onFail: null
 		);
 	}
 }

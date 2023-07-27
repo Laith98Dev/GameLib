@@ -44,8 +44,11 @@ class ArenaStateChangeEvent extends Event
 	 * @param ArenaState $newState
 	 * @param int $timer
 	 */
-	public function __construct(protected Arena $arena, protected ArenaState $oldState, private ArenaState $newState)
-	{
+	public function __construct(
+		protected Arena $arena,
+		protected ArenaState $oldState,
+		private ArenaState $newState
+	) {
 	}
 
 	/**

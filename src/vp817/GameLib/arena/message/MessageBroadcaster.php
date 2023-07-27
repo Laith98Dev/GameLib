@@ -32,6 +32,7 @@ declare(strict_types=1);
 namespace vp817\GameLib\arena\message;
 
 use vp817\GameLib\arena\Arena;
+use function count;
 use function is_null;
 
 class MessageBroadcaster
@@ -40,16 +41,17 @@ class MessageBroadcaster
 	/**
 	 * @param Arena $arena
 	 */
-	public function __construct(protected Arena $arena)
-	{
+	public function __construct(
+		protected Arena $arena
+	) {
 	}
 
 	/**
 	 * @param string $function
-	 * @param string $argument
+	 * @param mixed ...$arguments
 	 * @return void
 	 */
-	public function broadcast(string $function, string $argument = ""): void
+	public function broadcastFunctionCall(string $functionName, mixed ...$arguments): void
 	{
 		$players = $this->arena->getMode()->getPlayers();
 
@@ -58,12 +60,12 @@ class MessageBroadcaster
 			if (is_null($cells)) return;
 			if (!$cells->isOnline()) return;
 
-			if (strlen(trim($argument)) < 1) {
-				$cells->$function();
+			iF (count($arguments) < 1) {
+				$cells->$functionName();
 				return;
 			}
 
-			$cells->$function($argument);
+			$cells->$functionName($arguments);
 		}
 	}
 
@@ -73,7 +75,10 @@ class MessageBroadcaster
 	 */
 	public function broadcastMessage(string $value): void
 	{
-		$this->broadcast("sendMessage", $value);
+		$this->broadcastFunctionCall(
+			functionName: "sendMessage",
+			arguments: $value
+		);
 	}
 
 	/**
@@ -82,7 +87,10 @@ class MessageBroadcaster
 	 */
 	public function broadcastPopup(string $value): void
 	{
-		$this->broadcast("sendPopup", $value);
+		$this->broadcastFunctionCall(
+			functionName: "sendPopup",
+			arguments: $value
+		);
 	}
 
 	/**
@@ -91,7 +99,10 @@ class MessageBroadcaster
 	 */
 	public function broadcastTip(string $value): void
 	{
-		$this->broadcast("sendTip", $value);
+		$this->broadcastFunctionCall(
+			functionName: "sendTip",
+			arguments: $value
+		);
 	}
 
 	/**
@@ -100,7 +111,10 @@ class MessageBroadcaster
 	 */
 	public function broadcastTitle(string $value): void
 	{
-		$this->broadcast("sendTitle", $value);
+		$this->broadcastFunctionCall(
+			functionName: "sendTitle",
+			arguments: $value
+		);
 	}
 
 	/**
@@ -109,7 +123,10 @@ class MessageBroadcaster
 	 */
 	public function broadcastSubTitle(string $value): void
 	{
-		$this->broadcast("sendSubTitle", $value);
+		$this->broadcastFunctionCall(
+			functionName: "sendSubTitle",
+			arguments: $value
+		);
 	}
 
 	/**
@@ -118,7 +135,10 @@ class MessageBroadcaster
 	 */
 	public function broadcastActionBarMessage(string $value): void
 	{
-		$this->broadcast("sendActionBarMessage", $value);
+		$this->broadcastFunctionCall(
+			functionName: "sendActionBarMessage",
+			arguments: $value
+		);
 	}
 
 	/**
@@ -126,7 +146,7 @@ class MessageBroadcaster
 	 */
 	public function broadcastTitlesClear(): void
 	{
-		$this->broadcast("removeTitles");
+		$this->broadcastFunctionCall(functionName: "removeTitles");
 	}
 
 	/**
@@ -134,6 +154,6 @@ class MessageBroadcaster
 	 */
 	public function broadcastTitlesReset(): void
 	{
-		$this->broadcast("resetTitles");
+		$this->broadcastFunctionCall(functionName: "resetTitles");
 	}
 }

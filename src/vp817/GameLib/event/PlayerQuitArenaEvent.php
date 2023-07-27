@@ -42,8 +42,10 @@ class PlayerQuitArenaEvent extends Event
 	 * @param ArenaPlayer $player
 	 * @param Arena $arena
 	 */
-	public function __construct(protected ArenaPlayer $player, protected Arena $arena)
-	{
+	public function __construct(
+		protected ArenaPlayer $player,
+		protected Arena $arena
+	) {
 	}
 
 	/**

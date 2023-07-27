@@ -40,7 +40,6 @@ use function is_null;
 trait ArenaPlayerTrait
 {
 
-	/** @var ArenaPlayer[] $list */
 	private array $list = [];
 
 	/**
@@ -57,7 +56,7 @@ trait ArenaPlayerTrait
 			return;
 		}
 
-		$this->list[$bytes] = new ArenaPlayer($player);
+		$this->list[$bytes] = new ArenaPlayer(player: $player);
 
 		if (!is_null($onSuccess)) $onSuccess($this->list[$bytes]);
 	}
@@ -106,20 +105,10 @@ trait ArenaPlayerTrait
 	}
 
 	/**
-	 * @param bool $sortInNumbers
 	 * @return ArenaPlayer[]
 	 */
-	public function getAll(bool $sortInNumbers = false): array
+	public function getAll(): array
 	{
-		if (!$sortInNumbers) {
-			return $this->list;
-		}
-
-		$list = [];
-		foreach ($this->list as $bytes => $player) {
-			$list[] = $player;
-		}
-
-		return $list;
+		return $this->list;
 	}
 }

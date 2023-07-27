@@ -52,7 +52,7 @@ final class SetupManager
 	public function add(Player $player, string $arenaID, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
 		$bytes = $player->getUniqueId()->getBytes();
-		if ($this->has($bytes)) {
+		if ($this->has(bytes: $bytes)) {
 			if (!is_null($onFail)) $onFail();
 			return;
 		}
@@ -71,7 +71,7 @@ final class SetupManager
 	public function remove(Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
 		$bytes = $player->getUniqueId()->getBytes();
-		if (!$this->has($bytes)) {
+		if (!$this->has(bytes: $bytes)) {
 			if (!is_null($onFail)) $onFail();
 			return;
 		}
@@ -88,7 +88,7 @@ final class SetupManager
 	 */
 	public function get(string $bytes, Closure $onSuccess, ?Closure $onFail = null): void
 	{
-		if (!$this->has($bytes)) {
+		if (!$this->has(bytes: $bytes)) {
 			if (!is_null($onFail)) $onFail();
 			return;
 		}

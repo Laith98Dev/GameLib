@@ -35,6 +35,8 @@ use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerQuitEvent;
 use vp817\GameLib\event\PlayerQuitFromServerEvent;
 use vp817\GameLib\GameLib;
+use function strlen;
+use function trim;
 
 class ServerEventListener implements Listener 
 {
@@ -42,8 +44,9 @@ class ServerEventListener implements Listener
 	/**
 	 * @param GameLib $gamelib
 	 */
-	public function __construct(protected GameLib $gamelib)
-	{
+	public function __construct(
+		protected GameLib $gamelib
+	) {
 	}
 
 	/**

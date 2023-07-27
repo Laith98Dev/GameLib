@@ -43,8 +43,11 @@ class ArenaPlayerTpToSpawnEvent extends Event
 	 * @param Arena $arena
 	 * @param array $spawn
 	 */
-	public function __construct(protected ArenaPlayer $player, protected Arena $arena, protected array $spawn)
-	{
+	public function __construct(
+		protected ArenaPlayer $player,
+		protected Arena $arena,
+		protected array $spawn
+	) {
 	}
 
 	/**

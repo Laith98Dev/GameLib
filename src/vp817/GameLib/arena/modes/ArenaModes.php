@@ -53,10 +53,22 @@ final class ArenaModes
 	 */
 	public static function setup(): void
 	{
-		self::_registryRegister("solo", new SoloMode());
-		self::_registryRegister("duo", new DuoMode());
-		self::_registryRegister("trio", new TrioMode());
-		self::_registryRegister("squad", new SquadMode());
+		self::_registryRegister(
+			name: "solo",
+			member: new SoloMode()
+		);
+		self::_registryRegister(
+			name: "duo",
+			member: new DuoMode()
+		);
+		self::_registryRegister(
+			name: "trio",
+			member: new TrioMode()
+		);
+		self::_registryRegister(
+			name: "squad",
+			member: new SquadMode()
+		);
 	}
 
 	/**
@@ -65,6 +77,6 @@ final class ArenaModes
 	 */
 	public static function fromString(string $value): ?ArenaMode
 	{
-		return self::_registryFromString($value) ?? null;
+		return self::_registryFromString(name: $value) ?? null;
 	}
 }

@@ -31,28 +31,20 @@ declare(strict_types=1);
 
 namespace vp817\GameLib\tasks\async;
 
-use Closure;
 use pocketmine\scheduler\AsyncTask;
-use pocketmine\thread\NonThreadSafeValue;
 use vp817\GameLib\utils\Utils;
-use function is_bool;
-use function is_null;
 
 class DeleteDirectoryAsyncTask extends AsyncTask
 {
 
-	public const ON_SUCCESS_KEY = "OnSuccess";
-	public const ON_FAIL_KEY = "OnFail";
+	protected bool $completed = false;
 
 	/**
 	 * @param string $directoryFullPath
-	 * @param null|Closure $onSuccess
-	 * @param null|Closure $onFail
 	 */
-	public function __construct(private string $directoryFullPath, ?Closure $onSuccess, ?Closure $onFail)
-	{
-		$this->storeLocal(self::ON_SUCCESS_KEY, new NonThreadSafeValue($onSuccess));
-		$this->storeLocal(self::ON_FAIL_KEY, new NonThreadSafeValue($onFail));
+	public function __construct(
+		private string $directoryFullPath
+	) {
 	}
 
 	/**
@@ -60,8 +52,8 @@ class DeleteDirectoryAsyncTask extends AsyncTask
 	 */
 	public function onRun(): void
 	{
-		$result = Utils::deleteDirectory($this->directoryFullPath);
-		$this->setResult($result);
+		$result = Utils::deleteDirectory(directoryFullPath: $this->directoryFullPath);
+		$this->setResult(result: $result);
 	}
 
 	/**
@@ -69,19 +61,14 @@ class DeleteDirectoryAsyncTask extends AsyncTask
 	 */
 	public function onCompletion(): void
 	{
-		$onSuccess = $this->fetchLocal(self::ON_SUCCESS_KEY)?->deserialize();
-		$onFail = $this->fetchLocal(self::ON_FAIL_KEY)?->deserialize();
-		$noError = $this->getResult();
+		$this->completed = true;
+	}
 
-		if (!is_bool($noError)) {
-			if (!is_null($onFail)) ($onFail)();
-			return;
-		}
-
-		if ($noError) {
-			if (!is_null($onSuccess)) ($onSuccess)();
-		} else {
-			if (!is_null($onFail)) ($onFail)();
-		}
+	/**
+	 * @return bool
+	 */
+	public function isCompleted(): bool
+	{
+		return $this->completed;
 	}
 }

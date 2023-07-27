@@ -37,15 +37,16 @@ use vp817\GameLib\queue\SetupSettingsQueue;
 final class SetupPlayer
 {
 
-	/** @var SetupSettingsQueue $setupSettingsQueue */
 	private SetupSettingsQueue $setupSettingsQueue;
 
 	/**
 	 * @param Player $player
 	 * @param string $setupingArenaID
 	 */
-	public function __construct(private Player $player, private string $setupingArenaID)
-	{
+	public function __construct(
+		private Player $player,
+		private string $setupingArenaID
+	) {
 		$this->setupSettingsQueue = new SetupSettingsQueue();
 	}
 

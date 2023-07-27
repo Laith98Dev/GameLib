@@ -48,12 +48,19 @@ class RestartingState extends ArenaState
 		$tickTask = $arena->getTickTask();
 		$time = $tickTask->getRestartingTime();
 
-		(new ArenaTickEvent($arena, $this, $time))->call();
+		(new ArenaTickEvent(
+			arena: $arena,
+			state: $this,
+			timer: $time
+		))->call();
 
 		if ($time < 1) {
-			$arena->setWinners([]);
-			$arena->getMode()->endGame($arena, false);
-			$arena->setState(ArenaStates::RESETTING());
+			$arena->setWinners(value: []);
+			$arena->getMode()->endGame(
+				arena: $arena,
+				changeState: false
+			);
+			$arena->setState(state: ArenaStates::RESETTING());
 			return;
 		}
 

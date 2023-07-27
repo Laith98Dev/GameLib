@@ -41,30 +41,18 @@ use vp817\GameLib\util\Team;
 final class ArenaPlayer
 {
 
-    /** @var array $savedCells */
     private array $savedCells = [];
-    /** @var Player $cells */
     private Player $cells;
 
-    /** @var null|Team $team */
     private ?Team $team = null;
-    /** @var string $displayName */
     private string $displayName;
-    /** @var string $nameTag */
     private string $nameTag;
-    /** @var PlayerInventory $inventory */
     private PlayerInventory $inventory;
-    /** @var ArmorInventory $armorInventory */
     private ArmorInventory $armorInventory;
-    /** @var EffectManager $effectManager */
     private EffectManager $effectManager;
-    /** @var float $health */
     private float $health;
-    /** @var int $maxHealth */
     private int $maxHealth;
-    /** @var float $food */
     private float $food;
-    /** @var GameMode $gamemode */
     private GameMode $gamemode;
 
     /**
@@ -252,14 +240,14 @@ final class ArenaPlayer
         $effects = $this->getEffectManager()->all();
         if (!empty($effects)) {
             foreach ($effects as $key => $value) {
-                $this->getEffectManager()->add($value);
+                $this->getEffectManager()->add(effect: $value);
             }
         }
 
-        $this->setHealth($this->getHealth());
-        $this->setMaxHealth($this->getMaxHealth());
-        $this->setFood($this->getFood());
-        $this->setGamemode(GameMode::ADVENTURE());
+        $this->setHealth(value: $this->getHealth());
+        $this->setMaxHealth(value: $this->getMaxHealth());
+        $this->setFood(value: $this->getFood());
+        $this->setGamemode(value: GameMode::ADVENTURE());
     }
 
     /**
@@ -267,21 +255,21 @@ final class ArenaPlayer
      */
     public function deinitBasic(): void
     {
-        $this->getInventory()->setContents($this->savedCells["inventory"]);
-        $this->getArmorInventory()->setContents($this->savedCells["armorInventory"]);
+        $this->getInventory()->setContents(items: $this->savedCells["inventory"]);
+        $this->getArmorInventory()->setContents(items: $this->savedCells["armorInventory"]);
         $this->getEffectManager()->clear();
 
         $effects = $this->savedCells["effects"];
         if (!empty($effects)) {
             foreach ($effects as $key => $value) {
-                $this->getEffectManager()->add($value);
+                $this->getEffectManager()->add(effect: $value);
             }
         }
 
-        $this->setHealth($this->savedCells["health"]);
-        $this->setMaxHealth($this->savedCells["maxHealth"]);
-        $this->setFood($this->savedCells["food"]);
-        $this->setGamemode($this->savedCells["gamemode"]);
+        $this->setHealth(value: $this->savedCells["health"]);
+        $this->setMaxHealth(value: $this->savedCells["maxHealth"]);
+        $this->setFood(value: $this->savedCells["food"]);
+        $this->setGamemode(value: $this->savedCells["gamemode"]);
     }
 
     /**
@@ -297,19 +285,19 @@ final class ArenaPlayer
      */
     public function setAll(bool $unsetSavedCells = false): void
     {
-        $this->getCells()->getInventory()->setContents($this->getInventory()->getContents());
-        $this->getCells()->getArmorInventory()->setContents($this->getArmorInventory()->getContents());
+        $this->getCells()->getInventory()->setContents(items: $this->getInventory()->getContents());
+        $this->getCells()->getArmorInventory()->setContents(items: $this->getArmorInventory()->getContents());
         $this->getCells()->getEffects()->clear();
 
         $effects = $this->getEffectManager()->all();
         foreach ($effects as $key => $value) {
-            $this->getCells()->getEffects()->add($value);
+            $this->getCells()->getEffects()->add(effect: $value);
         }
 
-        $this->getCells()->setHealth($this->getHealth());
-        $this->getCells()->setMaxHealth($this->getMaxHealth());
-        $this->getCells()->getHungerManager()->setFood($this->getFood());
-        $this->getCells()->setGamemode($this->getGamemode());
+        $this->getCells()->setHealth(amount: $this->getHealth());
+        $this->getCells()->setMaxHealth(amount: $this->getMaxHealth());
+        $this->getCells()->getHungerManager()->setFood(new: $this->getFood());
+        $this->getCells()->setGamemode(gm: $this->getGamemode());
 
         if ($unsetSavedCells) {
             unset($this->savedCells);

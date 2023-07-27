@@ -39,7 +39,6 @@ use function json_encode;
 final class ArenaDataParser
 {
 
-	/** @var array $imitatedData */
 	private array $imitatedData = [
 		"arenaID" => "",
 		"worldName" => "",
@@ -52,7 +51,6 @@ final class ArenaDataParser
 		"arenaData" => "{}",
 		"extraData" => "{}"
 	];
-	/** @var array $data */
 	private array $data = [];
 
 	/**
@@ -61,7 +59,10 @@ final class ArenaDataParser
 	 */
 	public function __construct(array $data)
 	{
-		if (!Utils::arrayKeysExist(array_keys($data), $this->imitatedData)) {
+		if (!Utils::arrayKeysExist(
+			keys: array_keys($data),
+			array: $this->imitatedData
+		)) {
 			throw new RuntimeException("Corrupted ArenaData, Expected: " . json_encode($this->imitatedData) . ", got: " . json_encode($data));
 		}
 		$this->data = $data;

@@ -37,14 +37,14 @@ use pocketmine\player\Player;
 class PlayerQuitFromServerEvent extends Event
 {
 
-	/** @var string $globalMessage */
 	protected string $globalMessage = "";
 
 	/**
 	 * @param Player $player
 	 */
-	public function __construct(protected Player $player)
-	{
+	public function __construct(
+		protected Player $player
+	) {
 	}
 
 	/**

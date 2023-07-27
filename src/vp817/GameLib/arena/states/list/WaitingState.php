@@ -48,10 +48,14 @@ class WaitingState extends ArenaState
 		$playerCount = $arena->getMode()->getPlayerCount();
 		$maxPlayerCount = $arena->getMode()->getMaxPlayers();
 
-		(new ArenaTickEvent($arena, $this, ArenaTickEvent::NO_TIMER))->call();
+		(new ArenaTickEvent(
+			arena: $arena,
+			state: $this,
+			timer: ArenaTickEvent::NO_TIMER
+		))->call();
 
 		if ($playerCount >= $maxPlayerCount) {
-			$arena->setState(ArenaStates::COUNTDOWN());
+			$arena->setState(state: ArenaStates::COUNTDOWN());
 		}
 	}
 }

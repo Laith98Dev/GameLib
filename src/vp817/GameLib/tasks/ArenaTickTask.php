@@ -39,7 +39,6 @@ use vp817\GameLib\arena\states\ArenaStates;
 class ArenaTickTask extends Task
 {
 
-	/** @var array $savedTimes */
 	private array $savedTimes = [];
 
 	/**
@@ -156,6 +155,6 @@ class ArenaTickTask extends Task
 	 */
 	public function onRun(): void
 	{
-		$this->arena->getState()->tick($this->arena);
+		$this->arena->getState()->tick(arena: $this->arena);
 	}
 }

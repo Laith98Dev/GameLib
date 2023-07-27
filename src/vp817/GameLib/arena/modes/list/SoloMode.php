@@ -44,18 +44,16 @@ use vp817\GameLib\GameLib;
 use vp817\GameLib\managers\PlayerManager;
 use vp817\GameLib\player\ArenaPlayer;
 use vp817\GameLib\utilities\Utils;
-use function is_null;
+use function array_values;
 use function is_int;
+use function is_null;
 use function is_object;
 
 class SoloMode extends ArenaMode
 {
 
-	/** @var PlayerManager $playerManager */
 	private PlayerManager $playerManager;
-	/** @var GameLib $gamelib */
 	private GameLib $gamelib;
-	/** @var int $slots */
 	private int $slots;
 
 	/**
@@ -69,15 +67,15 @@ class SoloMode extends ArenaMode
 		$gamelib = $arguments[1];
 
 		if (!is_int($slots)) {
-			throw new TypeError("The slots is invalid");
+			throw new TypeError(message: "The slots is invalid");
 		}
 
 		if (!is_object($gamelib)) {
-			throw new TypeError("The arena is not an object");
+			throw new TypeError(message: "The arena is not an object");
 		}
 
 		if (!$gamelib instanceof GameLib) {
-			throw new TypeError("The gamelib is invalid");
+			throw new TypeError(message: "The gamelib is invalid");
 		}
 
 		$this->playerManager = new PlayerManager();
@@ -91,7 +89,7 @@ class SoloMode extends ArenaMode
 	 */
 	public function hasPlayer(string $bytes): bool
 	{
-		return $this->playerManager->has($bytes);
+		return $this->playerManager->has(bytes: $bytes);
 	}
 
 	/**
@@ -126,7 +124,11 @@ class SoloMode extends ArenaMode
 	 */
 	public function removePlayer(string $bytes, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
-		$this->playerManager->remove($bytes, $onSuccess, $onFail);
+		$this->playerManager->remove(
+			bytes: $bytes,
+			onSuccess: $onSuccess,
+			onFail: $onFail
+		);
 	}
 
 	/**
@@ -155,7 +157,10 @@ class SoloMode extends ArenaMode
 		}
 
 		$this->playerManager->add($player, function (ArenaPlayer $player) use ($arena, $arenaMessages, $onSuccess): void {
-			$event = new PlayerJoinArenaEvent($player, $arena);
+			$event = new PlayerJoinArenaEvent(
+				player: $player,
+				arena: $arena
+			);
 			$event->call();
 
 			$arenaPlayer = $event->getPlayer();
@@ -163,12 +168,17 @@ class SoloMode extends ArenaMode
 
 			$arenaPlayer->setAll();
 
-			$cells->teleport($arena->getLobbySettings()->getLocation());
-			$arena->getMessageBroadcaster()->broadcastMessage(Utils::replaceMessageContent([
-				"%name%" => $arenaPlayer->getDisplayName(),
-				"%current%" => $this->getPlayerCount(),
-				"%max%" => $this->getMaxPlayers()
-			], $arenaMessages->SucessfullyJoinedArena()));
+			$cells->teleport(pos: $arena->getLobbySettings()->getLocation());
+			$arena->getMessageBroadcaster()->broadcastMessage(
+				value: Utils::replaceMessageContent(
+					replacement: [
+						"%name%" => $arenaPlayer->getDisplayName(),
+						"%current%" => $this->getPlayerCount(),
+						"%max%" => $this->getMaxPlayers()
+					],
+					message: $arenaMessages->SucessfullyJoinedArena()
+				)
+			);
 
 			if (!is_null($onSuccess)) $onSuccess();
 		});
@@ -198,28 +208,40 @@ class SoloMode extends ArenaMode
 			return;
 		}
 
-		$this->playerManager->get($bytes, function (ArenaPlayer $player) use ($arena, $arenaMessages, $bytes, $onSuccess, $onFail, $notifyPlayers): void {
-			$event = new PlayerQuitArenaEvent($player, $arena);
-			$event->call();
+		$this->playerManager->get(
+			bytes: $bytes,
+			onSuccess: function (ArenaPlayer $player) use ($arena, $arenaMessages, $bytes, $onSuccess, $onFail, $notifyPlayers): void {
+				$event = new PlayerQuitArenaEvent(
+					player: $player,
+					arena: $arena
+				);
+				$event->call();
 
-			$arenaPlayer = $event->getPlayer();
+				$arenaPlayer = $event->getPlayer();
 
-			$arenaPlayer->setAll(true);
+				$arenaPlayer->setAll(unsetSavedCells: true);
 
-			$this->removePlayer($bytes, function () use ($arenaMessages, $arenaPlayer, $onSuccess, $onFail, $notifyPlayers): void {
-				$cells = $arenaPlayer->getCells();
+				$this->removePlayer(
+					bytes: $bytes,
+					onSuccess: function () use ($arenaMessages, $arenaPlayer, $onSuccess, $onFail, $notifyPlayers): void {
+						$cells = $arenaPlayer->getCells();
 
-				$notifyCB = fn () => Utils::replaceMessageContent([
-					"%name%" => $arenaPlayer->getDisplayName(),
-					"%current%" => $this->getPlayerCount(),
-					"%max%" => $this->getMaxPlayers()
-				], $arenaMessages->SucessfullyLeftArena());
+						$notifyCB = fn () => Utils::replaceMessageContent(
+							replacement: [
+								"%name%" => $arenaPlayer->getDisplayName(),
+								"%current%" => $this->getPlayerCount(),
+								"%max%" => $this->getMaxPlayers()
+							],
+							message: $arenaMessages->SucessfullyLeftArena()
+						);
 
-				$cells->teleport($this->gamelib->getWorldManager()->getDefaultWorld()->getSpawnLocation());
-				if ($notifyPlayers) $notifyCB;
-				if (!is_null($onSuccess)) $onSuccess();
-			});
-		});
+						$cells->teleport(pos: $this->gamelib->getWorldManager()->getDefaultWorld()->getSpawnLocation());
+						if ($notifyPlayers) $notifyCB;
+						if (!is_null($onSuccess)) $onSuccess();
+					}
+				);
+			}
+		);
 	}
 
 	/**
@@ -227,20 +249,24 @@ class SoloMode extends ArenaMode
 	 * @param array $spawns
 	 * @return void
 	 */
-	public function sendPlayersToTheirSpawn(Arena $arena, array $spawns): void
+	public function relocatePlayersToSpawns(Arena $arena, array $spawns): void
 	{
-		$players = $this->playerManager->getAll(true);
+		$players = array_values($this->playerManager->getAll());
 		for ($i = 1; $i <= count($players); ++$i) {
 			$player = $players[$i - 1];
 
-			$event = new ArenaPlayerTpToSpawnEvent($player, $arena, $spawns[$i]);
+			$event = new ArenaPlayerTpToSpawnEvent(
+				player: $player,
+				arena: $arena,
+				spawn: $spawns[$i]
+			);
 			$event->call();
 
 			$eventPlayer = $event->getPlayer();
 			$eventArena = $event->getArena();
 			$eventSpawn = $event->getSpawn();
 
-			$eventPlayer->getCells()->teleport($eventArena->getLocationOfSpawn($eventSpawn));
+			$eventPlayer->getCells()->teleport(pos: $eventArena->getLocationOfSpawn(spawn: $eventSpawn));
 		}
 	}
 }

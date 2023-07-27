@@ -45,8 +45,11 @@ class ArenaTickEvent extends Event
 	 * @param ArenaState $state
 	 * @param int $timer
 	 */
-	public function __construct(protected Arena $arena, protected ArenaState $state, private int $timer)
-	{
+	public function __construct(
+		protected Arena $arena,
+		protected ArenaState $state,
+		private int $timer
+	) {
 	}
 
 	/**

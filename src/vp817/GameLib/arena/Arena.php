@@ -57,54 +57,56 @@ use function json_decode;
 class Arena
 {
 
-	/** @var string $id */
 	protected string $id;
-	/** @var ArenaState $state */
 	protected ArenaState $state;
-	/** @var ArenaMode $mode */
 	protected ArenaMode $mode;
-	/** @var ArenaMessages $messages */
 	protected ArenaMessages $messages;
-	/** @var LobbySettings $lobbySettings */
 	protected LobbySettings $lobbySettings;
-	/**  @var ?World $world */
 	protected ?World $world = null;
-	/** @var MessageBroadcaster $messageBroadcaster */
 	protected MessageBroadcaster $messageBroadcaster;
-	/** @var array $spawns */
 	protected array $spawns;
-	/** @var string $worldName */
 	protected string $worldName;
-	/** @var ArenaTickTask $arenaTickTask */
 	protected ArenaTickTask $arenaTickTask;
-	/** @var ArenaPlayer[] */
 	protected array $winners = [];
 
 	/**
 	 * @param GameLib $gamelib
 	 * @param ArenaDataParser $arenaDataParser
 	 */
-	public function __construct(private GameLib $gamelib, private ArenaDataParser $dataParser)
-	{
-		$this->id = $dataParser->parse("arenaID");
+	public function __construct(
+		private GameLib $gamelib,
+		private ArenaDataParser $dataParser
+	) {
+		$this->id = $dataParser->parse(key: "arenaID");
 		$this->messages = $gamelib->getArenaMessagesClass();
 		$this->state = ArenaStates::WAITING();
-		$mode = ArenaModes::fromString($dataParser->parse("mode"));
-		$arenaData = json_decode($dataParser->parse("arenaData"), true);
+		$mode = ArenaModes::fromString(value: $dataParser->parse(key: "mode"));
+		$arenaData = json_decode($dataParser->parse(key: "arenaData"), true);
 		if ($mode->equals(ArenaModes::SOLO())) {
 			$mode->init(intval($arenaData["slots"]), $gamelib);
 		} else if ($mode->isTeamMode()) {
 			$mode->init(json_decode($arenaData["teams"], true), $this, $gamelib);
 		}
 		$this->mode = $mode;
-		$this->lobbySettings = new LobbySettings($gamelib->getWorldManager(), json_decode($dataParser->parse("lobbySettings"), true));
-		$this->spawns = json_decode($dataParser->parse("spawns"), true);
-		$this->worldName = $dataParser->parse("worldName");
-		$this->world = $gamelib->getWorldManager()->getWorldByName($this->worldName);
-		$this->messageBroadcaster = new MessageBroadcaster($this);
-		$gamelib->registerArenaListener($this);
-		$this->arenaTickTask = new ArenaTickTask($this, intval($dataParser->parse("countdownTime")), intval($dataParser->parse("arenaTime")), intval($dataParser->parse("restartingTime")));
-		$gamelib->getScheduler()->scheduleRepeatingTask($this->arenaTickTask, 20);
+		$this->lobbySettings = new LobbySettings(
+			worldManager: $gamelib->getWorldManager(),
+			settings: json_decode($dataParser->parse("lobbySettings"), true)
+		);
+		$this->spawns = json_decode($dataParser->parse(key: "spawns"), true);
+		$this->worldName = $dataParser->parse(key: "worldName");
+		$this->world = $gamelib->getWorldManager()->getWorldByName(name: $this->worldName);
+		$this->messageBroadcaster = new MessageBroadcaster(arena: $this);
+		$gamelib->registerArenaListener(arena: $this);
+		$this->arenaTickTask = new ArenaTickTask(
+			arena: $this,
+			countdownTime: intval($dataParser->parse(key: "countdownTime")),
+			arenaTime: intval($dataParser->parse(key: "arenaTime")),
+			restartingTime: intval($dataParser->parse(key: "restartingTime"))
+		);
+		$gamelib->getScheduler()->scheduleRepeatingTask(
+			task: $this->arenaTickTask,
+			period: 20
+		);
 	}
 
 	/**
@@ -115,7 +117,12 @@ class Arena
 	 */
 	public function join(Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
-		$this->mode->onJoin($this, $player, $onSuccess, $onFail);
+		$this->mode->onJoin(
+			arena: $this,
+			player: $player,
+			onSuccess: $onSuccess,
+			onFail: $onFail
+		);
 	}
 
 	/**
@@ -128,7 +135,14 @@ class Arena
 	 */
 	public function quit(Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null, bool $notifyPlayers = true, bool $force = false): void
 	{
-		$this->mode->onQuit($this, $player, $onSuccess, $onFail, $notifyPlayers, $force);
+		$this->mode->onQuit(
+			arena: $this,
+			player: $player,
+			onSuccess: $onSuccess,
+			onFail: $onFail,
+			notifyPlayers: $notifyPlayers,
+			force: $force
+		);
 	}
 
 	/**
@@ -192,7 +206,11 @@ class Arena
 	 */
 	public function getWorld(): ?World
 	{
-		Utils::lazyUpdateWorld($this->gamelib->getWorldManager(), $this->worldName, $this->world);
+		Utils::lazyUpdateWorld(
+			worldManager: $this->gamelib->getWorldManager(),
+			worldName: $this->worldName,
+			world: $this->world
+		);
 
 		return $this->world;
 	}
@@ -225,7 +243,14 @@ class Arena
 		$yaw = $spawn["yaw"];
 		$pitch = $spawn["pitch"];
 
-		return new Location($x, $y, $z, $this->getWorld(), $yaw, $pitch);
+		return new Location(
+			x: $x,
+			y: $y,
+			z: $z,
+			world: $this->getWorld(),
+			yaw: $yaw,
+			pitch: $pitch
+		);
 	}
 
 	/**
@@ -272,26 +297,24 @@ class Arena
 
 		$worldManager = $this->gamelib->getWorldManager();
 
-		if ($worldManager->isWorldLoaded($this->worldName)) {
-			$worldManager->unloadWorld($worldManager->getWorldByName($this->worldName));
+		if ($worldManager->isWorldLoaded(name: $this->worldName)) {
+			$worldManager->unloadWorld(world: $worldManager->getWorldByName($this->worldName));
 		}
 
-		$asyncPool->submitTask(new DeleteDirectoryAsyncTask(
-			$worldDirectoryFullPath,
-			function () use ($asyncPool, $zipFileFullPath, $extractionFullPath, $worldManager, $onSuccess, $onFail): void {
-				$asyncPool->submitTask(new ExtractZipAsyncTask(
-					$zipFileFullPath,
-					$extractionFullPath,
-					function () use ($worldManager, $onSuccess): void {
-						$worldManager->loadWorld($this->worldName);
+		$deleteDirAsync = new DeleteDirectoryAsyncTask(directoryFullPath: $worldDirectoryFullPath);
+		$asyncPool->submitTask(task: $deleteDirAsync);
+		if ($deleteDirAsync->isCompleted()) {
+			$extractZipAsync = new ExtractZipAsyncTask(
+				zipFileFullPath: $zipFileFullPath,
+				extractionFullPath: $extractionFullPath
+			);
+			$asyncPool->submitTask(task: $extractZipAsync);
+			if ($extractZipAsync->isCompleted()) {
+				$worldManager->loadWorld(name: $this->worldName);
 
-						if (!is_null($onSuccess)) $onSuccess();
-					},
-					$onFail
-				));
-			},
-			$onFail
-		));
+				if (!is_null($onSuccess)) $onSuccess();
+			}
+		}
 	}
 
 	/**

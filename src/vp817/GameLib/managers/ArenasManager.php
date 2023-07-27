@@ -39,7 +39,6 @@ use function array_key_exists;
 final class ArenasManager
 {
 
-	/** @var Arena[] $loadedArenas */
 	private array $loadedArenas = [];
 
 	/**
@@ -51,7 +50,7 @@ final class ArenasManager
 	 */
 	public function signAsLoaded(string $arenaID, Arena $arena, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
-		if ($this->hasLoadedArena($arenaID)) {
+		if ($this->hasLoadedArena(arenaID: $arenaID)) {
 			if (!is_null($onFail)) $onFail($arenaID);
 			return;
 		}
@@ -68,7 +67,7 @@ final class ArenasManager
 	 */
 	public function unsignFromBeingLoaded(string $arenaID, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
-		if (!$this->hasLoadedArena($arenaID)) {
+		if (!$this->hasLoadedArena(arenaID: $arenaID)) {
 			if (!is_null($onFail)) $onFail($arenaID);
 			return;
 		}
@@ -85,7 +84,7 @@ final class ArenasManager
 	 */
 	public function getLoadedArena(string $arenaID, Closure $onSuccess, ?Closure $onFail = null): void
 	{
-		if (!$this->hasLoadedArena($arenaID)) {
+		if (!$this->hasLoadedArena(arenaID: $arenaID)) {
 			if (!is_null($onFail)) $onFail($arenaID);
 			return;
 		}

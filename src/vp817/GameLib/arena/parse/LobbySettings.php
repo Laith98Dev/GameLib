@@ -39,9 +39,7 @@ use vp817\GameLib\utils\Utils;
 final class LobbySettings
 {
 
-	/** @var string $worldName */
 	private string $worldName;
-	/** @var null|World $world */
 	private ?World $world = null;
 
 	/**
@@ -50,8 +48,8 @@ final class LobbySettings
 	 */
 	public function __construct(private WorldManager $worldManager, private array $settings)
 	{
-		$this->worldName = $settings["worldName"] ?? "";
-		$this->world = $this->worldManager->getWorldByName($this->worldName);
+		$this->worldName = $settings["worldName"];
+		$this->world = $this->worldManager->getWorldByName(name: $this->worldName);
 	}
 
 	/**
@@ -59,7 +57,11 @@ final class LobbySettings
 	 */
 	public function getWorld(): ?World
 	{
-		Utils::lazyUpdateWorld($this->worldManager, $this->worldName, $this->world);
+		Utils::lazyUpdateWorld(
+			worldManager: $this->worldManager,
+			worldName: $this->worldName,
+			world: $this->world
+		);
 
 		return $this->world;
 	}
@@ -76,6 +78,13 @@ final class LobbySettings
 		$yaw = $location["yaw"];
 		$pitch = $location["pitch"];
 
-		return new Location($x, $y, $z, $this->getWorld(), $yaw, $pitch);
+		return new Location(
+			x: $x,
+			y: $y,
+			z: $z,
+			world: $this->getWorld(),
+			yaw: $yaw,
+			pitch: $pitch
+		);
 	}
 }

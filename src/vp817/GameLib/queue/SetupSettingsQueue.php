@@ -38,7 +38,6 @@ use function json_encode;
 final class SetupSettingsQueue
 {
 
-	/** @var array $queue */
 	private array $queue = [
 		"spawnsQueue" => []
 	];
@@ -157,12 +156,12 @@ final class SetupSettingsQueue
 	 */
 	public function clear(): void
 	{
-		foreach ($this->queue["spawnsQueue"] as $key => $value) {
-			unset($this->queue["spawnsQueue"][$key]);
+		foreach (["spawnsQueue", "lobbySettingsQueue", "arenaData"] as $key => $value) {
+			unset($this->queue[$value]);
 		}
-		unset($this->queue["spawnsQueue"]);
-		unset($this->queue["lobbySettingsQueue"]);
-		unset($this->queue["arenaData"]);
+		$this->queue = [
+			"spawnsQueue" => []
+		];
 		if ($this->hasExtraData()) {
 			unset($this->queue["extraDataQueue"]);
 		}

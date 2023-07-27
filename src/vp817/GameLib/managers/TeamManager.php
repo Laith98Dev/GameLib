@@ -38,8 +38,8 @@ use vp817\GameLib\player\ArenaPlayer;
 use vp817\GameLib\util\Team;
 use function array_filter;
 use function array_key_exists;
+use function array_merge;
 use function array_rand;
-use function array_shift;
 use function count;
 use function is_null;
 use function strtolower;
@@ -68,7 +68,7 @@ final class TeamManager
 	public function addTeam(Team $team, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
 		$name = strtolower($team->getName());
-		if ($this->hasTeam($name)) {
+		if ($this->hasTeam(name: $name)) {
 			if (!is_null($onFail)) $onFail();
 			return;
 		}
@@ -86,7 +86,7 @@ final class TeamManager
 	 */
 	public function removeTeam(string $name, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
-		if (!$this->hasTeam($name)) {
+		if (!$this->hasTeam(name: $name)) {
 			if (!is_null($onFail)) $onFail();
 			return;
 		}
@@ -104,7 +104,7 @@ final class TeamManager
 	 */
 	public function getTeam(string $name, Closure $onSuccess, ?Closure $onFail = null): void
 	{
-		if (!$this->hasTeam($name)) {
+		if (!$this->hasTeam(name: $name)) {
 			if (!is_null($onFail)) $onFail();
 			return;
 		}
@@ -137,11 +137,7 @@ final class TeamManager
 		$players = [];
 
 		foreach ($this->getTeams() as $name => $team) {
-			if (count($team->getPlayers()) < 1) continue;
-
-			foreach ($team->getPlayers() as $bytes => $player) {
-				$players[] = $player;
-			}
+			$players = array_merge($players, $team->getPlayers());
 		}
 
 		return $players;
@@ -156,13 +152,17 @@ final class TeamManager
 	 */
 	public function addPlayerToTeam(Player $player, string $teamName, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
-		if ($this->isPlayerInATeamFromBytes($player->getUniqueId()->getBytes())) {
+		if ($this->isPlayerInATeamFromBytes(bytes: $player->getUniqueId()->getBytes())) {
 			return;
 		}
 
-		$this->getTeam($teamName, function (Team $team) use ($player, $onSuccess, $onFail): void {
-			$team->addPlayer($player, $onSuccess, $onFail);
-		}, $onFail);
+		$this->getTeam(
+			name: $teamName,
+			onSuccess: static function (Team $team) use ($player, $onSuccess, $onFail): void {
+				$team->addPlayer($player, $onSuccess, $onFail);
+			},
+			onFail: $onFail
+		);
 	}
 
 	/**
@@ -175,22 +175,19 @@ final class TeamManager
 	{
 		$maxPlayersPerTeam = $this->arena->getMode()->getMaxPlayersPerTeam();
 		$availableTeams = array_filter($this->list, function ($value) use ($maxPlayersPerTeam) {
-			return count($value->getPlayers()) < $maxPlayersPerTeam + 1;
+			return count($value->getPlayers()) < $maxPlayersPerTeam;
 		});
-		$availableTeamsCount = count($availableTeams);
 
-		if ($availableTeamsCount > 0 && $availableTeamsCount < 2) {
-			$team = array_shift($availableTeams);
-		} else if ($availableTeamsCount > 1) {
-			$team = $availableTeams[array_rand($availableTeams)];
-		} else {
+		if (empty($availableTeams)) {
 			if (!is_null($onFail)) $onFail($this->arena->getMessages()->NoTeamsAvailable());
 			return;
 		}
 
-		$team->addPlayer($player, function (ArenaPlayer $player) use ($onSuccess, $team): void {
-			if (!is_null($onSuccess)) $onSuccess($player, $team);
-		});
+		$team = $availableTeams[array_rand($availableTeams)];
+		$team->addPlayer(
+			player: $player,
+			onSuccess: fn (ArenaPlayer $player) => !is_null($onSuccess) ? $onSuccess($player, $team) : null
+		);
 	}
 
 	/**
@@ -199,15 +196,13 @@ final class TeamManager
 	 */
 	public function isPlayerInATeamFromBytes(string $bytes): bool
 	{
-		$retVal = false;
-
 		foreach ($this->list as $teamName => $team) {
-			if (!$team->hasPlayer($bytes)) continue;
-
-			$retVal = true;
+			if ($team->hasPlayer(bytes: $bytes)) {
+				return true;
+			}
 		}
 
-		return $retVal;
+		return false;
 	}
 
 	/**
@@ -218,19 +213,15 @@ final class TeamManager
 	 */
 	public function getTeamOfPlayerFromBytes(string $bytes, Closure $onSuccess, ?Closure $onFail = null): void
 	{
-		$retVal = null;
-
-		foreach ($this->list as $teamName => $team) {
-			if (!$team->hasPlayer($bytes)) continue;
-			
-			$retVal = $team;
+		foreach ($this->list as $team) {
+			if ($team->hasPlayer(bytes: $bytes)) {
+				$onSuccess($team);
+				return;
+			}
 		}
 
-		if (is_null($retVal)) {
-			if (!is_null($onFail)) $onFail();
-			return;
+		if (!is_null($onFail)) {
+			$onFail();
 		}
-
-		$onSuccess($retVal);
 	}
 }

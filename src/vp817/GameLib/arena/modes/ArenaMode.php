@@ -135,7 +135,7 @@ abstract class ArenaMode
 	 * @param array $spawns
 	 * @return void
 	 */
-	abstract public function sendPlayersToTheirSpawn(Arena $arena, array $spawns): void;
+	abstract public function relocatePlayersToSpawns(Arena $arena, array $spawns): void;
 
 	/**
 	 * @param Arena $arena

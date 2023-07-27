@@ -53,7 +53,8 @@ use RecursiveIteratorIterator;
 use ReflectionProperty;
 use Symfony\Component\Filesystem\Path;
 use ZipArchive;
-use function array_key_exists;
+use function array_diff_key;
+use function array_flip;
 use function array_keys;
 use function array_values;
 use function basename;
@@ -92,15 +93,7 @@ final class Utils
 	 */
 	public static function arrayKeysExist(array $keys, array $array): bool
 	{
-		$retVal = false;
-
-		foreach ($keys as $key) {
-			if (!array_key_exists($key, $array)) continue;
-
-			$retVal = true;
-		}
-
-		return $retVal;
+		return empty(array_diff_key(array_flip($keys), $array));
 	}
 
 	/**
@@ -120,10 +113,10 @@ final class Utils
 	 */
 	private static function getResource(string $path, string $filename)
 	{
-		$filename = self::removeLastSlashFromPath($filename);
+		$filename = self::removeLastSlashFromPath(path: $filename);
 		if (file_exists($path . $filename)) {
 			$resource = fopen($path . $filename, "rb");
-			if ($resource === false) throw new AssumptionFailedError("fopen() should not fail on a file which exists");
+			if ($resource === false) throw new AssumptionFailedError(message: "fopen() should not fail on a file which exists");
 			return $resource;
 		}
 
@@ -143,7 +136,10 @@ final class Utils
 			return false;
 		}
 
-		if (($resource = self::getResource($resourcePath, $filename)) === null) {
+		if (($resource = self::getResource(
+			path: $resourcePath,
+			filename: $filename
+		)) === null) {
 			return false;
 		}
 
@@ -161,7 +157,7 @@ final class Utils
 		}
 
 		$fp = fopen($out, "wb");
-		if ($fp === false) throw new AssumptionFailedError("fopen() should not fail with wb flags");
+		if ($fp === false) throw new AssumptionFailedError(message: "fopen() should not fail with wb flags");
 
 		$ret = stream_copy_to_stream($resource, $fp) > 0;
 		fclose($fp);
@@ -176,16 +172,27 @@ final class Utils
 	 */
 	public static function saveResourceToPluginResources(PluginBase $plugin, string $fromPath, string $filename): bool
 	{
-		$property = new ReflectionProperty(PluginBase::class, "resourceProvider");
+		$property = new ReflectionProperty(
+			class: PluginBase::class,
+			property: "resourceProvider"
+		);
 		/** @var ResourceProvider $resourceProvider */
-		$resourceProvider = $property->getValue($plugin);
-		$property2 = new ReflectionProperty($resourceProvider, "file");
-		$resourcePath = $property2->getValue($resourceProvider);
-		$resourcePathNoSl = self::removeLastSlashFromPath($resourcePath);
+		$resourceProvider = $property->getValue(object: $plugin);
+		$property2 = new ReflectionProperty(
+			class: $resourceProvider,
+			property: "file"
+		);
+		$resourcePath = $property2->getValue(object: $resourceProvider);
+		$resourcePathNoSl = self::removeLastSlashFromPath(path: $resourcePath);
 		if (!is_dir($resourcePathNoSl)) {
 			@mkdir($resourcePathNoSl);
 		}
-		return self::saveResourceToPlugin($plugin, $fromPath, $filename, $resourcePath);
+		return self::saveResourceToPlugin(
+			plugin: $plugin,
+			resourcePath: $fromPath,
+			filename: $filename,
+			pathToUploadTo: $resourcePath
+		);
 	}
 
 	/**
@@ -203,16 +210,16 @@ final class Utils
 		libasynql::detectPackaged();
 
 		if (!is_array($configData)) {
-			throw new ConfigException("Database settings are missing or incorrect");
+			throw new ConfigException(message: "Database settings are missing or incorrect");
 		}
 
 		$type = (string) $configData["type"];
 		if ($type === "") {
-			throw new ConfigException("Database type is missing");
+			throw new ConfigException(message: "Database type is missing");
 		}
 
 		if (count($sqlMap) === 0) {
-			throw new InvalidArgumentException("Parameter $sqlMap cannot be empty");
+			throw new InvalidArgumentException(message: "Parameter $sqlMap cannot be empty");
 		}
 
 		$pdo = ($configData["prefer-pdo"] ?? false) && extension_loaded("pdo");
@@ -224,61 +231,83 @@ final class Utils
 			case "sqlite3":
 			case "sq3":
 				if (!$pdo && !extension_loaded("sqlite3")) {
-					throw new ExtensionMissingException("sqlite3");
+					throw new ExtensionMissingException(extensionName: "sqlite3");
 				}
 
-				$fileName = self::resolvePath($plugin->getDataFolder(), $configData["sqlite"]["file"] ?? "data.sqlite");
+				$fileName = self::resolvePath(
+					folder: $plugin->getDataFolder(),
+					path: $configData["sqlite"]["file"] ?? "data.sqlite"
+				);
 				if ($pdo) {
 					// TODO add PDO support
 				} else {
-					$factory = Sqlite3Thread::createFactory($fileName);
+					$factory = Sqlite3Thread::createFactory(path: $fileName);
 				}
 				$dialect = "sqlite";
 				break;
 			case "mysql":
 			case "mysqli":
 				if (!$pdo && !extension_loaded("mysqli")) {
-					throw new ExtensionMissingException("mysqli");
+					throw new ExtensionMissingException(extensionName: "mysqli");
 				}
 
 				if (!isset($configData["mysql"])) {
-					throw new ConfigException("Missing MySQL settings");
+					throw new ConfigException(message: "Missing MySQL settings");
 				}
 
-				$cred = MysqlCredentials::fromArray($configData["mysql"], strtolower($plugin->getName()));
+				$cred = MysqlCredentials::fromArray(
+					array: $configData["mysql"],
+					defaultSchema: strtolower($plugin->getName())
+				);
 
 				if ($pdo) {
 					// TODO add PDO support
 				} else {
-					$factory = MysqliThread::createFactory($cred, $plugin->getServer()->getLogger());
+					$factory = MysqliThread::createFactory(
+						credentials: $cred,
+						logger: $plugin->getServer()->getLogger()
+					);
 					$placeHolder = "?";
 				}
 				$dialect = "mysql";
-
 				break;
 		}
 
 		if (!isset($dialect, $factory, $sqlMap[$dialect])) {
-			throw new ConfigException("Unsupported database type \"$type\". Try \"" . implode("\" or \"", array_keys($sqlMap)) . "\".");
+			throw new ConfigException(message: "Unsupported database type \"$type\". Try \"" . implode("\" or \"", array_keys($sqlMap)) . "\".");
 		}
 
-		$pool = new SqlThreadPool($factory, $configData["worker-limit"] ?? 1);
+		$pool = new SqlThreadPool(
+			workerFactory: $factory,
+			workerLimit: $configData["worker-limit"] ?? 1
+		);
 		while (!$pool->connCreated()) {
 			usleep(1000);
 		}
 		if ($pool->hasConnError()) {
-			throw new SqlError(SqlError::STAGE_CONNECT, $pool->getConnError());
+			throw new SqlError(
+				stage: SqlError::STAGE_CONNECT,
+				errorMessage: $pool->getConnError()
+			);
 		}
 
-		$connector = new DataConnectorImpl($plugin, $pool, $placeHolder, $logQueries ?? !libasynql::isPackaged());
+		$connector = new DataConnectorImpl(
+			plugin: $plugin,
+			thread: $pool,
+			placeHolder: $placeHolder,
+			logQueries: $logQueries ?? !libasynql::isPackaged()
+		);
 		foreach (is_string($sqlMap[$dialect]) ? [$sqlMap[$dialect]] : $sqlMap[$dialect] as $filePath) {
 			$realPath = realpath($filePath);
 			$pathFilename = basename($realPath);
-			$resource = self::getResource(str_replace($pathFilename, "", $realPath), $pathFilename);
+			$resource = self::getResource(
+				path: str_replace($pathFilename, "", $realPath),
+				filename: $pathFilename
+			);
 			if ($resource === null) {
-				throw new InvalidArgumentException("$realPath does not exist");
+				throw new InvalidArgumentException(message: "$realPath does not exist");
 			}
-			$connector->loadQueryFile($resource);
+			$connector->loadQueryFile(fh: $resource);
 		}
 
 		return $connector;
@@ -321,9 +350,9 @@ final class Utils
 	public static function lazyUpdateWorld(WorldManager $worldManager, string $worldName, ?World &$world): void
 	{
 		$fn = static function () use ($worldManager, $worldName): ?World {
-			if (!$worldManager->isWorldLoaded($worldName)) $worldManager->loadWorld($worldName);
+			if (!$worldManager->isWorldLoaded(name: $worldName)) $worldManager->loadWorld(name: $worldName);
 
-			return $worldManager->getWorldByName($worldName);
+			return $worldManager->getWorldByName(name: $worldName);
 		};
 
 		$world = $fn();
@@ -376,10 +405,16 @@ final class Utils
 
 		$directoryFullPath = realpath($directoryFullPath);
 
-		$recursiveIterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directoryFullPath), RecursiveIteratorIterator::LEAVES_ONLY);
+		$recursiveIterator = new RecursiveIteratorIterator(
+			iterator: new RecursiveDirectoryIterator($directoryFullPath),
+			mode: RecursiveIteratorIterator::LEAVES_ONLY
+		);
 
 		$zip = new ZipArchive;
-		$zip->open($zipFileFullPath, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+		$zip->open(
+			filename: $zipFileFullPath,
+			flags: ZipArchive::CREATE | ZipArchive::OVERWRITE
+		);
 
 		foreach ($recursiveIterator as $fileInfo) {
 			if (!$fileInfo->isDir()) {
@@ -388,7 +423,10 @@ final class Utils
 					continue;
 				}
 				$filePath = $fileInfo->getPath() . "/" . $fileInfo->getBasename();
-				$zip->addFile($realPath, substr($filePath, strlen($directoryFullPath) + 1));
+				$zip->addFile(
+					filepath: $realPath,
+					entryname: substr($filePath, strlen($directoryFullPath) + 1)
+				);
 			}
 		}
 
@@ -414,8 +452,8 @@ final class Utils
 		}
 
 		$zip = new ZipArchive;
-		$zip->open($zipFileFullPath);
-		$zip->extractTo($extractionFullPath);
+		$zip->open(filename: $zipFileFullPath);
+		$zip->extractTo(pathto: $extractionFullPath);
 		$zip->close();
 
 		unset($zip);

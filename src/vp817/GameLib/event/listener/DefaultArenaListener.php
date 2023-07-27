@@ -45,8 +45,11 @@ class DefaultArenaListener implements Listener
 	 * @param GameLib $gamelib
 	 * @param Arena $arena
 	 */
-	public function __construct(protected Plugin $plugin, protected GameLib $gamelib, protected ?Arena $arena = null)
-	{
+	public function __construct(
+		protected Plugin $plugin,
+		protected GameLib $gamelib,
+		protected ?Arena $arena = null
+	) {
 	}
 
 	/**

@@ -42,8 +42,9 @@ class ArenaEndEvent extends Event
 	 * @param Arena $arena
 	 * @param ArenaPlayer[]
 	 */
-	public function __construct(protected Arena $arena)
-	{
+	public function __construct(
+		protected Arena $arena
+	) {
 	}
 
 	/**

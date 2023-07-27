@@ -33,7 +33,6 @@ namespace vp817\GameLib\arena\states\list;
 
 use vp817\GameLib\arena\Arena;
 use vp817\GameLib\arena\states\ArenaState;
-use vp817\GameLib\arena\states\ArenaStates;
 use vp817\GameLib\event\ArenaTickEvent;
 
 class InGameState extends ArenaState
@@ -48,10 +47,14 @@ class InGameState extends ArenaState
 		$tickTask = $arena->getTickTask();
 		$time = $tickTask->getArenaTime();
 
-		(new ArenaTickEvent($arena, $this, $time))->call();
+		(new ArenaTickEvent(
+			arena: $arena,
+			state: $this,
+			timer: $time
+		))->call();
 
 		if ($time < 1) {
-			$arena->getMode()->endGame($arena);
+			$arena->getMode()->endGame(arena: $arena);
 			return;
 		}
 

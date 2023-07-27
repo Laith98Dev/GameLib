@@ -42,8 +42,10 @@ class PlayerArenaWinEvent extends Event
 	 * @param Arena $arena
 	 * @param ArenaPlayer[]
 	 */
-	public function __construct(protected Arena $arena, protected array $winners)
-	{
+	public function __construct(
+		protected Arena $arena,
+		protected array $winners
+	) {
 	}
 
 	/**
