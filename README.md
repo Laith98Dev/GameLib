@@ -18,6 +18,14 @@ this is the solution to everything related to making a minigame on pocketmine
 <br/>
 
 # Examples
+<<<<<<< HEAD
+=======
+
+## Incase you dont find what you are looking for here is a list of examples:
+
+<a href="https://github.com/Laith98Dev/Sumo">Sumo</a>
+
+>>>>>>> e09428d800274767b699d4ad47563c83c43188fd
 ### creating a gamelib instance
 ```php
 <?php

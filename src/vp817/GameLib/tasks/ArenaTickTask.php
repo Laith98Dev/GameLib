@@ -39,7 +39,7 @@ use vp817\GameLib\arena\states\ArenaStates;
 class ArenaTickTask extends Task
 {
 
-	private array $savedTimes = [];
+	private array $timeCache = [];
 
 	/**
 	 * @param Arena $arena
@@ -49,7 +49,7 @@ class ArenaTickTask extends Task
 	 */
 	public function __construct(private Arena $arena, private int $countdownTime, private int $arenaTime, private int $restartingTime)
 	{
-		$this->savedTimes = [
+		$this->timeCache = [
 			"countdownTime" => $countdownTime,
 			"arenaTime" => $arenaTime,
 			"restartingTime" => $restartingTime
@@ -109,7 +109,7 @@ class ArenaTickTask extends Task
 	 */
 	public function resetCountdownTime(): void
 	{
-		$this->countdownTime = $this->savedTimes["countdownTime"];
+		$this->countdownTime = $this->timeCache["countdownTime"];
 	}
 
 	/**
@@ -117,7 +117,7 @@ class ArenaTickTask extends Task
 	 */
 	public function resetArenaTime(): void
 	{
-		$this->arenaTime = $this->savedTimes["arenaTime"];
+		$this->arenaTime = $this->timeCache["arenaTime"];
 	}
 
 	/**
@@ -125,7 +125,7 @@ class ArenaTickTask extends Task
 	 */
 	public function resetRestartingTime(): void
 	{
-		$this->restartingTime = $this->savedTimes["restartingTime"];
+		$this->restartingTime = $this->timeCache["restartingTime"];
 	}
 
 	/**

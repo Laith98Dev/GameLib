@@ -717,13 +717,9 @@ final class GameLib
 		$arenasManager = $this->getArenasManager();
 		$allArenas = $arenasManager->getAll();
 
-		foreach ($allArenas as $arenaID => $arena) {
-			if (array_key_exists($player->getUniqueId()->getBytes(), $arena->getMode()->getPlayers())) {
-				return true;
-			}
-		}
-
-		return false;
+		return !empty(array_filter($allArenas, static function(Arena $arena) use ($player): bool {
+			return array_key_exists($player->getUniqueId()->getBytes(), $arena->getMode()->getPlayers());
+		}));
 	}
 
 	/**
@@ -810,10 +806,10 @@ final class GameLib
 		}
 		ksort($sortedArenas);
 
-		$closedArenas = array_filter($sortedArenas, function (Arena $value) {
+		$closedArenas = array_filter($sortedArenas, static function (Arena $value) {
 			return (!$value->getState()->equals(ArenaStates::WAITING()) || !$value->getState()->equals(ArenaStates::COUNTDOWN())) && $value->getMode()->getPlayerCount() >= $value->getMode()->getMaxPlayers();
 		});
-		$openedArenas = array_filter($sortedArenas, function (Arena $value) {
+		$openedArenas = array_filter($sortedArenas, static function (Arena $value) {
 			return ($value->getState()->equals(ArenaStates::WAITING()) || $value->getState()->equals(ArenaStates::COUNTDOWN())) && $value->getMode()->getPlayerCount() < $value->getMode()->getMaxPlayers();
 		});
 
