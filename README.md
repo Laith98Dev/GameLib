@@ -18,11 +18,6 @@ this is the solution to everything related to making a minigame on pocketmine
 <br/>
 
 # Examples
-
-## Incase you dont find what you are looking for here is a list of examples:
-
-<a href="https://github.com/vp817/Sumo">Sumo</a>
-
 ### creating a gamelib instance
 ```php
 <?php
@@ -294,6 +289,10 @@ $beds = $extraData["beds"];
 
 ?>
 ```
+
+### in case you dont find what you are looking for here is a list of examples:
+
+<a href="https://github.com/Laith98Dev/Sumo">Sumo</a>
 
 # Links
 
