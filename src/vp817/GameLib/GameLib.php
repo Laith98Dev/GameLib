@@ -806,12 +806,10 @@ final class GameLib
 		}
 		ksort($sortedArenas);
 
-		$closedArenas = array_filter($sortedArenas, static function (Arena $value) {
-			return (!$value->getState()->equals(ArenaStates::WAITING()) || !$value->getState()->equals(ArenaStates::COUNTDOWN())) && $value->getMode()->getPlayerCount() >= $value->getMode()->getMaxPlayers();
-		});
 		$openedArenas = array_filter($sortedArenas, static function (Arena $value) {
 			return ($value->getState()->equals(ArenaStates::WAITING()) || $value->getState()->equals(ArenaStates::COUNTDOWN())) && $value->getMode()->getPlayerCount() < $value->getMode()->getMaxPlayers();
 		});
+		$closedArenas = array_diff($sortedArenas, $openedArenas);
 
 		$lastKey = array_key_last($openedArenas);
 		if (empty($openedArenas) || is_null($lastKey)) {
@@ -820,9 +818,13 @@ final class GameLib
 		}
 		$plannedArena = $openedArenas[$lastKey];
 
-		if (in_array($plannedArena, $closedArenas, true)) {
+		$shuffleWithRand = function () use (&$plannedArena): void {
 			shuffle($openedArenas);
 			$plannedArena = $openedArenas[array_rand($openedArenas)];
+		};
+
+		if (in_array($plannedArena, $closedArenas, true)) {
+			$shuffleWithRand();
 		}
 
 		if (count($openedArenas) >= 2) {
@@ -832,11 +834,8 @@ final class GameLib
 
 				if ($plannedArenaMode->getPlayerCount() < $valueMode->getMaxPlayers()) {
 					$plannedArena = $value;
-				} else if ($plannedArenaMode->getPlayerCount() === $valueMode->getMaxPlayers()) {
-					$plannedArena = $openedArenas[array_rand($openedArenas)];
-				} else if ($plannedArenaMode->getPlayerCount() === 0 && $valueMode->getMaxPlayers() === 0) {
-					shuffle($openedArenas);
-					$plannedArena = $openedArenas[array_rand($openedArenas)];
+				} else if (($plannedArenaMode->getPlayerCount() === $valueMode->getMaxPlayers()) || ($plannedArenaMode->getPlayerCount() === 0 && $valueMode->getMaxPlayers() === 0)) {
+					$shuffleWithRand();
 				}
 			}
 		}
