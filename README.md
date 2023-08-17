@@ -128,25 +128,6 @@ $gamelib->addPlayerToSetupArena(player, arenaID, onSuccess(player), onFail(arena
 ?>
 ```
 
-### setuping an arena
-```php
-<?php
-
-/**
- * adding a player to setup a certain arena
- * 
- * player = \pocketmine\player\Player.php
- * arenaID = string
- * onSuccess = callback
- * onFail = callback
- * 
- * this can be used at many places but i recommend using it when succeeding at creating an arena
- */
-$gamelib->addPlayerToSetupArena(player, arenaID, onSuccess(player), onFail(arenaID, reason));
-
-?>
-```
-
 ### finishing setuping an arena
 ```php
 <?php
