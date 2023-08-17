@@ -43,7 +43,7 @@ use vp817\GameLib\event\PlayerQuitArenaEvent;
 use vp817\GameLib\GameLib;
 use vp817\GameLib\managers\PlayerManager;
 use vp817\GameLib\player\ArenaPlayer;
-use vp817\GameLib\utilities\Utils;
+use vp817\GameLib\utils\Utils;
 use function array_values;
 use function is_int;
 use function is_null;

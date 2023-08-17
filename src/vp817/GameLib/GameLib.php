@@ -38,6 +38,7 @@ use pocketmine\plugin\PluginBase;
 use pocketmine\plugin\PluginLogger;
 use pocketmine\scheduler\AsyncPool;
 use pocketmine\scheduler\TaskScheduler;
+use pocketmine\utils\Utils as PMUtils;
 use pocketmine\world\WorldManager;
 use poggit\libasynql\DataConnector;
 use poggit\libasynql\SqlError;
@@ -60,18 +61,16 @@ use vp817\GameLib\utils\Utils;
 use const DIRECTORY_SEPARATOR;
 use function array_filter;
 use function array_key_exists;
-use function array_key_last;
 use function array_rand;
 use function array_shift;
 use function basename;
 use function class_exists;
 use function count;
 use function file_exists;
-use function in_array;
 use function is_dir;
 use function is_null;
 use function json_encode;
-use function ksort;
+use function uksort;
 use function mkdir;
 use function shuffle;
 use function strlen;
@@ -530,10 +529,22 @@ final class GameLib
 					$worldManager->unloadWorld(world: $worldManager->getWorldByName($worldName));
 				}
 
-				$this->getAsyncPool()->submitTask(task: new CreateZipAsyncTask(
-					directoryFullPath: Path::join($this->getServerWorldsPath(), $worldName),
-					zipFileFullPath: $zipFileFullPath
-				));
+				$directoryFullPath = Path::join($this->getServerWorldsPath(), $worldName);
+
+				// TODO: Temp fix
+				// There seems to be an issue for creating zip in another thread
+				// I have no idea what is causing this since i debugged everything
+				if (PMUtils::getOS() === PMUtils::OS_WINDOWS) {
+					Utils::zipDirectory(
+						directoryFullPath: $directoryFullPath,
+						zipFileFullPath: $zipFileFullPath
+					);
+				} else {
+					$this->getAsyncPool()->submitTask(task: new CreateZipAsyncTask(
+						directoryFullPath: $directoryFullPath,
+						zipFileFullPath: $zipFileFullPath
+					));
+				}
 
 				$worldManager->loadWorld(name: $worldName);
 
@@ -717,7 +728,7 @@ final class GameLib
 		$arenasManager = $this->getArenasManager();
 		$allArenas = $arenasManager->getAll();
 
-		return !empty(array_filter($allArenas, static function(Arena $arena) use ($player): bool {
+		return !empty(array_filter($allArenas, static function (Arena $arena) use ($player): bool {
 			return array_key_exists($player->getUniqueId()->getBytes(), $arena->getMode()->getPlayers());
 		}));
 	}
@@ -793,50 +804,64 @@ final class GameLib
 			return;
 		}
 
+		$existingArena = null;
 		$sortedArenas = [];
-		foreach ($arenasManager->getAll() as $arenaID => $arena) {
+		foreach ($allArenas as $arenaID => $arena) {
 			$mode = $arena->getMode();
-
-			if (array_key_exists($player->getUniqueId()->getBytes(), $mode->getPlayers())) {
-				if (!is_null($onFail)) $onFail($arenaMessages->PlayerAlreadyInsideAnArena());
-				return;
+			if (!is_null($mode->getPlayers()[$player->getUniqueId()->toString()] ?? null)) {
+				$existingArena = $arena;
+				break;
 			}
-
-			$sortedArenas[$mode->getPlayerCount()] = $arena;
+			$sortedArenas[$arenaID] = $arena;
 		}
-		ksort($sortedArenas);
 
-		$openedArenas = array_filter($sortedArenas, static function (Arena $value) {
-			return ($value->getState()->equals(ArenaStates::WAITING()) || $value->getState()->equals(ArenaStates::COUNTDOWN())) && $value->getMode()->getPlayerCount() < $value->getMode()->getMaxPlayers();
+		if (!is_null($existingArena)) {
+			if (!is_null($onFail)) $onFail($arenaMessages->PlayerAlreadyInsideAnArena());
+			return;
+		}
+
+		uksort($sortedArenas, static function ($rhs, $lhs) use ($allArenas): int {
+			return count($allArenas[$rhs]->getMode()->getPlayers()) <=> count($allArenas[$lhs]->getMode()->getPlayers());
 		});
-		$closedArenas = array_diff($sortedArenas, $openedArenas);
 
-		$lastKey = array_key_last($openedArenas);
-		if (empty($openedArenas) || is_null($lastKey)) {
+		$openedArenas = [];
+		$closedArenas = [];
+		foreach ($sortedArenas as $arena) {
+			if (($arena->getState()->equals(ArenaStates::WAITING()) || $arena->getState()->equals(ArenaStates::COUNTDOWN())) && $arena->getMode()->getPlayerCount() < $arena->getMode()->getMaxPlayers()) {
+				$openedArenas[] = $arena;
+			} else {
+				$closedArenas[] = $arena;
+			}
+		}
+
+		if (empty($openedArenas)) {
 			if (!is_null($onFail)) $onFail($arenaMessages->NoAvailableArenasFound());
 			return;
 		}
-		$plannedArena = $openedArenas[$lastKey];
 
-		$shuffleWithRand = function () use (&$plannedArena): void {
+		$plannedArena = $openedArenas[array_rand($openedArenas)];
+
+		$shuffePlan = function() use (&$plannedArena): void {
 			shuffle($openedArenas);
 			$plannedArena = $openedArenas[array_rand($openedArenas)];
 		};
 
-		if (in_array($plannedArena, $closedArenas, true)) {
-			$shuffleWithRand();
+		if (!is_null($closedArenas[$plannedArena->getID()] ?? null)) {
+			$shuffePlan();
 		}
 
-		if (count($openedArenas) >= 2) {
-			foreach ($openedArenas as $key => $value) {
-				$plannedArenaMode = $plannedArena->getMode();
-				$valueMode = $value->getMode();
+		foreach ($openedArenas as $arena) {
+			$plannedArenaMode = $plannedArena->getMode();
+			$valueMode = $arena->getMode();
 
-				if ($plannedArenaMode->getPlayerCount() < $valueMode->getMaxPlayers()) {
-					$plannedArena = $value;
-				} else if (($plannedArenaMode->getPlayerCount() === $valueMode->getMaxPlayers()) || ($plannedArenaMode->getPlayerCount() === 0 && $valueMode->getMaxPlayers() === 0)) {
-					$shuffleWithRand();
-				}
+			if ($arena->getID() === $plannedArena->getID()) {
+				continue;
+			}
+
+			if ($plannedArenaMode->getPlayerCount() < $valueMode->getMaxPlayers()) {
+				$plannedArena = $arena;
+			} else if (($plannedArenaMode->getPlayerCount() === $valueMode->getMaxPlayers()) || ($plannedArenaMode->getPlayerCount() === 0 && $valueMode->getMaxPlayers() === 0)) { // here seems to be an error. remove this if im wrong since im only testing with 1 arena
+				$shuffePlan();
 			}
 		}
 

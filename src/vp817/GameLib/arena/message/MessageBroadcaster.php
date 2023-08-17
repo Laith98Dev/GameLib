@@ -48,10 +48,10 @@ class MessageBroadcaster
 
 	/**
 	 * @param string $function
-	 * @param mixed ...$arguments
+	 * @param array $arguments
 	 * @return void
 	 */
-	public function broadcastFunctionCall(string $functionName, mixed ...$arguments): void
+	public function broadcastFunctionCall(string $functionName, array $arguments = []): void
 	{
 		$players = $this->arena->getMode()->getPlayers();
 
@@ -65,7 +65,7 @@ class MessageBroadcaster
 				return;
 			}
 
-			$cells->$functionName($arguments);
+			$cells->$functionName(...$arguments);
 		}
 	}
 
@@ -77,7 +77,7 @@ class MessageBroadcaster
 	{
 		$this->broadcastFunctionCall(
 			functionName: "sendMessage",
-			arguments: $value
+			arguments: [$value]
 		);
 	}
 
@@ -89,7 +89,7 @@ class MessageBroadcaster
 	{
 		$this->broadcastFunctionCall(
 			functionName: "sendPopup",
-			arguments: $value
+			arguments: [$value]
 		);
 	}
 
@@ -101,7 +101,7 @@ class MessageBroadcaster
 	{
 		$this->broadcastFunctionCall(
 			functionName: "sendTip",
-			arguments: $value
+			arguments: [$value]
 		);
 	}
 
@@ -113,7 +113,7 @@ class MessageBroadcaster
 	{
 		$this->broadcastFunctionCall(
 			functionName: "sendTitle",
-			arguments: $value
+			arguments: [$value]
 		);
 	}
 
@@ -125,7 +125,7 @@ class MessageBroadcaster
 	{
 		$this->broadcastFunctionCall(
 			functionName: "sendSubTitle",
-			arguments: $value
+			arguments: [$value]
 		);
 	}
 
@@ -137,7 +137,7 @@ class MessageBroadcaster
 	{
 		$this->broadcastFunctionCall(
 			functionName: "sendActionBarMessage",
-			arguments: $value
+			arguments: [$value]
 		);
 	}
 

@@ -15,7 +15,6 @@
         }
     ],
     "require": {
-        "pocketmine/pocketmine-mp": "^5.0.0",
         "symfony/filesystem": "^6.2"
     },
     "extra":{
