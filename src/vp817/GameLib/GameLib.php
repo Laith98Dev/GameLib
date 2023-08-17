@@ -32,7 +32,6 @@ declare(strict_types=1);
 namespace vp817\GameLib;
 
 use Closure;
-use Phar;
 use pocketmine\player\Player;
 use pocketmine\plugin\PluginBase;
 use pocketmine\plugin\PluginLogger;
@@ -66,16 +65,17 @@ use function array_shift;
 use function basename;
 use function class_exists;
 use function count;
+use function dirname;
 use function file_exists;
 use function is_dir;
 use function is_null;
 use function json_encode;
-use function uksort;
 use function mkdir;
 use function shuffle;
 use function strlen;
 use function strtolower;
 use function trim;
+use function uksort;
 
 final class GameLib
 {
@@ -87,14 +87,6 @@ final class GameLib
 	private string $arenaListenerClass;
 	private string $arenasBackupPath;
 	private SetupManager $setupManager;
-
-	/**
-	 * @return bool
-	 */
-	protected static function isPhar(): bool
-	{
-		return Phar::running() !== "";
-	}
 
 	/**
 	 * initialize a new gamelib
@@ -126,8 +118,7 @@ final class GameLib
 			throw new RuntimeException("libasyql virion not found. unable to use gamelib");
 		}
 
-		$autoload = self::isPhar() ? "phar://" : "";
-		$autoload .= __DIR__ . "/../../../vendor/autoload.php";
+		$autoload = Path::join(dirname(__DIR__, 3), "vendor/autoload.php");
 		if (!file_exists($autoload)) {
 			throw new RuntimeException(message: "Composer autoloader for gamelib not found.");
 		}
@@ -234,9 +225,7 @@ final class GameLib
 	 */
 	public function getResourcesPath(): string
 	{
-		$path = self::isPhar() ? "phar://" : "";
-		$path .= __DIR__ . "/../../../resources/";
-		return $path;
+		return Path::join(dirname(__DIR__, 3) . "resources");
 	}
 
 	/**
@@ -629,7 +618,7 @@ final class GameLib
 					return;
 				}
 
-				if ($this->getArenasManager()->hasLoadedArena($arenaID)) {
+				if ($this->getArenasManager()->hasLoadedArena(arenaID: $arenaID)) {
 					if (!is_null($onFail)) $onFail($arenaID, "unable to add player to setup a loaded arena");
 					return;
 				}
@@ -841,7 +830,7 @@ final class GameLib
 
 		$plannedArena = $openedArenas[array_rand($openedArenas)];
 
-		$shuffePlan = function() use (&$plannedArena): void {
+		$shuffePlan = function () use (&$plannedArena): void {
 			shuffle($openedArenas);
 			$plannedArena = $openedArenas[array_rand($openedArenas)];
 		};

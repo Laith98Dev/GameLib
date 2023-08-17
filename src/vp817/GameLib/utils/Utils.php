@@ -32,6 +32,7 @@ declare(strict_types=1);
 namespace vp817\GameLib\utils;
 
 use InvalidArgumentException;
+use Phar;
 use pocketmine\plugin\PluginBase;
 use pocketmine\plugin\ResourceProvider;
 use pocketmine\utils\AssumptionFailedError;
@@ -458,5 +459,13 @@ final class Utils
 
 		unset($zip);
 		return true;
+	}
+
+	/**
+	 * @return bool
+	 */
+	public static function isPhar(): bool
+	{
+		return Phar::running() !== "";
 	}
 }

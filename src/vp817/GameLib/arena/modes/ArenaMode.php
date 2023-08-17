@@ -38,6 +38,8 @@ use vp817\GameLib\arena\states\ArenaStates;
 use vp817\GameLib\event\ArenaEndEvent;
 use vp817\GameLib\event\PlayerArenaWinEvent;
 use vp817\GameLib\player\ArenaPlayer;
+use function basename;
+use function strtolower;
 
 abstract class ArenaMode
 {
