@@ -80,6 +80,7 @@ use function shuffle;
 use function strlen;
 use function trim;
 use function uksort;
+use function unlink;
 
 final class GameLib
 {
@@ -549,7 +550,7 @@ final class GameLib
 						}
 						$zipFileFullPath = Path::join($this->getArenasBackupPath(), $arenaID) . ".zip";
 
-						if (is_file($zipFileFullPath)) {
+						if (file_exists($zipFileFullPath)) {
 							unlink($zipFileFullPath);
 						}
 					},
