@@ -72,7 +72,7 @@ class SoloMode extends ArenaMode
 		}
 
 		if (!is_object($gamelib)) {
-			throw new GameLibInvalidArgumentException(message: "The arena is not an object");
+			throw new GameLibInvalidArgumentException(message: "The gamelib is not an object");
 		}
 
 		if (!$gamelib instanceof GameLib) {

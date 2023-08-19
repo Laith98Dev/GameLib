@@ -31,6 +31,8 @@ declare(strict_types=1);
 
 namespace vp817\GameLib;
 
+require_once "GameLibDefinitions.php";
+
 use Closure;
 use pocketmine\player\Player;
 use pocketmine\plugin\PluginBase;
@@ -39,8 +41,6 @@ use pocketmine\scheduler\AsyncPool;
 use pocketmine\scheduler\TaskScheduler;
 use pocketmine\utils\Utils as PMUtils;
 use pocketmine\world\WorldManager;
-use poggit\libasynql\DataConnector;
-use poggit\libasynql\SqlError;
 use Symfony\Component\Filesystem\Path;
 use TypeError;
 use vp817\GameLib\arena\Arena;
@@ -54,33 +54,30 @@ use vp817\GameLib\event\listener\ServerEventListener;
 use vp817\GameLib\exceptions\GameLibAlreadyInitException;
 use vp817\GameLib\exceptions\GameLibInvalidListenerException;
 use vp817\GameLib\exceptions\GameLibMissingComposerException;
-use vp817\GameLib\exceptions\GameLibMissingKeysException;
 use vp817\GameLib\exceptions\GameLibMissingLibException;
 use vp817\GameLib\exceptions\GameLibNotInitException;
 use vp817\GameLib\managers\ArenasManager;
 use vp817\GameLib\managers\SetupManager;
 use vp817\GameLib\player\SetupPlayer;
+use vp817\GameLib\provider\Provider;
+use vp817\GameLib\provider\Providers;
 use vp817\GameLib\tasks\async\CreateZipAsyncTask;
-use vp817\GameLib\utils\SqlQueries;
 use vp817\GameLib\utils\Utils;
-use const DIRECTORY_SEPARATOR;
+use const GAMELIB_COMPOSER_AUTOLOAD_PATH;
+use const JSON_THROW_ON_ERROR;
 use function array_filter;
 use function array_key_exists;
 use function array_rand;
 use function array_shift;
-use function basename;
 use function class_exists;
 use function count;
-use function dirname;
 use function file_exists;
-use function glob;
 use function is_dir;
 use function is_null;
 use function json_encode;
 use function mkdir;
 use function shuffle;
 use function strlen;
-use function strtolower;
 use function trim;
 use function uksort;
 
@@ -88,7 +85,7 @@ final class GameLib
 {
 
 	private static ?PluginBase $plugin = null;
-	private static ?DataConnector $database = null;
+	private ?Provider $provider = null;
 	private ArenasManager $arenasManager;
 	private ArenaMessages $arenaMessages;
 	private string $arenaListenerClass;
@@ -98,7 +95,7 @@ final class GameLib
 	/**
 	 * initialize a new gamelib
 	 * 
-	 * sqlDatabase usage example:
+	 * databaseSettings usage example:
 	 * 
 	 * sqlite: [ "type" => "sqlite" ]
 	 * 
@@ -110,13 +107,15 @@ final class GameLib
 	 * 		"schema" => "schema"
 	 * ]
 	 * 
+	 * what was said up only applies when you are using the sql provider (default provider)
+	 * 
 	 * @param PluginBase $plugin
 	 * @param GameLibType $libType
-	 * @param array $sqlDatabase
+	 * @param array $databaseSettings
 	 * @return GameLib
 	 * @throws GameLibAlreadyInitException|GameLibMissingLibException|GameLibMissingComposerException
 	 */
-	public static function init(PluginBase $plugin, GameLibType $libType, array $sqlDatabase): GameLib
+	public static function init(PluginBase $plugin, GameLibType $libType, array $databaseSettings): GameLib
 	{
 		if (!is_null(self::$plugin)) {
 			throw new GameLibAlreadyInitException(message: "GameLib is already initialized for this plugin");
@@ -126,17 +125,16 @@ final class GameLib
 			throw new GameLibMissingLibException(message: "libasyql virion not found. unable to use gamelib");
 		}
 
-		$autoload = Path::join(dirname(__DIR__, 3), "vendor/autoload.php");
-		if (!file_exists($autoload)) {
+		if (!file_exists(GAMELIB_COMPOSER_AUTOLOAD_PATH)) {
 			throw new GameLibMissingComposerException(message: "Composer autoloader for gamelib not found.");
 		}
 
-		require_once $autoload;
+		require_once GAMELIB_COMPOSER_AUTOLOAD_PATH;
 
 		return new GameLib(
 			plugin: $plugin,
 			libType: $libType,
-			sqlDatabase: $sqlDatabase
+			databaseSettings: $databaseSettings
 		);
 	}
 
@@ -144,96 +142,40 @@ final class GameLib
 	 * @return void
 	 * @throws GameLibNotInitException
 	 */
-	public static function uninit(): void
+	public function deinit(): void
 	{
 		if (is_null(self::$plugin)) {
 			throw new GameLibNotInitException(message: "There is no instance to uninitialize for gamelib");
 		}
 
-		if (isset(self::$database)) {
-			self::$database->close();
+		if (!is_null($this->provider)) {
+			$this->provider->free();
+			unset($this->provider);
 		}
 	}
 
 	/**
 	 * @param PluginBase $plugin
 	 * @param GameLibType $libType
-	 * @param array $sqlDatabase
-	 * @throws GameLibMissingKeysException
+	 * @param array $databaseSettings
 	 */
 	private function __construct(
 		PluginBase $plugin,
 		private GameLibType $libType,
-		array $sqlDatabase = []
+		private array $databaseSettings
 	) {
 		self::$plugin = $plugin;
 
-		$sqlType = $sqlDatabase["type"];
-		$database = [
-			"type" => $sqlType
-		];
+		$this->provider = Providers::SQL();
+		$this->provider->init($this, self::$plugin);
 
-		if ($sqlType == "sqlite") {
-			$database["sqlite"] = [
-				"file" => $sqlDatabase["dataFileName"] ?? "data.sql"
-			];
-		} else if ($sqlType == "mysql") {
-			if (!Utils::arrayKeysExist(
-				[
-					"host",
-					"username",
-					"password",
-					"schema"
-				],
-				$sqlDatabase
-			)) {
-				throw new GameLibMissingKeysException(message: "the sql database is missing some keys for mysql database");
-			}
-			$database["mysql"][] = $sqlDatabase;
-		}
-
-		$sqlMapPath = $plugin->getDataFolder() . "SqlMap";
-		if (!is_dir($sqlMapPath)) {
-			@mkdir($sqlMapPath);
-		}
-
-		foreach (glob(Path::join($this->getResourcesPath(), "*.sql")) as $resource) {
-			$filename = basename($resource);
-			Utils::saveResourceToPlugin(
-				plugin: $plugin,
-				resourcePath: $this->getResourcesPath(),
-				filename: $filename,
-				pathToUploadTo: $sqlMapPath
-			);
-		}
-
-		self::$database = Utils::libasynqlCreateForVirion(
-			plugin: $plugin,
-			configData: $database,
-			sqlMap: [
-				"sqlite" => Path::join($sqlMapPath, "sqlite.sql"),
-				"mysql" => Path::join($sqlMapPath, "mysql.sql")
-			]
-		);
-
-		self::$database->executeGeneric(
-			queryName: SqlQueries::INIT,
-			args: [],
-			onSuccess: null,
-			onError: static function (SqlError $error) use ($plugin): void {
-				$plugin->getLogger()->error($error->getMessage());
-			}
-		);
-
-		self::$database->waitAll();
-
-		$this->arenasManager = new ArenasManager();
+		$this->arenasManager = new ArenasManager;
 		if ($libType->equals(GameLibType::MINIGAME())) {
-			$this->arenaMessages = new MiniGameMessages();
+			$this->arenaMessages = new MiniGameMessages;
 		} else {
-			$this->arenaMessages = new PracticeMessages();
+			$this->arenaMessages = new PracticeMessages;
 		}
-		$this->setupManager = new SetupManager();
+		$this->setupManager = new SetupManager;
 		$this->arenaListenerClass = DefaultArenaListener::class;
 
 		self::$plugin->getServer()->getPluginManager()->registerEvents(
@@ -243,11 +185,19 @@ final class GameLib
 	}
 
 	/**
-	 * @return string
+	 * @return array
 	 */
-	public function getResourcesPath(): string
+	public function getDatabaseSettings(): array
 	{
-		return Path::join(dirname(__DIR__, 3) . "resources");
+		return $this->databaseSettings;
+	}
+
+	/**
+	 * @return Provider|null
+	 */
+	public function getProvider(): ?Provider
+	{
+		return $this->provider;
 	}
 
 	/**
@@ -260,7 +210,25 @@ final class GameLib
 			@mkdir($path);
 		}
 
-		$this->arenasBackupPath = $path . DIRECTORY_SEPARATOR;
+		$this->arenasBackupPath = $path;
+	}
+
+	/**
+	 * @param Provider $provider
+	 * @return void
+	 */
+	public function setProvider(Provider $provider): void
+	{
+		$this->provider = $provider;
+	}
+
+	/**
+	 * @param ArenaMessages $arenaMessages
+	 * @return void
+	 */
+	public function setArenaMessagesClass(ArenaMessages $arenaMessages): void
+	{
+		$this->arenaMessages = $arenaMessages;
 	}
 
 	/**
@@ -305,15 +273,6 @@ final class GameLib
 	public function getLogger(): PluginLogger
 	{
 		return self::$plugin->getLogger();
-	}
-
-	/**
-	 * @param ArenaMessages $arenaMessages
-	 * @return void
-	 */
-	public function setArenaMessagesClass(ArenaMessages $arenaMessages): void
-	{
-		$this->arenaMessages = $arenaMessages;
 	}
 
 	/**
@@ -418,10 +377,10 @@ final class GameLib
 	 */
 	public function loadArenas(?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
-		self::$database->executeSelect(
-			queryName: SqlQueries::GET_ALL_ARENAS,
-			args: [],
-			onSelect: function ($rows) use ($onSuccess, $onFail): void {
+		$provider = $this->getProvider();
+
+		$provider?->getAllArenas(
+			resultClosure: function ($rows) use ($provider, $onSuccess, $onFail): void {
 				if (count($rows) < 1) {
 					if (!is_null($onFail)) $onFail("None", "no arenas to be loaded");
 					return;
@@ -429,13 +388,9 @@ final class GameLib
 
 				foreach ($rows as $arenasData) {
 					$arenaID = $arenasData["arenaID"];
-					$this->arenaExistsInDatabase(
+					$provider?->isArenaNotInvalid(
 						arenaID: $arenaID,
-						resultClosure: function (bool $arenaExists) use ($arenaID, $arenasData, $onSuccess, $onFail): void {
-							if (!$arenaExists) {
-								if (!is_null($onFail)) $onFail($arenaID, "Arena doesnt exists in db. this shouldnt happen");
-								return;
-							}
+						onSuccess: function () use ($arenaID, $arenasData, $onSuccess, $onFail): void {
 							if ($this->getArenasManager()->hasLoadedArena(arenaID: $arenaID)) {
 								if (!is_null($onFail)) $onFail($arenaID, "unable to load an already loaded arena");
 								return;
@@ -449,9 +404,10 @@ final class GameLib
 										data: $arenasData
 									)
 								),
-								onSuccess: fn (Arena $arena) => !is_null($onSuccess) ? $onSuccess($arena) : null
+								onSuccess: static fn (Arena $arena) => !is_null($onSuccess) ? $onSuccess($arena) : null
 							);
-						}
+						},
+						onFail: static fn () => !is_null($onFail) ? $onFail($arenaID, "Arena doesnt exists in db. this shouldnt happen") : null
 					);
 				}
 			}
@@ -466,23 +422,14 @@ final class GameLib
 	 */
 	public function loadArena(string $arenaID, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
-		$this->arenaExistsInDatabase(
+		$provider = $this->getProvider();
+
+		$provider?->isArenaNotInvalid(
 			arenaID: $arenaID,
-			resultClosure: function ($arenaExists) use ($arenaID, $onSuccess, $onFail): void {
-				if (!$arenaExists) {
-					if (!is_null($onFail)) $onFail();
-					return;
-				}
-
-				self::$database->executeSelect(
-					queryName: SqlQueries::GET_ARENA_DATA,
-					args: ["arenaID" => $arenaID],
-					onSelect: function ($rows) use ($onSuccess, $onFail): void {
-						if (count($rows) < 1) {
-							if (!is_null($onFail)) $onFail();
-							return;
-						}
-
+			onSuccess: function () use ($provider, $arenaID, $onSuccess, $onFail): void {
+				$provider?->getArenaDataByID(
+					arenaID: $arenaID,
+					onSuccess: function ($rows) use ($onSuccess): void {
 						foreach ($rows as $arenaData) {
 							$arenaID = $arenaData["arenaID"];
 
@@ -499,12 +446,14 @@ final class GameLib
 										data: $arenaData
 									)
 								),
-								onSuccess: fn (Arena $arena) => !is_null($onSuccess) ? $onSuccess($arena) : null
+								onSuccess: static fn (Arena $arena) => !is_null($onSuccess) ? $onSuccess($arena) : null
 							);
 						}
-					}
+					},
+					onFail: $onFail
 				);
-			}
+			},
+			onFail: static fn () => !is_null($onFail) ? $onFail() : null
 		);
 	}
 
@@ -521,14 +470,12 @@ final class GameLib
 	 */
 	public function createArena(string $arenaID, string $worldName, string $mode, int $countdownTime, int $arenaTime, int $restartingTime, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
-		$this->arenaExistsInDatabase(
-			arenaID: $arenaID,
-			resultClosure: function (bool $arenaExists) use ($arenaID, $worldName, $mode, $countdownTime, $arenaTime, $restartingTime, $onSuccess, $onFail): void {
-				if ($arenaExists) {
-					if (!is_null($onFail)) $onFail($arenaID, "Arena already exists");
-					return;
-				}
+		$provider = $this->getProvider();
 
+		$provider?->isArenaNotInvalid(
+			arenaID: $arenaID,
+			onSuccess: static fn () => !is_null($onFail) ? $onFail($arenaID, "Arena already exists") : null,
+			onFail: function () use ($provider, $arenaID, $worldName, $mode, $countdownTime, $arenaTime, $restartingTime, $onSuccess, $onFail): void {
 				$data = [
 					"arenaID" => $arenaID,
 					"worldName" => $worldName,
@@ -538,39 +485,40 @@ final class GameLib
 					"restartingTime" => $restartingTime
 				];
 
-				self::$database->executeInsert(
-					queryName: SqlQueries::ADD_ARENA,
-					args: $data
+				$provider?->insertArenaData(
+					data: $data,
+					onSuccess: function (int $insertID, int $affectedRows) use ($arenaID, $worldName, $data, $onSuccess): void {
+						$zipFileFullPath = Path::join($this->getArenasBackupPath(), $arenaID) . ".zip";
+						$worldManager = $this->getWorldManager();
+
+						if ($worldManager->isWorldLoaded(name: $worldName)) {
+							$worldManager->unloadWorld(world: $worldManager->getWorldByName($worldName));
+						}
+
+						$directoryFullPath = Path::join($this->getServerWorldsPath(), $worldName);
+
+						// TODO: Temp fix and might be permanent
+						// There seems to be an issue for creating zip in another thread
+						// I have no idea what is causing this since i have debugged everything related to this
+						// This is only tested on windows 11 i have not tested on other versions of windows
+						if (PMUtils::getOS() === PMUtils::OS_WINDOWS) {
+							Utils::zipDirectory(
+								directoryFullPath: $directoryFullPath,
+								zipFileFullPath: $zipFileFullPath
+							);
+						} else {
+							$this->getAsyncPool()->submitTask(task: new CreateZipAsyncTask(
+								directoryFullPath: $directoryFullPath,
+								zipFileFullPath: $zipFileFullPath
+							));
+						}
+
+						$worldManager->loadWorld(name: $worldName);
+
+						if (!is_null($onSuccess)) $onSuccess($data);
+					},
+					onFail: static fn (string $reason) => !is_null($onFail) ? $onFail($arenaID, $reason) : null
 				);
-
-				$zipFileFullPath = Path::join($this->getArenasBackupPath(), $arenaID) . ".zip";
-				$worldManager = $this->getWorldManager();
-
-				if ($worldManager->isWorldLoaded(name: $worldName)) {
-					$worldManager->unloadWorld(world: $worldManager->getWorldByName($worldName));
-				}
-
-				$directoryFullPath = Path::join($this->getServerWorldsPath(), $worldName);
-
-				// TODO: Temp fix and might be permanent
-				// There seems to be an issue for creating zip in another thread
-				// I have no idea what is causing this since i have debugged everything related to this
-				// This is only tested on windows 11 i have not tested on other versions of windows
-				if (PMUtils::getOS() === PMUtils::OS_WINDOWS) {
-					Utils::zipDirectory(
-						directoryFullPath: $directoryFullPath,
-						zipFileFullPath: $zipFileFullPath
-					);
-				} else {
-					$this->getAsyncPool()->submitTask(task: new CreateZipAsyncTask(
-						directoryFullPath: $directoryFullPath,
-						zipFileFullPath: $zipFileFullPath
-					));
-				}
-
-				$worldManager->loadWorld(name: $worldName);
-
-				if (!is_null($onSuccess)) $onSuccess($data);
 			}
 		);
 	}
@@ -579,58 +527,36 @@ final class GameLib
 	 * @param string $arenaID
 	 * @param null|Closure $onSuccess
 	 * @param null|Closure $onFail
-	 * @param bool $alertConsole
 	 * @return void
 	 */
-	public function removeArena(string $arenaID, ?Closure $onSuccess = null, ?Closure $onFail = null, bool $alertConsole = true): void
+	public function removeArena(string $arenaID, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
-		$this->arenaExistsInDatabase(
-			arenaID: $arenaID,
-			resultClosure: function ($arenaExists) use ($arenaID, $onSuccess, $onFail, $alertConsole): void {
-				if (!$arenaExists) {
-					if (!is_null($onFail)) $onFail($arenaID, "Arena does not exists");
-					return;
-				}
+		$provider = $this->getProvider();
 
+		$provider?->isArenaNotInvalid(
+			arenaID: $arenaID,
+			onSuccess: function () use ($provider, $arenaID, $onSuccess, $onFail): void {
 				$arenasManager = $this->getArenasManager();
 
-				self::$database->executeChange(
-					queryName: SqlQueries::REMOVE_ARENA,
-					args: ["arenaID" => $arenaID],
-					onSuccess: static function ($_) use ($arenasManager, $arenaID, $onSuccess, $alertConsole): void {
+				$provider?->removeArenaDataByID(
+					arenaID: $arenaID,
+					onSuccess: function (int $affectedRows) use ($arenasManager, $arenaID, $onSuccess): void {
 						if ($arenasManager->hasLoadedArena(arenaID: $arenaID)) {
 							$arenasManager->unsignFromBeingLoaded(
 								arenaID: $arenaID,
 								onSuccess: fn () => !is_null($onSuccess) ? $onSuccess($arenaID) : null
 							);
 						}
+						$zipFileFullPath = Path::join($this->getArenasBackupPath(), $arenaID) . ".zip";
 
-						if ($alertConsole) self::$plugin->getLogger()->alert(message: "Arena: $arenaID has been successfully removed");
-					}
+						if (is_file($zipFileFullPath)) {
+							unlink($zipFileFullPath);
+						}
+					},
+					onFail: static fn (string $reason) => !is_null($onFail) ? $onFail($arenaID, $reason) : null
 				);
-			}
-		);
-	}
-
-	/**
-	 * @param string $arenaID
-	 * @param Closure $resultClosure
-	 * @return void
-	 */
-	public function arenaExistsInDatabase(string $arenaID, Closure $resultClosure): void
-	{
-		self::$database->executeSelect(
-			queryName: SqlQueries::GET_ALL_ARENAS,
-			args: [],
-			onSelect: static function ($rows) use ($resultClosure, $arenaID): void {
-				foreach ($rows as $arenasData) {
-					if (strtolower($arenasData["arenaID"]) === strtolower($arenaID)) {
-						$resultClosure(true);
-						return;
-					}
-				}
-				$resultClosure(false);
-			}
+			},
+			onFail: static fn () => !is_null($onFail) ? $onFail($arenaID, "Arena does not exists") : null
 		);
 	}
 
@@ -643,14 +569,11 @@ final class GameLib
 	 */
 	public function addPlayerToSetupArena(Player $player, string $arenaID, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
-		$this->arenaExistsInDatabase(
-			arenaID: $arenaID,
-			resultClosure: function ($arenaExists) use ($player, $arenaID, $onSuccess, $onFail): void {
-				if (!$arenaExists) {
-					if (!is_null($onFail)) $onFail($arenaID, "arena doesnt exists in db");
-					return;
-				}
+		$provider = $this->getProvider();
 
+		$provider?->isArenaNotInvalid(
+			arenaID: $arenaID,
+			onSuccess: function () use ($player, $arenaID, $onSuccess, $onFail): void {
 				if ($this->getArenasManager()->hasLoadedArena(arenaID: $arenaID)) {
 					if (!is_null($onFail)) $onFail($arenaID, "unable to add player to setup a loaded arena");
 					return;
@@ -662,7 +585,8 @@ final class GameLib
 					onSuccess: fn (SetupPlayer $player) => !is_null($onSuccess) ? $onSuccess($player) : null,
 					onFail: fn ()  => !is_null($onFail) ? $onFail($arenaID, "You are already inside the setup") : null
 				);
-			}
+			},
+			onFail: static fn () => !is_null($onFail) ? $onFail($arenaID, "The given arena id does not exist in the data") : null
 		);
 	}
 
@@ -674,57 +598,46 @@ final class GameLib
 	 */
 	public function finishArenaSetup(Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
+		$provider = $this->getProvider();
 		$setupManager = $this->getSetupManager();
+
 		if (!$setupManager->has(bytes: $player->getUniqueId()->getBytes())) {
 			if (!is_null($onFail)) $onFail("The player is not inside the setup");
 			return;
 		}
 
+
 		$setupManager->get(
 			bytes: $player->getUniqueId()->getBytes(),
-			onSuccess: function (SetupPlayer $setupPlayer) use ($setupManager, $onSuccess, $onFail): void {
+			onSuccess: function (SetupPlayer $setupPlayer) use ($provider, $setupManager, $onSuccess, $onFail): void {
 				$setupSettingsQueue = $setupPlayer->getSetupSettingsQueue();
 				$arenaID = $setupPlayer->getSetupingArenaID();
 
-				$fail = fn (SqlError $error) => !is_null($onFail) ? $onFail($error->getMessage()) : null;
-
-				self::$database->executeChange(
-					queryName: SqlQueries::UPDATE_ARENA_SPAWNS,
-					args: [
-						"arenaID" => $arenaID,
-						"spawns" => json_encode($setupSettingsQueue->getSpawns())
-					],
+				$provider?->setArenaSpawnsDataByID(
+					arenaID: $arenaID,
+					data: json_encode($setupSettingsQueue->getSpawns(), JSON_THROW_ON_ERROR),
 					onSuccess: null,
-					onError: $fail
+					onFail: $onFail
 				);
-				self::$database->executeChange(
-					queryName: SqlQueries::UPDATE_ARENA_LOBBY_SETTINGS,
-					args: [
-						"arenaID" => $arenaID,
-						"settings" => $setupSettingsQueue->getLobbySettings()
-					],
+				$provider?->setArenaLobbySettingsDataByID(
+					arenaID: $arenaID,
+					data: $setupSettingsQueue->getLobbySettings(),
 					onSuccess: null,
-					onError: $fail
+					onFail: $onFail
 				);
-				self::$database->executeChange(
-					queryName: SqlQueries::UPDATE_ARENA_DATA,
-					args: [
-						"arenaID" => $arenaID,
-						"arenaData" => $setupSettingsQueue->getArenaData()
-					],
+				$provider?->setArenaLobbySettingsDataByID(
+					arenaID: $arenaID,
+					data: $setupSettingsQueue->getArenaData(),
 					onSuccess: null,
-					onError: $fail
+					onFail: $onFail
 				);
 
 				if ($setupSettingsQueue->hasExtraData()) {
-					self::$database->executeChange(
-						queryName: SqlQueries::UPDATE_ARENA_EXTRA_DATA,
-						args: [
-							"arenaID" => $arenaID,
-							"extraData" => $setupSettingsQueue->getExtraData()
-						],
+					$provider?->setArenaLobbySettingsDataByID(
+						arenaID: $arenaID,
+						data: $setupSettingsQueue->getExtraData(),
 						onSuccess: null,
-						onError: $fail
+						onFail: $onFail
 					);
 				}
 
@@ -732,8 +645,8 @@ final class GameLib
 
 				$this->loadArena(
 					arenaID: $arenaID,
-					onSuccess: fn (Arena $arena) => !is_null($onSuccess) ? $onSuccess($arena) : null,
-					onFail: fn () => !is_null($onFail) ? $onFail("unable to load arena") : null
+					onSuccess: static fn (Arena $arena) => !is_null($onSuccess) ? $onSuccess($arena) : null,
+					onFail: static fn () => !is_null($onFail) ? $onFail("unable to load arena") : null
 				);
 
 				$setupManager->remove(player: $setupPlayer->getCells());

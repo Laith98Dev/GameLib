@@ -29,56 +29,11 @@
 
 declare(strict_types=1);
 
-namespace vp817\GameLib\event\listener;
+namespace vp817\GameLib;
 
-use pocketmine\event\Listener;
-use pocketmine\event\player\PlayerQuitEvent;
-use vp817\GameLib\event\PlayerQuitFromServerEvent;
-use vp817\GameLib\GameLib;
-use function strlen;
-use function trim;
+use const DIRECTORY_SEPARATOR;
+use function dirname;
 
-class ServerEventListener implements Listener 
-{
-
-	/**
-	 * @param GameLib $gamelib
-	 */
-	public function __construct(
-		protected GameLib $gamelib
-	) {
-	}
-
-	/**
-	 * @param PlayerQuitEvent $event
-	 * @return void
-	 */
-	public function _E1298313(PlayerQuitEvent $event): void
-	{
-		$player = $event->getPlayer();
-		$allArenas = $this->gamelib->getArenasManager()->getAll();
-
-		if (empty($allArenas)) {
-			return;
-		}
-
-		if (!$this->gamelib->isPlayerInsideAnArena(player: $player)) {
-			return;
-		}
-
-		$quitEvent = new PlayerQuitFromServerEvent(player: $player);
-		$quitEvent->call();
-
-		$notifyPlayers = strlen(trim($quitEvent->getGlobalMessage())) < 1;
-
-		$event->setQuitMessage(quitMessage: $event->getQuitMessage());
-
-		$this->gamelib->leaveArena(
-			player: $player,
-			onSuccess: null,
-			onFail: null,
-			notifyPlayers: $notifyPlayers,
-			force: true
-		);
-	}
-}
+define("GAMELIB_COMPOSER_PATH", dirname(__DIR__, 3) . DIRECTORY_SEPARATOR . "vendor");
+define("GAMELIB_COMPOSER_AUTOLOAD_PATH", GAMELIB_COMPOSER_PATH . DIRECTORY_SEPARATOR . "autoload.php");
+define("GAMELIB_RESOURCE_PATH", dirname(__DIR__, 3) . DIRECTORY_SEPARATOR . "resources");

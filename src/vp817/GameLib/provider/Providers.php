@@ -29,56 +29,40 @@
 
 declare(strict_types=1);
 
-namespace vp817\GameLib\event\listener;
+namespace vp817\GameLib\provider;
 
-use pocketmine\event\Listener;
-use pocketmine\event\player\PlayerQuitEvent;
-use vp817\GameLib\event\PlayerQuitFromServerEvent;
-use vp817\GameLib\GameLib;
-use function strlen;
-use function trim;
+use pocketmine\utils\CloningRegistryTrait;
+use vp817\GameLib\provider\list\SqlProvider;
 
-class ServerEventListener implements Listener 
+/**
+ * @method static SqlProvider SQL()
+ */
+final class Providers
 {
+	use CloningRegistryTrait;
 
 	/**
-	 * @param GameLib $gamelib
+	 * @return void
+	 * @throws \InvalidArgumentException
 	 */
-	public function __construct(
-		protected GameLib $gamelib
-	) {
+	public static function setup(): void
+	{
+		self::_registryRegister(
+			name: "sql",
+			member: new SqlProvider()
+		);
 	}
 
 	/**
-	 * @param PlayerQuitEvent $event
-	 * @return void
+	 * @see ArenaModes::registerCustomMode
+	 * 
+	 * @param Provider $provider
 	 */
-	public function _E1298313(PlayerQuitEvent $event): void
+	public function registerCustomProvider(Provider $provider)
 	{
-		$player = $event->getPlayer();
-		$allArenas = $this->gamelib->getArenasManager()->getAll();
-
-		if (empty($allArenas)) {
-			return;
-		}
-
-		if (!$this->gamelib->isPlayerInsideAnArena(player: $player)) {
-			return;
-		}
-
-		$quitEvent = new PlayerQuitFromServerEvent(player: $player);
-		$quitEvent->call();
-
-		$notifyPlayers = strlen(trim($quitEvent->getGlobalMessage())) < 1;
-
-		$event->setQuitMessage(quitMessage: $event->getQuitMessage());
-
-		$this->gamelib->leaveArena(
-			player: $player,
-			onSuccess: null,
-			onFail: null,
-			notifyPlayers: $notifyPlayers,
-			force: true
+		self::_registryRegister(
+			name: $provider->name(),
+			member: $provider
 		);
 	}
 }

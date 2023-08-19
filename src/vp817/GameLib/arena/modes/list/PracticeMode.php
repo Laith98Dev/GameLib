@@ -35,7 +35,6 @@ use Closure;
 use pocketmine\player\Player;
 use vp817\GameLib\arena\Arena;
 use vp817\GameLib\arena\modes\ArenaMode;
-use vp817\GameLib\arena\states\ArenaStates;
 use vp817\GameLib\event\ArenaTeleportEvent;
 use vp817\GameLib\event\enums\ArenaTeleportCause;
 use vp817\GameLib\event\PlayerJoinArenaEvent;
@@ -45,7 +44,6 @@ use vp817\GameLib\GameLib;
 use vp817\GameLib\managers\PlayerManager;
 use vp817\GameLib\player\ArenaPlayer;
 use vp817\GameLib\utils\Utils;
-use function array_values;
 use function is_null;
 use function is_object;
 
@@ -65,7 +63,7 @@ class PracticeMode extends ArenaMode
 		$gamelib = $arguments[0];
 
 		if (!is_object($gamelib)) {
-			throw new GameLibInvalidArgumentException(message: "The arena is not an object");
+			throw new GameLibInvalidArgumentException(message: "The gamelib is not an object");
 		}
 
 		if (!$gamelib instanceof GameLib) {

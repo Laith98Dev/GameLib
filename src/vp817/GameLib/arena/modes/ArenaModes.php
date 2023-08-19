@@ -103,6 +103,8 @@ final class ArenaModes
 	 * for example the CustomSoloMode will be called CUSTOMSOLO
 	 * and that is the right mode name
 	 * 
+	 * or you can just edit the name() function inside your class
+	 * 
 	 * @param ArenaMode $mode
 	 */
 	public function registerCustomMode(ArenaMode $mode)

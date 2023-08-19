@@ -26,7 +26,8 @@ this is the solution to everything related to making any type of game on pocketm
  * the first argument is for the plugin
  * the second argument is for the library type
  * can be practice or minigame
- * the third argument is for the sql settings
+ * the third argument is for the databaseSettings
+ * what is shown down only applies to the sql provider (default)
  */
 // this is for using sqlite
 $gamelib = \vp817\GameLib\GameLib::init(
@@ -40,6 +41,19 @@ $gamelib = \vp817\GameLib\GameLib::init($this, \vp817\GameLib\GameLibTypes:MINIG
 	"password" => "", // your mysql password
 	"schema" => "" // schema for storing data for the plugin using the lib
 ]);
+
+// registering custom provider
+// read what was said in \vp817\GameLib\arena\mode\ArenaModes
+\vp817\GameLib\provider\Providers::registerCustomProvider(new \your_path\CustomDataProvider());
+
+// setting your custom provider as the current provider used
+$provider = new \your_path\CustomDataProvider();
+$provider->init(...);
+$gamelib->setProvider($provider);
+
+// registering custom mode
+// read what was said there to understand how it works
+\vp817\GameLib\arena\mode\ArenaModes::registerCustomMode(new \your_path\CustomArenaMode());
 
 // this is the place for saving the world of the arenas
 $gamelib->setArenasBackupPath("GameLibMapsBackup"); // prefer the plugin data
@@ -67,6 +81,8 @@ $gamelib->setArenaMessagesClass(new \your_path\CustomArenaMessagesClass());
 $gamelib->setArenaListenerClass(\your_path\CustomArenaListenerClass::class);
 // if you didnt get what was written up there then this is a tip
 $gamelib->setArenaListenerClass(\your_path\CustomArenaListenerClass::class);
+
+\vp817\GameLib\GameLib::deinit($gamelik);
 
 ?>
 

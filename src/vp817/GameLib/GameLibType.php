@@ -37,7 +37,7 @@ use pocketmine\utils\EnumTrait;
  * @method static GameLibType MINIGAME()
  * @method static GameLibType PRACTICE()
  */
-class GameLibType
+final class GameLibType
 {
 	use EnumTrait;
 

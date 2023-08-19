@@ -32,6 +32,7 @@ declare(strict_types=1);
 namespace vp817\GameLib\queue;
 
 use pocketmine\entity\Location;
+use const JSON_THROW_ON_ERROR;
 use function array_key_exists;
 use function json_encode;
 
@@ -82,7 +83,7 @@ final class SetupSettingsQueue
 				"yaw" => $location->getYaw(),
 				"pitch" => $location->getPitch()
 			]
-		]);
+		], JSON_THROW_ON_ERROR);
 	}
 
 	/**
@@ -95,7 +96,7 @@ final class SetupSettingsQueue
 			return;
 		}
 
-		$this->queue["arenaDataQueue"] = json_encode($data);
+		$this->queue["arenaDataQueue"] = json_encode($data, JSON_THROW_ON_ERROR);
 	}
 
 	/**
@@ -108,7 +109,7 @@ final class SetupSettingsQueue
 			return;
 		}
 
-		$this->queue["extraDataQueue"] = json_encode($data);
+		$this->queue["extraDataQueue"] = json_encode($data, JSON_THROW_ON_ERROR);
 	}
 
 	/**
@@ -156,7 +157,11 @@ final class SetupSettingsQueue
 	 */
 	public function clear(): void
 	{
-		foreach (["spawnsQueue", "lobbySettingsQueue", "arenaData"] as $key => $value) {
+		foreach ([
+				"spawnsQueue",
+				"lobbySettingsQueue",
+				"arenaData"
+			] as $value) {
 			unset($this->queue[$value]);
 		}
 		$this->queue = [
