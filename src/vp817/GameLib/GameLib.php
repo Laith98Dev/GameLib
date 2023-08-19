@@ -149,7 +149,7 @@ final class GameLib
 		}
 
 		if (!is_null($this->provider)) {
-			$this->provider->free();
+			$this->provider?->free();
 			unset($this->provider);
 		}
 	}
