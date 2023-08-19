@@ -138,7 +138,7 @@ class SqlProvider extends Provider
 			}
 		);
 
-		$this->database->waitAll();
+		$this->database?->waitAll();
 	}
 
 	/**
@@ -147,7 +147,7 @@ class SqlProvider extends Provider
 	 */
 	public function getAllArenas(Closure $resultClosure): void
 	{
-		$this->database->executeSelect(
+		$this->database?->executeSelect(
 			queryName: SqlQueries::GET_ALL_ARENAS,
 			args: [],
 			onSelect: static fn (array $rows) => $resultClosure($rows)
@@ -162,7 +162,7 @@ class SqlProvider extends Provider
 	 */
 	public function isArenaNotInvalid(string $arenaID, Closure $onSuccess, Closure $onFail): void
 	{
-		$this->database->executeSelect(
+		$this->database?->executeSelect(
 			queryName: SqlQueries::GET_ALL_ARENAS,
 			args: [],
 			onSelect: static function (array $rows) use ($arenaID, $onSuccess, $onFail): void {
@@ -186,7 +186,7 @@ class SqlProvider extends Provider
 	 */
 	public function getArenaDataByID(string $arenaID, Closure $onSuccess, Closure $onFail): void
 	{
-		$this->database->executeSelect(
+		$this->database?->executeSelect(
 			queryName: SqlQueries::GET_ARENA_DATA,
 			args: ["arenaID" => $arenaID],
 			onSelect: static function (array $rows) use ($onSuccess, $onFail): void {
@@ -209,7 +209,7 @@ class SqlProvider extends Provider
 	 */
 	public function insertArenaData(array $data, Closure $onSuccess, Closure $onFail): void
 	{
-		$this->database->executeInsert(
+		$this->database?->executeInsert(
 			queryName: SqlQueries::ADD_ARENA,
 			args: $data,
 			onInserted: $onSuccess,
@@ -225,7 +225,7 @@ class SqlProvider extends Provider
 	 */
 	public function removeArenaDataByID(string $arenaID, Closure $onSuccess, Closure $onFail): void
 	{
-		$this->database->executeChange(
+		$this->database?->executeChange(
 			queryName: SqlQueries::REMOVE_ARENA,
 			args: ["arenaID" => $arenaID],
 			onSuccess: $onSuccess,
@@ -242,7 +242,7 @@ class SqlProvider extends Provider
 	 */
 	public function setArenaSpawnsDataByID(string $arenaID, string $data, ?Closure $onSuccess, ?Closure $onFail): void
 	{
-		$this->database->executeChange(
+		$this->database?->executeChange(
 			queryName: SqlQueries::UPDATE_ARENA_SPAWNS,
 			args: [
 				"arenaID" => $arenaID,
@@ -262,7 +262,7 @@ class SqlProvider extends Provider
 	 */
 	public function setArenaLobbySettingsDataByID(string $arenaID, string $data, ?Closure $onSuccess, ?Closure $onFail): void
 	{
-		$this->database->executeChange(
+		$this->database?->executeChange(
 			queryName: SqlQueries::UPDATE_ARENA_LOBBY_SETTINGS,
 			args: [
 				"arenaID" => $arenaID,
@@ -282,7 +282,7 @@ class SqlProvider extends Provider
 	 */
 	public function setArenaNonExtraDataByID(string $arenaID, string $data, ?Closure $onSuccess, ?Closure $onFail): void
 	{
-		$this->database->executeChange(
+		$this->database?->executeChange(
 			queryName: SqlQueries::UPDATE_ARENA_DATA,
 			args: [
 				"arenaID" => $arenaID,
@@ -302,7 +302,7 @@ class SqlProvider extends Provider
 	 */
 	public function setArenaExtraDataByID(string $arenaID, string $data, ?Closure $onSuccess, ?Closure $onFail): void
 	{
-		$this->database->executeChange(
+		$this->database?->executeChange(
 			queryName: SqlQueries::UPDATE_ARENA_EXTRA_DATA,
 			args: [
 				"arenaID" => $arenaID,
@@ -319,7 +319,7 @@ class SqlProvider extends Provider
 	public function free(): void
 	{
 		if (!is_null($this->database)) {
-			$this->database->close();
+			$this->database?->close();
 			unset($this->database);
 		}
 	}
