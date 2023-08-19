@@ -35,7 +35,7 @@ use Closure;
 use pocketmine\player\Player;
 use vp817\GameLib\arena\Arena;
 use vp817\GameLib\player\ArenaPlayer;
-use vp817\GameLib\util\Team;
+use vp817\GameLib\utils\Team;
 use function array_filter;
 use function array_key_exists;
 use function array_merge;
@@ -46,17 +46,15 @@ use function strtolower;
 
 final class TeamManager
 {
-	/** @var array $list */
+
 	private array $list = [];
-	/** @var Arena $arena */
-	private Arena $arena;
 
 	/**
 	 * @param Arena $arena
 	 */
-	public function __construct(Arena $arena)
-	{
-		$this->arena = $arena;
+	public function __construct(
+		private Arena $arena
+	) {
 	}
 
 	/**
@@ -136,7 +134,7 @@ final class TeamManager
 	{
 		$players = [];
 
-		foreach ($this->getTeams() as $name => $team) {
+		foreach ($this->getTeams() as $team) {
 			$players = array_merge($players, $team->getPlayers());
 		}
 
@@ -174,7 +172,7 @@ final class TeamManager
 	public function addPlayerToRandomTeam(Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
 		$maxPlayersPerTeam = $this->arena->getMode()->getMaxPlayersPerTeam();
-		$availableTeams = array_filter($this->list, function ($value) use ($maxPlayersPerTeam) {
+		$availableTeams = array_filter($this->list, static function ($value) use ($maxPlayersPerTeam) {
 			return count($value->getPlayers()) < $maxPlayersPerTeam;
 		});
 
@@ -196,7 +194,7 @@ final class TeamManager
 	 */
 	public function isPlayerInATeamFromBytes(string $bytes): bool
 	{
-		foreach ($this->list as $teamName => $team) {
+		foreach ($this->list as $team) {
 			if ($team->hasPlayer(bytes: $bytes)) {
 				return true;
 			}

@@ -37,8 +37,6 @@ use vp817\GameLib\utils\Utils;
 class ExtractZipAsyncTask extends AsyncTask
 {
 
-	protected bool $completed = false;
-
 	/**
 	 * @param string $zipFileFullPath
 	 * @param string $extractionFullPath
@@ -59,21 +57,5 @@ class ExtractZipAsyncTask extends AsyncTask
 			extractionFullPath: $this->extractionFullPath
 		);
 		$this->setResult(result: $result);
-	}
-
-	/**
-	 * @return void
-	 */
-	public function onCompletion(): void
-	{
-		$this->completed = true;
-	}
-
-	/**
-	 * @return bool
-	 */
-	public function isCompleted(): bool
-	{
-		return $this->completed;
 	}
 }

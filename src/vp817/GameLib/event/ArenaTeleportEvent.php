@@ -29,41 +29,52 @@
 
 declare(strict_types=1);
 
-namespace vp817\GameLib\arena\parse;
+namespace vp817\GameLib\event;
 
 use pocketmine\entity\Location;
-use pocketmine\world\World;
-use pocketmine\world\WorldManager;
-use vp817\GameLib\utils\Utils;
+use pocketmine\event\Event;
+use vp817\GameLib\arena\Arena;
+use vp817\GameLib\event\enums\ArenaTeleportCause;
+use vp817\GameLib\player\ArenaPlayer;
 
-final class LobbySettings
+class ArenaTeleportEvent extends Event
 {
 
-	private string $worldName;
-	private ?World $world = null;
-
 	/**
-	 * @param WorldManager $worldManager
-	 * @param array $settings
+	 * @param ArenaPlayer $player
+	 * @param Arena $arena
+	 * @param array $spawn
 	 */
-	public function __construct(private WorldManager $worldManager, private array $settings)
-	{
-		$this->worldName = $settings["worldName"];
-		$this->world = $this->worldManager->getWorldByName(name: $this->worldName);
+	public function __construct(
+		protected ArenaPlayer $player,
+		protected Arena $arena,
+		protected ArenaTeleportCause $cause,
+		protected Location $location
+	) {
 	}
 
 	/**
-	 * @return null|World
+	 * @return ArenaPlayer
 	 */
-	public function getWorld(): ?World
+	public function getPlayer(): ArenaPlayer
 	{
-		Utils::lazyUpdateWorld(
-			worldManager: $this->worldManager,
-			worldName: $this->worldName,
-			world: $this->world
-		);
+		return $this->player;
+	}
 
-		return $this->world;
+	/**
+	 * @return Arena
+	 */
+	public function getArena(): Arena
+	{
+		return $this->arena;
+	}
+
+	/**
+	 * @return ArenaTeleportCause
+	 */
+	public function getCause(): ArenaTeleportCause
+	{
+		return $this->cause;
 	}
 
 	/**
@@ -71,20 +82,6 @@ final class LobbySettings
 	 */
 	public function getLocation(): Location
 	{
-		$location = $this->settings["location"];
-		$x = $location["x"];
-		$y = $location["y"];
-		$z = $location["z"];
-		$yaw = $location["yaw"];
-		$pitch = $location["pitch"];
-
-		return new Location(
-			x: $x,
-			y: $y,
-			z: $z,
-			world: $this->getWorld(),
-			yaw: $yaw,
-			pitch: $pitch
-		);
+		return $this->location;
 	}
 }

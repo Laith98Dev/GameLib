@@ -41,16 +41,22 @@ use pocketmine\utils\Utils as PMUtils;
 use pocketmine\world\WorldManager;
 use poggit\libasynql\DataConnector;
 use poggit\libasynql\SqlError;
-use RuntimeException;
 use Symfony\Component\Filesystem\Path;
 use TypeError;
 use vp817\GameLib\arena\Arena;
-use vp817\GameLib\arena\ArenaDataParser;
+use vp817\GameLib\arena\parse\ArenaDataParser;
 use vp817\GameLib\arena\message\ArenaMessages;
-use vp817\GameLib\arena\message\DefaultArenaMessages;
+use vp817\GameLib\arena\message\list\MiniGameMessages;
+use vp817\GameLib\arena\message\list\PracticeMessages;
 use vp817\GameLib\arena\states\ArenaStates;
 use vp817\GameLib\event\listener\DefaultArenaListener;
 use vp817\GameLib\event\listener\ServerEventListener;
+use vp817\GameLib\exceptions\GameLibAlreadyInitException;
+use vp817\GameLib\exceptions\GameLibInvalidListenerException;
+use vp817\GameLib\exceptions\GameLibMissingComposerException;
+use vp817\GameLib\exceptions\GameLibMissingKeysException;
+use vp817\GameLib\exceptions\GameLibMissingLibException;
+use vp817\GameLib\exceptions\GameLibNotInitException;
 use vp817\GameLib\managers\ArenasManager;
 use vp817\GameLib\managers\SetupManager;
 use vp817\GameLib\player\SetupPlayer;
@@ -67,6 +73,7 @@ use function class_exists;
 use function count;
 use function dirname;
 use function file_exists;
+use function glob;
 use function is_dir;
 use function is_null;
 use function json_encode;
@@ -104,41 +111,43 @@ final class GameLib
 	 * ]
 	 * 
 	 * @param PluginBase $plugin
+	 * @param GameLibType $libType
 	 * @param array $sqlDatabase
 	 * @return GameLib
-	 * @throws RuntimeException
+	 * @throws GameLibAlreadyInitException|GameLibMissingLibException|GameLibMissingComposerException
 	 */
-	public static function init(PluginBase $plugin, array $sqlDatabase): GameLib
+	public static function init(PluginBase $plugin, GameLibType $libType, array $sqlDatabase): GameLib
 	{
 		if (!is_null(self::$plugin)) {
-			throw new RuntimeException("GameLib is already initialized for this plugin");
+			throw new GameLibAlreadyInitException(message: "GameLib is already initialized for this plugin");
 		}
 
 		if (!class_exists("poggit\libasynql\libasynql")) {
-			throw new RuntimeException("libasyql virion not found. unable to use gamelib");
+			throw new GameLibMissingLibException(message: "libasyql virion not found. unable to use gamelib");
 		}
 
 		$autoload = Path::join(dirname(__DIR__, 3), "vendor/autoload.php");
 		if (!file_exists($autoload)) {
-			throw new RuntimeException(message: "Composer autoloader for gamelib not found.");
+			throw new GameLibMissingComposerException(message: "Composer autoloader for gamelib not found.");
 		}
 
 		require_once $autoload;
 
 		return new GameLib(
 			plugin: $plugin,
+			libType: $libType,
 			sqlDatabase: $sqlDatabase
 		);
 	}
 
 	/**
 	 * @return void
-	 * @throws GameLib
+	 * @throws GameLibNotInitException
 	 */
 	public static function uninit(): void
 	{
 		if (is_null(self::$plugin)) {
-			throw new RuntimeException(message: "There is no instance to uninitialize for gamelib");
+			throw new GameLibNotInitException(message: "There is no instance to uninitialize for gamelib");
 		}
 
 		if (isset(self::$database)) {
@@ -148,10 +157,13 @@ final class GameLib
 
 	/**
 	 * @param PluginBase $plugin
+	 * @param GameLibType $libType
 	 * @param array $sqlDatabase
+	 * @throws GameLibMissingKeysException
 	 */
 	private function __construct(
 		PluginBase $plugin,
+		private GameLibType $libType,
 		array $sqlDatabase = []
 	) {
 		self::$plugin = $plugin;
@@ -163,15 +175,21 @@ final class GameLib
 
 		if ($sqlType == "sqlite") {
 			$database["sqlite"] = [
-				"file" => "data.sql"
+				"file" => $sqlDatabase["dataFileName"] ?? "data.sql"
 			];
 		} else if ($sqlType == "mysql") {
-			$database["mysql"] = [
-				"host" => $sqlDatabase["host"],
-				"username" => $sqlDatabase["username"],
-				"password" => $sqlDatabase["password"],
-				"schema" => $sqlDatabase["schema"]
-			];
+			if (!Utils::arrayKeysExist(
+				[
+					"host",
+					"username",
+					"password",
+					"schema"
+				],
+				$sqlDatabase
+			)) {
+				throw new GameLibMissingKeysException(message: "the sql database is missing some keys for mysql database");
+			}
+			$database["mysql"][] = $sqlDatabase;
 		}
 
 		$sqlMapPath = $plugin->getDataFolder() . "SqlMap";
@@ -210,7 +228,11 @@ final class GameLib
 		self::$database->waitAll();
 
 		$this->arenasManager = new ArenasManager();
-		$this->arenaMessages = new DefaultArenaMessages();
+		if ($libType->equals(GameLibType::MINIGAME())) {
+			$this->arenaMessages = new MiniGameMessages();
+		} else {
+			$this->arenaMessages = new PracticeMessages();
+		}
 		$this->setupManager = new SetupManager();
 		$this->arenaListenerClass = DefaultArenaListener::class;
 
@@ -239,6 +261,14 @@ final class GameLib
 		}
 
 		$this->arenasBackupPath = $path . DIRECTORY_SEPARATOR;
+	}
+
+	/**
+	 * @return GameLibType
+	 */
+	public function getLibType(): GameLibType
+	{
+		return $this->libType;
 	}
 
 	/**
@@ -346,7 +376,7 @@ final class GameLib
 	/**
 	 * @param Arena $arena
 	 * @return void
-	 * @throws TypeError
+	 * @throws GameLibInvalidListenerException
 	 */
 	public function registerArenaListener(Arena $arena): void
 	{
@@ -372,7 +402,7 @@ final class GameLib
 		}
 
 		if (!$listener instanceof DefaultArenaListener) {
-			throw new TypeError(message: "The listener that you provided is not an instance of GameLib/DefaultArenaListener.php");
+			throw new GameLibInvalidListenerException(message: "The listener that you provided is not an instance of GameLib/DefaultArenaListener.php");
 		}
 
 		self::$plugin->getServer()->getPluginManager()->registerEvents(
@@ -406,7 +436,7 @@ final class GameLib
 								if (!is_null($onFail)) $onFail($arenaID, "Arena doesnt exists in db. this shouldnt happen");
 								return;
 							}
-							if ($this->getArenasManager()->hasLoadedArena($arenaID)) {
+							if ($this->getArenasManager()->hasLoadedArena(arenaID: $arenaID)) {
 								if (!is_null($onFail)) $onFail($arenaID, "unable to load an already loaded arena");
 								return;
 							}
@@ -465,7 +495,9 @@ final class GameLib
 								arenaID: $arenaID,
 								arena: new Arena(
 									gamelib: $this,
-									dataParser: new ArenaDataParser($arenaData)
+									dataParser: new ArenaDataParser(
+										data: $arenaData
+									)
 								),
 								onSuccess: fn (Arena $arena) => !is_null($onSuccess) ? $onSuccess($arena) : null
 							);
@@ -520,9 +552,10 @@ final class GameLib
 
 				$directoryFullPath = Path::join($this->getServerWorldsPath(), $worldName);
 
-				// TODO: Temp fix
+				// TODO: Temp fix and might be permanent
 				// There seems to be an issue for creating zip in another thread
-				// I have no idea what is causing this since i debugged everything
+				// I have no idea what is causing this since i have debugged everything related to this
+				// This is only tested on windows 11 i have not tested on other versions of windows
 				if (PMUtils::getOS() === PMUtils::OS_WINDOWS) {
 					Utils::zipDirectory(
 						directoryFullPath: $directoryFullPath,
@@ -564,7 +597,7 @@ final class GameLib
 				self::$database->executeChange(
 					queryName: SqlQueries::REMOVE_ARENA,
 					args: ["arenaID" => $arenaID],
-					onSuccess: function ($rows) use ($arenasManager, $arenaID, $onSuccess, $alertConsole): void {
+					onSuccess: static function ($_) use ($arenasManager, $arenaID, $onSuccess, $alertConsole): void {
 						if ($arenasManager->hasLoadedArena(arenaID: $arenaID)) {
 							$arenasManager->unsignFromBeingLoaded(
 								arenaID: $arenaID,
@@ -589,7 +622,7 @@ final class GameLib
 		self::$database->executeSelect(
 			queryName: SqlQueries::GET_ALL_ARENAS,
 			args: [],
-			onSelect: function ($rows) use ($resultClosure, $arenaID): void {
+			onSelect: static function ($rows) use ($resultClosure, $arenaID): void {
 				foreach ($rows as $arenasData) {
 					if (strtolower($arenasData["arenaID"]) === strtolower($arenaID)) {
 						$resultClosure(true);
@@ -733,16 +766,16 @@ final class GameLib
 		$arenasManager = $this->getArenasManager();
 		$allArenas = $arenasManager->getAll();
 
-		$possibleArenas = array_filter($allArenas, static function ($arena) use ($player) {
+		$matchingArenas = array_filter($allArenas, static function ($arena) use ($player) {
 			return array_key_exists($player->getUniqueId()->getBytes(), $arena->getMode()->getPlayers());
 		});
 
-		if (empty($possibleArenas)) {
+		if (empty($matchingArenas)) {
 			if (!is_null($onFail)) $onFail();
 			return;
 		}
 
-		$arena = array_shift($possibleArenas);
+		$arena = array_shift($matchingArenas);
 		if (is_null($arena)) {
 			if (!is_null($onFail)) $onFail();
 			return;
@@ -770,7 +803,7 @@ final class GameLib
 					onFail: $onFail
 				);
 			},
-			onFail: static function ($arenaID) use ($onFail): void {
+			onFail: static function ($_) use ($onFail): void {
 				if (!is_null($onFail)) $onFail("Arena not found");
 			}
 		);
@@ -830,7 +863,7 @@ final class GameLib
 
 		$plannedArena = $openedArenas[array_rand($openedArenas)];
 
-		$shuffePlan = function () use (&$plannedArena): void {
+		$shuffePlan = static function () use (&$plannedArena): void {
 			shuffle($openedArenas);
 			$plannedArena = $openedArenas[array_rand($openedArenas)];
 		};
@@ -849,7 +882,11 @@ final class GameLib
 
 			if ($plannedArenaMode->getPlayerCount() < $valueMode->getMaxPlayers()) {
 				$plannedArena = $arena;
-			} else if (($plannedArenaMode->getPlayerCount() === $valueMode->getMaxPlayers()) || ($plannedArenaMode->getPlayerCount() === 0 && $valueMode->getMaxPlayers() === 0)) { // here seems to be an error. remove this if im wrong since im only testing with 1 arena
+			} else if (
+				($plannedArenaMode->getPlayerCount() === $valueMode->getMaxPlayers())
+				||
+				($plannedArenaMode->getPlayerCount() === 0 && $valueMode->getMaxPlayers() === 0)
+			) { // here seems to be an error. remove this if im wrong since im only testing with 1 arena
 				$shuffePlan();
 			}
 		}

@@ -40,7 +40,8 @@ use vp817\GameLib\arena\message\ArenaMessages;
 use vp817\GameLib\arena\message\MessageBroadcaster;
 use vp817\GameLib\arena\modes\ArenaMode;
 use vp817\GameLib\arena\modes\ArenaModes;
-use vp817\GameLib\arena\parse\LobbySettings;
+use vp817\GameLib\arena\parse\ArenaDataParser;
+use vp817\GameLib\arena\parse\list\LobbySettings;
 use vp817\GameLib\arena\states\ArenaState;
 use vp817\GameLib\arena\states\ArenaStates;
 use vp817\GameLib\event\ArenaStateChangeEvent;
@@ -86,6 +87,8 @@ class Arena
 			$mode->init(intval($arenaData["slots"]), $gamelib);
 		} else if ($mode->isTeamMode()) {
 			$mode->init(json_decode($arenaData["teams"], true), $this, $gamelib);
+		} else if ($mode->equals(ArenaModes::PRACTICE())) {
+			$mode->init($gamelib);
 		}
 		$this->mode = $mode;
 		$this->lobbySettings = new LobbySettings(
@@ -97,22 +100,24 @@ class Arena
 		$this->world = $gamelib->getWorldManager()->getWorldByName(name: $this->worldName);
 		$this->messageBroadcaster = new MessageBroadcaster(arena: $this);
 		$gamelib->registerArenaListener(arena: $this);
-		$this->arenaTickTask = new ArenaTickTask(
-			arena: $this,
-			countdownTime: intval($dataParser->parse(key: "countdownTime")),
-			arenaTime: intval($dataParser->parse(key: "arenaTime")),
-			restartingTime: intval($dataParser->parse(key: "restartingTime"))
-		);
-		$gamelib->getScheduler()->scheduleRepeatingTask(
-			task: $this->arenaTickTask,
-			period: 20
-		);
+		if (!$mode->equals(ArenaModes::PRACTICE())) {
+			$this->arenaTickTask = new ArenaTickTask(
+				arena: $this,
+				countdownTime: intval($dataParser->parse(key: "countdownTime")),
+				arenaTime: intval($dataParser->parse(key: "arenaTime")),
+				restartingTime: intval($dataParser->parse(key: "restartingTime"))
+			);
+			$gamelib->getScheduler()->scheduleRepeatingTask(
+				task: $this->arenaTickTask,
+				period: 20
+			);
+		}
 	}
 
 	/**
 	 * @param Player $player
-	 * @param null|Closure $onSuccess
-	 * @param null|Closure $onFail
+	 * @param Closure|null $onSuccess
+	 * @param Closure|null $onFail
 	 * @return void
 	 */
 	public function join(Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null): void
@@ -127,8 +132,8 @@ class Arena
 
 	/**
 	 * @param Player $player
-	 * @param null|Closure $onSuccess
-	 * @param null|Closure $onFail
+	 * @param Closure|null $onSuccess
+	 * @param Closure|null $onFail
 	 * @param bool $notifyPlayers
 	 * @param bool $force
 	 * @return void
@@ -202,7 +207,7 @@ class Arena
 	}
 
 	/**
-	 * @return null|World
+	 * @return World|null
 	 */
 	public function getWorld(): ?World
 	{
@@ -270,8 +275,8 @@ class Arena
 	}
 
 	/**
-	 * @param null|Closure $onSuccess
-	 * @param null|Closure $onFail
+	 * @param Closure|null $onSuccess
+	 * @param Closure|null $onFail
 	 * @return void
 	 */
 	public function resetWorld(?Closure $onSuccess, ?Closure $onFail): void
@@ -301,20 +306,14 @@ class Arena
 			$worldManager->unloadWorld(world: $worldManager->getWorldByName($this->worldName));
 		}
 
-		$deleteDirAsync = new DeleteDirectoryAsyncTask(directoryFullPath: $worldDirectoryFullPath);
-		$asyncPool->submitTask(task: $deleteDirAsync);
-		if ($deleteDirAsync->isCompleted()) {
-			$extractZipAsync = new ExtractZipAsyncTask(
-				zipFileFullPath: $zipFileFullPath,
-				extractionFullPath: $extractionFullPath
-			);
-			$asyncPool->submitTask(task: $extractZipAsync);
-			if ($extractZipAsync->isCompleted()) {
-				$worldManager->loadWorld(name: $this->worldName);
+		$asyncPool->submitTask(task: new DeleteDirectoryAsyncTask(directoryFullPath: $worldDirectoryFullPath));
+		$asyncPool->submitTask(task: new ExtractZipAsyncTask(
+			zipFileFullPath: $zipFileFullPath,
+			extractionFullPath: $extractionFullPath
+		));
+		$worldManager->loadWorld(name: $this->worldName);
 
-				if (!is_null($onSuccess)) $onSuccess();
-			}
-		}
+		if (!is_null($onSuccess)) $onSuccess();
 	}
 
 	/**

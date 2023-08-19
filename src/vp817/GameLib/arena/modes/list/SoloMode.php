@@ -33,13 +33,14 @@ namespace vp817\GameLib\arena\modes\list;
 
 use Closure;
 use pocketmine\player\Player;
-use TypeError;
 use vp817\GameLib\arena\Arena;
 use vp817\GameLib\arena\modes\ArenaMode;
 use vp817\GameLib\arena\states\ArenaStates;
-use vp817\GameLib\event\ArenaPlayerTpToSpawnEvent;
+use vp817\GameLib\event\ArenaTeleportEvent;
+use vp817\GameLib\event\enums\ArenaTeleportCause;
 use vp817\GameLib\event\PlayerJoinArenaEvent;
 use vp817\GameLib\event\PlayerQuitArenaEvent;
+use vp817\GameLib\exceptions\GameLibInvalidArgumentException;
 use vp817\GameLib\GameLib;
 use vp817\GameLib\managers\PlayerManager;
 use vp817\GameLib\player\ArenaPlayer;
@@ -57,9 +58,9 @@ class SoloMode extends ArenaMode
 	private int $slots;
 
 	/**
-	 * @param ...$arguments
+	 * @param mixed ...$arguments
 	 * @return void
-	 * @throws TypeError
+	 * @throws GameLibInvalidArgumentException
 	 */
 	public function init(mixed ...$arguments): void
 	{
@@ -67,15 +68,15 @@ class SoloMode extends ArenaMode
 		$gamelib = $arguments[1];
 
 		if (!is_int($slots)) {
-			throw new TypeError(message: "The slots is invalid");
+			throw new GameLibInvalidArgumentException(message: "The slots is invalid");
 		}
 
 		if (!is_object($gamelib)) {
-			throw new TypeError(message: "The arena is not an object");
+			throw new GameLibInvalidArgumentException(message: "The arena is not an object");
 		}
 
 		if (!$gamelib instanceof GameLib) {
-			throw new TypeError(message: "The gamelib is invalid");
+			throw new GameLibInvalidArgumentException(message: "The gamelib is invalid");
 		}
 
 		$this->playerManager = new PlayerManager();
@@ -164,11 +165,23 @@ class SoloMode extends ArenaMode
 			$event->call();
 
 			$arenaPlayer = $event->getPlayer();
+			$eventArena = $event->getArena();
 			$cells = $arenaPlayer->getCells();
 
 			$arenaPlayer->setAll();
 
 			$cells->teleport(pos: $arena->getLobbySettings()->getLocation());
+
+			$tpEvent = new ArenaTeleportEvent(
+				player: $arenaPlayer,
+				arena: $eventArena,
+				cause: ArenaTeleportCause::LOBBY(),
+				location: $arena->getLobbySettings()->getLocation()
+			);
+			$tpEvent->call();
+
+			$cells->teleport(pos: $tpEvent->getLocation());
+
 			$arena->getMessageBroadcaster()->broadcastMessage(
 				value: Utils::replaceMessageContent(
 					replacement: [
@@ -210,7 +223,7 @@ class SoloMode extends ArenaMode
 
 		$this->playerManager->get(
 			bytes: $bytes,
-			onSuccess: function (ArenaPlayer $player) use ($arena, $arenaMessages, $bytes, $onSuccess, $onFail, $notifyPlayers): void {
+			onSuccess: function (ArenaPlayer $player) use ($arena, $arenaMessages, $bytes, $onSuccess, $notifyPlayers): void {
 				$event = new PlayerQuitArenaEvent(
 					player: $player,
 					arena: $arena
@@ -223,7 +236,7 @@ class SoloMode extends ArenaMode
 
 				$this->removePlayer(
 					bytes: $bytes,
-					onSuccess: function () use ($arenaMessages, $arenaPlayer, $onSuccess, $onFail, $notifyPlayers): void {
+					onSuccess: function () use ($arenaMessages, $arenaPlayer, $onSuccess, $notifyPlayers): void {
 						$cells = $arenaPlayer->getCells();
 
 						$notifyCB = fn () => Utils::replaceMessageContent(
@@ -255,18 +268,18 @@ class SoloMode extends ArenaMode
 		for ($i = 1; $i <= count($players); ++$i) {
 			$player = $players[$i - 1];
 
-			$event = new ArenaPlayerTpToSpawnEvent(
+			$event = new ArenaTeleportEvent(
 				player: $player,
 				arena: $arena,
-				spawn: $spawns[$i]
+				cause: ArenaTeleportCause::SPAWN(),
+				location: $arena->getLocationOfSpawn(spawn: $spawns[$i])
 			);
 			$event->call();
 
 			$eventPlayer = $event->getPlayer();
-			$eventArena = $event->getArena();
-			$eventSpawn = $event->getSpawn();
+			$eventLocation = $event->getLocation();
 
-			$eventPlayer->getCells()->teleport(pos: $eventArena->getLocationOfSpawn(spawn: $eventSpawn));
+			$eventPlayer->getCells()->teleport(pos: $eventLocation);
 		}
 	}
 }

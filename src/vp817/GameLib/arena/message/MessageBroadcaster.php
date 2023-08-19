@@ -55,7 +55,7 @@ class MessageBroadcaster
 	{
 		$players = $this->arena->getMode()->getPlayers();
 
-		foreach ($players as $bytes => $arenaPlayer) {
+		foreach ($players as $arenaPlayer) {
 			$cells = $arenaPlayer->getCells();
 			if (is_null($cells)) return;
 			if (!$cells->isOnline()) return;

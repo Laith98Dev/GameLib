@@ -37,8 +37,6 @@ use vp817\GameLib\utils\Utils;
 class CreateZipAsyncTask extends AsyncTask
 {
 
-	protected bool $completed = false;
-
 	/**
 	 * @param string $directoryFullPath
 	 * @param string $zipFileFullPath
@@ -59,21 +57,5 @@ class CreateZipAsyncTask extends AsyncTask
 			zipFileFullPath: $this->zipFileFullPath
 		);
 		$this->setResult(result: $result);
-	}
-
-	/**
-	 * @return void
-	 */
-	public function onCompletion(): void
-	{
-		$this->completed = true;
-	}
-
-	/**
-	 * @return bool
-	 */
-	public function isCompleted(): bool
-	{
-		return $this->completed;
 	}
 }

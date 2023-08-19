@@ -33,13 +33,14 @@ namespace vp817\GameLib\arena\modes;
 
 use Closure;
 use pocketmine\player\Player;
-use TypeError;
 use vp817\GameLib\arena\Arena;
 use vp817\GameLib\arena\modes\ArenaMode;
 use vp817\GameLib\arena\states\ArenaStates;
-use vp817\GameLib\event\ArenaPlayerTpToSpawnEvent;
+use vp817\GameLib\event\ArenaTeleportEvent;
+use vp817\GameLib\event\enums\ArenaTeleportCause;
 use vp817\GameLib\event\PlayerJoinArenaEvent;
 use vp817\GameLib\event\PlayerQuitArenaEvent;
+use vp817\GameLib\exceptions\GameLibInvalidArgumentException;
 use vp817\GameLib\GameLib;
 use vp817\GameLib\managers\TeamManager;
 use vp817\GameLib\player\ArenaPlayer;
@@ -59,37 +60,37 @@ abstract class TeamModeAbstract extends ArenaMode
 	/**
 	 * @param mixed ...$arguments
 	 * @return void
-	 * @throws TypeError
+	 * @throws GameLibInvalidArgumentException
 	 */
 	public function init(mixed ...$arguments): void
 	{
-		$teams = $arguments[0];
-		$arena = $arguments[1];
-		$gamelib = $arguments[2];
+		$teams = $arguments[0] ?? null;
+		$arena = $arguments[1] ?? null;
+		$gamelib = $arguments[2] ?? null;
 
 		if (!is_array($teams)) {
-			throw new TypeError(message: "The teams is invalid");
+			throw new GameLibInvalidArgumentException(message: "The teams is invalid");
 		}
 
 		if (!is_object($arena)) {
-			throw new TypeError(message: "The arena is not an object");
+			throw new GameLibInvalidArgumentException(message: "The arena is not an object");
 		}
 
 		if (!is_object($gamelib)) {
-			throw new TypeError(message: "The arena is not an object");
+			throw new GameLibInvalidArgumentException(message: "The arena is not an object");
 		}
 
 		if (!$arena instanceof Arena) {
-			throw new TypeError(message: "The arena is invalid");
+			throw new GameLibInvalidArgumentException(message: "The arena is invalid");
 		}
 
 		if (!$gamelib instanceof GameLib) {
-			throw new TypeError(message: "The gamelib is invalid");
+			throw new GameLibInvalidArgumentException(message: "The gamelib is invalid");
 		}
 
 		$this->teamManager = new TeamManager(arena: $arena);
-		foreach ($teams as $key => $value) {
-			$this->teamManager->addTeam(team: $value);
+		foreach ($teams as $team) {
+			$this->teamManager->addTeam(team: $team);
 		}
 
 		$this->gamelib = $gamelib;
@@ -173,20 +174,31 @@ abstract class TeamModeAbstract extends ArenaMode
 				$event->call();
 
 				$arenaPlayer = $event->getPlayer();
+				$eventArena = $event->getArena();
 				$cells = $arenaPlayer->getCells();
 
 				$arenaPlayer->setTeam(team: $team);
 				$arenaPlayer->setAll();
 
-				$cells->teleport(pos: $arena->getLobbySettings()->getLocation());
+				$tpEvent = new ArenaTeleportEvent(
+					player: $arenaPlayer,
+					arena: $eventArena,
+					cause: ArenaTeleportCause::LOBBY(),
+					location: $arena->getLobbySettings()->getLocation()
+				);
+				$tpEvent->call();
 
-				Utils::replaceMessageContent(
-					replacement: [
-						"%name%" => $arenaPlayer->getDisplayName(),
-						"%current%" => $this->getPlayerCount(),
-						"%max%" => $this->getMaxPlayers()
-					],
-					message: $arenaMessages->SucessfullyJoinedArena()
+				$cells->teleport(pos: $tpEvent->getLocation());
+
+				$arena->getMessageBroadcaster()->broadcastMessage(
+					Utils::replaceMessageContent(
+						replacement: [
+							"%name%" => $arenaPlayer->getDisplayName(),
+							"%current%" => $this->getPlayerCount(),
+							"%max%" => $this->getMaxPlayers()
+						],
+						message: $arenaMessages->SucessfullyJoinedArena()
+					)
 				);
 
 				if (!is_null($onSuccess)) $onSuccess();
@@ -231,20 +243,23 @@ abstract class TeamModeAbstract extends ArenaMode
 						$event->call();
 
 						$arenaPlayer = $event->getPlayer();
+						$eventArena = $event->getArena();
 
 						$arenaPlayer->setTeam(null);
 						$arenaPlayer->setAll(true);
 
-						$team->removePlayer($bytes, function () use ($arenaMessages, $arenaPlayer, $onSuccess, $notifyPlayers): void {
+						$team->removePlayer($bytes, function () use ($arenaMessages, $arenaPlayer, $eventArena, $onSuccess, $notifyPlayers): void {
 							$cells = $arenaPlayer->getCells();
 
-							$notifyCB = fn () => Utils::replaceMessageContent(
-								replacement: [
-									"%name%" => $arenaPlayer->getDisplayName(),
-									"%current%" => $this->getPlayerCount(),
-									"%max%" => $this->getMaxPlayers()
-								],
-								message: $arenaMessages->SucessfullyLeftArena()
+							$notifyCB = fn () => $eventArena->getMessageBroadcaster()->broadcastMessage(
+								Utils::replaceMessageContent(
+									replacement: [
+										"%name%" => $arenaPlayer->getDisplayName(),
+										"%current%" => $this->getPlayerCount(),
+										"%max%" => $this->getMaxPlayers()
+									],
+									message: $arenaMessages->SucessfullyLeftArena()
+								)
 							);
 
 							$cells->teleport(pos: $this->gamelib->getWorldManager()->getDefaultWorld()->getSpawnLocation());
@@ -265,20 +280,22 @@ abstract class TeamModeAbstract extends ArenaMode
 	public function relocatePlayersToSpawns(Arena $arena, array $spawns): void
 	{
 		$players = $this->getPlayers();
-		foreach ($players as $key => $player) {
+		foreach ($players as $player) {
 			$this->teamManager->getTeamOfPlayerFromBytes($player->getCells()->getUniqueId()->getBytes(), function (Team $team) use ($arena, $spawns, $player): void {
-				$event = new ArenaPlayerTpToSpawnEvent(
+				$event = new ArenaTeleportEvent(
 					player: $player,
 					arena: $arena,
-					spawn: $spawns[strtolower($team->getName())]
+					cause: ArenaTeleportCause::SPAWN(),
+					location: $arena->getLocationOfSpawn(
+						spawn: $spawns[strtolower($team->getName())]
+					)
 				);
 				$event->call();
 
-				$eventPlayer = $event->getPlayer();
-				$eventArena = $event->getArena();
-				$eventSpawn = $event->getSpawn();
+				$eventPlayerCells = $event->getPlayer()->getCells();
+				$eventLocation = $event->getLocation();
 
-				$eventPlayer->getCells()->teleport(pos: $eventArena->getLocationOfSpawn(spawn: $eventSpawn));
+				$eventPlayerCells->teleport(pos: $eventLocation);
 			});
 		}
 	}

@@ -59,20 +59,28 @@ class ServerEventListener implements Listener
 		$allArenas = $this->gamelib->getArenasManager()->getAll();
 
 		if (empty($allArenas)) {
+			var_dump("Empty arenas");
 			return;
 		}
 
-		if (!$this->gamelib->isPlayerInsideAnArena($player)) {
+		if (!$this->gamelib->isPlayerInsideAnArena(player: $player)) {
+			var_dump("Not in arena");
 			return;
 		}
 
-		$quitEvent = new PlayerQuitFromServerEvent($player);
+		$quitEvent = new PlayerQuitFromServerEvent(player: $player);
 		$quitEvent->call();
 
-		$notifyPlayers = strlen(trim($quitEvent->getGlobalMessage())) < 1 ? true : false;
+		$notifyPlayers = strlen(trim($quitEvent->getGlobalMessage())) < 1;
 
-		$event->setQuitMessage($event->getQuitMessage());
+		$event->setQuitMessage(quitMessage: $event->getQuitMessage());
 
-		$this->gamelib->leaveArena($player, null, null, $notifyPlayers, true);
+		$this->gamelib->leaveArena(
+			player: $player,
+			onSuccess: null,
+			onFail: null,
+			notifyPlayers: $notifyPlayers,
+			force: true
+		);
 	}
 }

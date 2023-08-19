@@ -29,48 +29,62 @@
 
 declare(strict_types=1);
 
-namespace vp817\GameLib\event;
+namespace vp817\GameLib\arena\parse\list;
 
-use pocketmine\event\Event;
-use vp817\GameLib\arena\Arena;
-use vp817\GameLib\player\ArenaPlayer;
+use pocketmine\entity\Location;
+use pocketmine\world\World;
+use pocketmine\world\WorldManager;
+use vp817\GameLib\utils\Utils;
 
-class ArenaPlayerTpToSpawnEvent extends Event
+final class LobbySettings
 {
 
+	private string $worldName;
+	private ?World $world = null;
+
 	/**
-	 * @param ArenaPlayer $player
-	 * @param Arena $arena
-	 * @param array $spawn
+	 * @param WorldManager $worldManager
+	 * @param array $settings
 	 */
-	public function __construct(
-		protected ArenaPlayer $player,
-		protected Arena $arena,
-		protected array $spawn
-	) {
+	public function __construct(private WorldManager $worldManager, private array $settings)
+	{
+		$this->worldName = $settings["worldName"];
+		$this->world = $this->worldManager->getWorldByName(name: $this->worldName);
 	}
 
 	/**
-	 * @return ArenaPlayer
+	 * @return null|World
 	 */
-	public function getPlayer(): ArenaPlayer
+	public function getWorld(): ?World
 	{
-		return $this->player;
+		Utils::lazyUpdateWorld(
+			worldManager: $this->worldManager,
+			worldName: $this->worldName,
+			world: $this->world
+		);
+
+		return $this->world;
 	}
 
 	/**
-	 * @return Arena
+	 * @return Location
 	 */
-	public function getArena(): Arena
+	public function getLocation(): Location
 	{
-		return $this->arena;
-	}
+		$location = $this->settings["location"];
+		$x = $location["x"];
+		$y = $location["y"];
+		$z = $location["z"];
+		$yaw = $location["yaw"];
+		$pitch = $location["pitch"];
 
-	/**
-	 * @return array
-	 */
-	public function getSpawn(): array
-	{
-		return $this->spawn;
+		return new Location(
+			x: $x,
+			y: $y,
+			z: $z,
+			world: $this->getWorld(),
+			yaw: $yaw,
+			pitch: $pitch
+		);
 	}
 }

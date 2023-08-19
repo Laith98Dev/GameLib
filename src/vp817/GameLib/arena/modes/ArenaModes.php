@@ -33,6 +33,7 @@ namespace vp817\GameLib\arena\modes;
 
 use pocketmine\utils\CloningRegistryTrait;
 use vp817\GameLib\arena\modes\list\DuoMode;
+use vp817\GameLib\arena\modes\list\PracticeMode;
 use vp817\GameLib\arena\modes\list\SoloMode;
 use vp817\GameLib\arena\modes\list\SquadMode;
 use vp817\GameLib\arena\modes\list\TrioMode;
@@ -42,6 +43,7 @@ use vp817\GameLib\arena\modes\list\TrioMode;
  * @method static DuoMode DUO()
  * @method static TrioMode TRIO()
  * @method static SquadMode SQUAD()
+ * @method static PracticeMode PRACTICE()
  */
 final class ArenaModes
 {
@@ -68,6 +70,46 @@ final class ArenaModes
 		self::_registryRegister(
 			name: "squad",
 			member: new SquadMode()
+		);
+		self::_registryRegister(
+			name: "practice",
+			member: new PracticeMode()
+		);
+	}
+
+	/**
+	 * The mode class name must be like this:
+	 * 
+	 * CustomSoloMode
+	 * CustomThingMode
+	 * CustomSolo
+	 * 
+	 * basically the class name must contain the mode name
+	 * and it must not have the same name as an already registered arena
+	 * and it must not contain anything that is not related to the mode
+	 * for example:
+	 * 
+	 * MyGameCustomSoloMode
+	 * MyGameCustomThingMode
+	 * MyGameCustomSolo
+	 * MyGameCustomSoloModeForLaterUse
+	 * MyGameCustomSoloModeObject
+	 * 
+	 * the reason of why you must not do what was shown up is
+	 * because it will give the wrong name of what the mode must be called
+	 * for example MyGameCustomSoloMode it will be shown as MYGAMECUSTOMSOLO
+	 * when doing what was said as the right way of putting the class name
+	 * it will show the name rightly
+	 * for example the CustomSoloMode will be called CUSTOMSOLO
+	 * and that is the right mode name
+	 * 
+	 * @param ArenaMode $mode
+	 */
+	public function registerCustomMode(ArenaMode $mode)
+	{
+		self::_registryRegister(
+			name: $mode->name(),
+			member: $mode
 		);
 	}
 

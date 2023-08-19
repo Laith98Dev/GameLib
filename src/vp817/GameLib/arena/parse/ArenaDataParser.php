@@ -29,57 +29,51 @@
 
 declare(strict_types=1);
 
-namespace vp817\GameLib\utils;
+namespace vp817\GameLib\arena\parse;
 
-use pocketmine\block\utils\DyeColor;
-use vp817\GameLib\traits\ArenaPlayerTrait;
+use vp817\GameLib\exceptions\GameLibCorruptedDataException;
+use vp817\GameLib\utils\Utils;
+use function array_keys;
+use function json_encode;
 
-final class Team
+final class ArenaDataParser
 {
-	use ArenaPlayerTrait {
-		add as public addPlayer;
-		remove as public removePlayer;
-		get as public getPlayer;
-		has as public hasPlayer;
-		getAll as public getPlayers;
-		add as private add;
-		remove as private remove;
-		get as private get;
-		has as private has;
-		getAll as private getAll;
-	}
+
+	private array $imitatedData = [
+		"arenaID" => "",
+		"worldName" => "",
+		"mode" => "",
+		"countdownTime" => -1,
+		"arenaTime" => -1,
+		"restartingTime" => -1,
+		"lobbySettings" => "{}",
+		"spawns" => "{}",
+		"arenaData" => "{}",
+		"extraData" => "{}"
+	];
+	private array $data = [];
 
 	/**
-	 * @param string $name
-	 * @param string $color
+	 * @param array $data
+	 * @throws GameLibCorruptedDataException
 	 */
-	public function __construct(
-		private string $name,
-		private string $color
-	) {
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getName(): string
+	public function __construct(array $data)
 	{
-		return $this->name;
+		if (!Utils::arrayKeysExist(
+			keys: array_keys($data),
+			array: $this->imitatedData
+		)) {
+			throw new GameLibCorruptedDataException("Corrupted ArenaData, Expected: " . json_encode($this->imitatedData) . ", got: " . json_encode($data));
+		}
+		$this->data = $data;
 	}
 
 	/**
-	 * @return string
+	 * @param string $key
+	 * @return mixed
 	 */
-	public function getColor(): string
+	public function parse(string $key): mixed
 	{
-		return $this->color;
-	}
-
-	/**
-	 * @return DyeColor
-	 */
-	public function getDyeColor(): DyeColor
-	{
-		return Utils::getDyeColorFromMinecraftColor($this->color);
+		return $this->data[$key];
 	}
 }

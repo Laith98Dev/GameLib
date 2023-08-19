@@ -133,7 +133,7 @@ class ArenaTickTask extends Task
 	 * @param ArenaState $newState
 	 * @return void
 	 */
-	public function checkForCountdownTimerReset(ArenaState $oldState, ArenaState $newState): void
+	public function resetCountdownTimeIfRequired(ArenaState $oldState, ArenaState $newState): void
 	{
 		if ($oldState->equals(ArenaStates::COUNTDOWN()) && $newState->equals(ArenaStates::WAITING())) {
 			$this->resetCountdownTime();

@@ -36,7 +36,7 @@ use pocketmine\inventory\ArmorInventory;
 use pocketmine\inventory\PlayerInventory;
 use pocketmine\player\GameMode;
 use pocketmine\player\Player;
-use vp817\GameLib\util\Team;
+use vp817\GameLib\utils\Team;
 
 final class ArenaPlayer
 {
@@ -86,7 +86,7 @@ final class ArenaPlayer
     }
 
     /**
-     * @param null|Team $team
+     * @param Team|null $team
      * @return void
      */
     public function setTeam(?Team $team): void
@@ -239,8 +239,8 @@ final class ArenaPlayer
 
         $effects = $this->getEffectManager()->all();
         if (!empty($effects)) {
-            foreach ($effects as $key => $value) {
-                $this->getEffectManager()->add(effect: $value);
+            foreach ($effects as $effect) {
+                $this->getEffectManager()->add(effect: $effect);
             }
         }
 
@@ -261,8 +261,8 @@ final class ArenaPlayer
 
         $effects = $this->savedCells["effects"];
         if (!empty($effects)) {
-            foreach ($effects as $key => $value) {
-                $this->getEffectManager()->add(effect: $value);
+            foreach ($effects as $effect) {
+                $this->getEffectManager()->add(effect: $effect);
             }
         }
 
@@ -290,8 +290,8 @@ final class ArenaPlayer
         $this->getCells()->getEffects()->clear();
 
         $effects = $this->getEffectManager()->all();
-        foreach ($effects as $key => $value) {
-            $this->getCells()->getEffects()->add(effect: $value);
+        foreach ($effects as $effect) {
+            $this->getCells()->getEffects()->add(effect: $effect);
         }
 
         $this->getCells()->setHealth(amount: $this->getHealth());

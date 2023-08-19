@@ -29,57 +29,19 @@
 
 declare(strict_types=1);
 
-namespace vp817\GameLib\utils;
+namespace vp817\GameLib\arena\message\list;
 
-use pocketmine\block\utils\DyeColor;
-use vp817\GameLib\traits\ArenaPlayerTrait;
+use pocketmine\utils\TextFormat;
 
-final class Team
+class PracticeMessages extends MiniGameMessages
 {
-	use ArenaPlayerTrait {
-		add as public addPlayer;
-		remove as public removePlayer;
-		get as public getPlayer;
-		has as public hasPlayer;
-		getAll as public getPlayers;
-		add as private add;
-		remove as private remove;
-		get as private get;
-		has as private has;
-		getAll as private getAll;
-	}
-
-	/**
-	 * @param string $name
-	 * @param string $color
-	 */
-	public function __construct(
-		private string $name,
-		private string $color
-	) {
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getName(): string
+	public function SucessfullyJoinedArena(): string
 	{
-		return $this->name;
+		return TextFormat::AQUA . "[%name%] " . TextFormat::GREEN .  "joined the arena.";
 	}
 
-	/**
-	 * @return string
-	 */
-	public function getColor(): string
+	public function SucessfullyLeftArena(): string
 	{
-		return $this->color;
-	}
-
-	/**
-	 * @return DyeColor
-	 */
-	public function getDyeColor(): DyeColor
-	{
-		return Utils::getDyeColorFromMinecraftColor($this->color);
+		return TextFormat::AQUA . "[%name%] " . TextFormat::RED .  "left the arena. ";
 	}
 }

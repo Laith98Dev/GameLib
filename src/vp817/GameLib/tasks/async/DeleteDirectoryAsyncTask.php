@@ -37,8 +37,6 @@ use vp817\GameLib\utils\Utils;
 class DeleteDirectoryAsyncTask extends AsyncTask
 {
 
-	protected bool $completed = false;
-
 	/**
 	 * @param string $directoryFullPath
 	 */
@@ -54,21 +52,5 @@ class DeleteDirectoryAsyncTask extends AsyncTask
 	{
 		$result = Utils::deleteDirectory(directoryFullPath: $this->directoryFullPath);
 		$this->setResult(result: $result);
-	}
-
-	/**
-	 * @return void
-	 */
-	public function onCompletion(): void
-	{
-		$this->completed = true;
-	}
-
-	/**
-	 * @return bool
-	 */
-	public function isCompleted(): bool
-	{
-		return $this->completed;
 	}
 }

@@ -24,12 +24,16 @@ this is the solution to everything related to making any type of game on pocketm
 
 /**
  * the first argument is for the plugin
- * the second argument is for the sql settings
+ * the second argument is for the library type
+ * can be practice or minigame
+ * the third argument is for the sql settings
  */
 // this is for using sqlite
-$gamelib = \vp817\GameLib\GameLib::init($this, ["type" => "sqlite"]);
+$gamelib = \vp817\GameLib\GameLib::init(
+	plugin: $this,
+	libType: \vp817\GameLib\GameLibTypes:MINIGAME() or \vp817\GameLib\GameLibTypes:PRACTICE(), ["type" => "sqlite"]);
 // this is for using mysql
-$gamelib = \vp817\GameLib\GameLib::init($this, [
+$gamelib = \vp817\GameLib\GameLib::init($this, \vp817\GameLib\GameLibTypes:MINIGAME() or \vp817\GameLib\GameLibTypes:PRACTICE(), [
 	"type" => "mysql",
 	"host" => "127.0.0.1", // your mysql address
 	"username" => "root", // your mysql username

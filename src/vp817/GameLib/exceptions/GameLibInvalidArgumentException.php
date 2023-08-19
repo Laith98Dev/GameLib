@@ -29,57 +29,10 @@
 
 declare(strict_types=1);
 
-namespace vp817\GameLib\utils;
+namespace vp817\GameLib\exceptions;
 
-use pocketmine\block\utils\DyeColor;
-use vp817\GameLib\traits\ArenaPlayerTrait;
+use ErrorException;
 
-final class Team
+class GameLibInvalidArgumentException extends ErrorException
 {
-	use ArenaPlayerTrait {
-		add as public addPlayer;
-		remove as public removePlayer;
-		get as public getPlayer;
-		has as public hasPlayer;
-		getAll as public getPlayers;
-		add as private add;
-		remove as private remove;
-		get as private get;
-		has as private has;
-		getAll as private getAll;
-	}
-
-	/**
-	 * @param string $name
-	 * @param string $color
-	 */
-	public function __construct(
-		private string $name,
-		private string $color
-	) {
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getName(): string
-	{
-		return $this->name;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getColor(): string
-	{
-		return $this->color;
-	}
-
-	/**
-	 * @return DyeColor
-	 */
-	public function getDyeColor(): DyeColor
-	{
-		return Utils::getDyeColorFromMinecraftColor($this->color);
-	}
 }

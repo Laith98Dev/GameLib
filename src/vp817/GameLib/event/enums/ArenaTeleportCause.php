@@ -29,57 +29,36 @@
 
 declare(strict_types=1);
 
-namespace vp817\GameLib\utils;
+namespace vp817\GameLib\event\enums;
 
-use pocketmine\block\utils\DyeColor;
-use vp817\GameLib\traits\ArenaPlayerTrait;
+use pocketmine\utils\EnumTrait;
 
-final class Team
+/**
+ * @method static ArenaTeleportCause LOBBY()
+ * @method static ArenaTeleportCause SPAWN()
+ */
+class ArenaTeleportCause
 {
-	use ArenaPlayerTrait {
-		add as public addPlayer;
-		remove as public removePlayer;
-		get as public getPlayer;
-		has as public hasPlayer;
-		getAll as public getPlayers;
-		add as private add;
-		remove as private remove;
-		get as private get;
-		has as private has;
-		getAll as private getAll;
-	}
+	use EnumTrait;
 
 	/**
-	 * @param string $name
-	 * @param string $color
+	 * @return void
+	 * @throws \InvalidArgumentException
 	 */
-	public function __construct(
-		private string $name,
-		private string $color
-	) {
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getName(): string
+	public static function setup(): void
 	{
-		return $this->name;
+		self::registerAll(
+			new self("lobby"),
+			new self("spawn")
+		);
 	}
 
 	/**
-	 * @return string
+	 * @param object $value
+	 * @return bool
 	 */
-	public function getColor(): string
+	public function equals(object $value): bool
 	{
-		return $this->color;
-	}
-
-	/**
-	 * @return DyeColor
-	 */
-	public function getDyeColor(): DyeColor
-	{
-		return Utils::getDyeColorFromMinecraftColor($this->color);
+		return $value instanceof static;
 	}
 }

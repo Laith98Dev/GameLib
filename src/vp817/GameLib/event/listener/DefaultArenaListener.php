@@ -58,10 +58,9 @@ class DefaultArenaListener implements Listener
 	 */
 	public function _S1293182(ArenaStateChangeEvent $event): void
 	{
-		$oldState = $event->getOldState();
-		$newState = $event->getNewState();
-		$tickTask = $event->getArena()->getTickTask();
-
-		$tickTask->checkForCountdownTimerReset($oldState, $newState);
+		$event->getArena()->getTickTask()->resetCountdownTimeIfRequired(
+			oldState: $event->getOldState(),
+			newState: $event->getNewState()
+		);
 	}
 }
