@@ -107,7 +107,7 @@ final class ArenaModes
 	 * 
 	 * @param ArenaMode $mode
 	 */
-	public function registerCustomMode(ArenaMode $mode)
+	public static function registerCustomMode(ArenaMode $mode)
 	{
 		self::_registryRegister(
 			name: $mode->name(),

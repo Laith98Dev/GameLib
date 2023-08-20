@@ -31,14 +31,13 @@ declare(strict_types=1);
 
 namespace vp817\GameLib;
 
-require_once "GameLibDefinitions.php";
-
 use Closure;
 use pocketmine\player\Player;
 use pocketmine\plugin\PluginBase;
 use pocketmine\plugin\PluginLogger;
 use pocketmine\scheduler\AsyncPool;
 use pocketmine\scheduler\TaskScheduler;
+use pocketmine\Server;
 use pocketmine\utils\Utils as PMUtils;
 use pocketmine\world\WorldManager;
 use Symfony\Component\Filesystem\Path;
@@ -52,6 +51,7 @@ use vp817\GameLib\arena\states\ArenaStates;
 use vp817\GameLib\event\listener\DefaultArenaListener;
 use vp817\GameLib\event\listener\ServerEventListener;
 use vp817\GameLib\exceptions\GameLibAlreadyInitException;
+use vp817\GameLib\exceptions\GameLibInvalidArgumentException;
 use vp817\GameLib\exceptions\GameLibInvalidListenerException;
 use vp817\GameLib\exceptions\GameLibMissingComposerException;
 use vp817\GameLib\exceptions\GameLibMissingLibException;
@@ -130,6 +130,7 @@ final class GameLib
 			throw new GameLibMissingComposerException(message: "Composer autoloader for gamelib not found.");
 		}
 
+		require_once "GameLibDefinitions.php";
 		require_once GAMELIB_COMPOSER_AUTOLOAD_PATH;
 
 		return new GameLib(
@@ -168,20 +169,22 @@ final class GameLib
 		self::$plugin = $plugin;
 
 		$this->provider = Providers::SQL();
-		$this->provider->init($this, self::$plugin);
+		$this->provider?->init($this, self::$plugin);
 
 		$this->arenasManager = new ArenasManager;
-		if ($libType->equals(GameLibType::MINIGAME())) {
-			$this->arenaMessages = new MiniGameMessages;
-		} else {
-			$this->arenaMessages = new PracticeMessages;
-		}
+
+		$this->arenaMessages = match (true){
+			$libType->equals(GameLibType::MINIGAME()) => new MiniGameMessages,
+			$libType->equals(GameLibType::PRACTICE()) => new PracticeMessages,
+			default => throw new GameLibInvalidArgumentException("Invalid GameType provided. Please ensure you are using a valid game type and try again.")
+		};
+		
 		$this->setupManager = new SetupManager;
 		$this->arenaListenerClass = DefaultArenaListener::class;
 
-		self::$plugin->getServer()->getPluginManager()->registerEvents(
+		Server::getInstance()->getPluginManager()->registerEvents(
 			listener: new ServerEventListener($this),
-			plugin: self::$plugin
+			plugin: $plugin
 		);
 	}
 

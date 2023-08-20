@@ -54,6 +54,7 @@ class DefaultArenaListener implements Listener
 
 	/**
 	 * @param ArenaStateChangeEvent $event
+	 * @priority LOWEST
 	 * @return void
 	 */
 	public function _S1293182(ArenaStateChangeEvent $event): void
