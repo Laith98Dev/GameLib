@@ -37,7 +37,6 @@ use pocketmine\plugin\PluginBase;
 use pocketmine\plugin\PluginLogger;
 use pocketmine\scheduler\AsyncPool;
 use pocketmine\scheduler\TaskScheduler;
-use pocketmine\Server;
 use pocketmine\utils\Utils as PMUtils;
 use pocketmine\world\WorldManager;
 use Symfony\Component\Filesystem\Path;
@@ -122,6 +121,8 @@ final class GameLib
 			throw new GameLibAlreadyInitException(message: "GameLib is already initialized for this plugin");
 		}
 
+		require_once "GameLibDefinitions.php";
+
 		if (!class_exists("poggit\libasynql\libasynql")) {
 			throw new GameLibMissingLibException(message: "libasyql virion not found. unable to use gamelib");
 		}
@@ -130,7 +131,6 @@ final class GameLib
 			throw new GameLibMissingComposerException(message: "Composer autoloader for gamelib not found.");
 		}
 
-		require_once "GameLibDefinitions.php";
 		require_once GAMELIB_COMPOSER_AUTOLOAD_PATH;
 
 		return new GameLib(
@@ -182,7 +182,7 @@ final class GameLib
 		$this->setupManager = new SetupManager;
 		$this->arenaListenerClass = DefaultArenaListener::class;
 
-		Server::getInstance()->getPluginManager()->registerEvents(
+		$plugin->getServer()->getPluginManager()->registerEvents(
 			listener: new ServerEventListener($this),
 			plugin: $plugin
 		);
