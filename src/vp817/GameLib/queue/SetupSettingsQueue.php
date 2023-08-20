@@ -64,18 +64,17 @@ final class SetupSettingsQueue
 	}
 
 	/**
-	 * @param string $worldName
 	 * @param Location $location
 	 * @return void
 	 */
-	public function setLobbySettings(string $worldName, Location $location): void
+	public function setLobbySettings(Location $location): void
 	{
 		if (array_key_exists("lobbySettingsQueue", $this->queue)) {
 			return;
 		}
 
 		$this->queue["lobbySettingsQueue"] = json_encode([
-			"worldName" => $worldName,
+			"worldName" => $location->getWorld()->getFolderName(),
 			"location" => [
 				"x" => $location->getX(),
 				"y" => $location->getY(),
