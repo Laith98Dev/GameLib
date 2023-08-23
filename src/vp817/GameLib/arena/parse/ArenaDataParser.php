@@ -45,7 +45,7 @@ final class ArenaDataParser
 		"mode" => "",
 		"countdownTime" => -1,
 		"arenaTime" => -1,
-		"restartingTime" => -1,
+		"restartTime" => -1,
 		"lobbySettings" => "{}",
 		"spawns" => "{}",
 		"arenaData" => "{}",

@@ -142,15 +142,24 @@ class SqlProvider extends Provider
 	}
 
 	/**
-	 * @param Closure $resultClosure
+	 * @param Closure $onSuccess
+	 * @param Closure $onFail
 	 * @return void
 	 */
-	public function getAllArenas(Closure $resultClosure): void
+	public function getAllArenas(Closure $onSuccess, Closure $onFail): void
 	{
 		$this->database?->executeSelect(
 			queryName: SqlQueries::GET_ALL_ARENAS,
 			args: [],
-			onSelect: static fn (array $rows) => $resultClosure($rows)
+			onSelect: static function (array $rows) use ($onSuccess, $onFail): void {
+				if (empty($rows)) {
+					$onFail("None", "No arenas found");
+					return;
+				}
+
+				$onSuccess($rows);
+			},
+			onError: static fn (SqlError $error) => $onFail("None", $error->getMessage())
 		);
 	}
 
@@ -160,7 +169,7 @@ class SqlProvider extends Provider
 	 * @param Closure $onFail
 	 * @return void
 	 */
-	public function isArenaNotInvalid(string $arenaID, Closure $onSuccess, Closure $onFail): void
+	public function isArenaValid(string $arenaID, Closure $onSuccess, Closure $onFail): void
 	{
 		$this->database?->executeSelect(
 			queryName: SqlQueries::GET_ALL_ARENAS,
@@ -191,13 +200,13 @@ class SqlProvider extends Provider
 			args: ["arenaID" => $arenaID],
 			onSelect: static function (array $rows) use ($onSuccess, $onFail): void {
 				if (empty($rows)) {
-					$onFail("Rows are empty");
+					$onFail("None", "Arena not found");
 					return;
 				}
 
-				$onSuccess();
+				$onSuccess($rows);
 			},
-			onError: static fn (SqlError $error) => $onFail($error->getMessage())
+			onError: static fn (SqlError $error) => $onFail("None", $error->getMessage())
 		);
 	}
 

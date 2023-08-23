@@ -58,7 +58,7 @@ final class Providers
 	 * 
 	 * @param Provider $provider
 	 */
-	public static function registerCustomProvider(Provider $provider)
+	public static function registerCustomProvider(Provider $provider): void
 	{
 		self::_registryRegister(
 			name: $provider->name(),

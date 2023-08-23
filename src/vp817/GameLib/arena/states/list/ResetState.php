@@ -35,7 +35,7 @@ use vp817\GameLib\arena\Arena;
 use vp817\GameLib\arena\states\ArenaState;
 use vp817\GameLib\arena\states\ArenaStates;
 
-class ResettingState extends ArenaState
+class ResetState extends ArenaState
 {
 
 	/**

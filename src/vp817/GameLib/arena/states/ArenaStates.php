@@ -34,16 +34,16 @@ namespace vp817\GameLib\arena\states;
 use pocketmine\utils\CloningRegistryTrait;
 use vp817\GameLib\arena\states\list\CountdownState;
 use vp817\GameLib\arena\states\list\InGameState;
-use vp817\GameLib\arena\states\list\ResettingState;
-use vp817\GameLib\arena\states\list\RestartingState;
+use vp817\GameLib\arena\states\list\ResetState;
+use vp817\GameLib\arena\states\list\RestartState;
 use vp817\GameLib\arena\states\list\WaitingState;
 
 /**
  * @method static WaitingState WAITING()
  * @method static CountdownState COUNTDOWN()
  * @method static InGameState INGAME()
- * @method static RestartingState RESTARTING()
- * @method static ResettingState RESETTING()
+ * @method static RestartState RESTART()
+ * @method static ResetState RESET()
  */
 final class ArenaStates
 {
@@ -68,12 +68,12 @@ final class ArenaStates
 			member: new InGameState()
 		);
 		self::_registryRegister(
-			name: "restarting",
-			member: new RestartingState()
+			name: "restart",
+			member: new RestartState()
 		);
 		self::_registryRegister(
-			name: "resetting",
-			member: new ResettingState()
+			name: "reset",
+			member: new ResetState()
 		);
 	}
 }

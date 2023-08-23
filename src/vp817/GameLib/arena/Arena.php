@@ -81,6 +81,7 @@ class Arena
 		$this->id = $dataParser->parse(key: "arenaID");
 		$this->messages = $gamelib->getArenaMessagesClass();
 		$this->state = ArenaStates::WAITING();
+
 		$mode = ArenaModes::fromString(value: $dataParser->parse(key: "mode"));
 		$arenaData = json_decode($dataParser->parse(key: "arenaData"), true);
 		if ($mode->equals(ArenaModes::SOLO())) {
@@ -91,6 +92,7 @@ class Arena
 			$mode->init($gamelib);
 		}
 		$this->mode = $mode;
+
 		$this->lobbySettings = new LobbySettings(
 			worldManager: $gamelib->getWorldManager(),
 			settings: json_decode($dataParser->parse("lobbySettings"), true)
@@ -99,13 +101,15 @@ class Arena
 		$this->worldName = $dataParser->parse(key: "worldName");
 		$this->world = $gamelib->getWorldManager()->getWorldByName(name: $this->worldName);
 		$this->messageBroadcaster = new MessageBroadcaster(arena: $this);
+
 		$gamelib->registerArenaListener(arena: $this);
+
 		if (!$mode->equals(ArenaModes::PRACTICE())) {
 			$this->arenaTickTask = new ArenaTickTask(
 				arena: $this,
 				countdownTime: intval($dataParser->parse(key: "countdownTime")),
 				arenaTime: intval($dataParser->parse(key: "arenaTime")),
-				restartingTime: intval($dataParser->parse(key: "restartingTime"))
+				restartTime: intval($dataParser->parse(key: "restartTime"))
 			);
 			$gamelib->getScheduler()->scheduleRepeatingTask(
 				task: $this->arenaTickTask,

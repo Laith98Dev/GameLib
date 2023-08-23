@@ -249,6 +249,15 @@ final class GameLib
 	}
 
 	/**
+	 * @internal
+	 * @return string
+	 */
+	public function getServerWorldsPath(): string
+	{
+		return Path::join(self::$plugin->getServer()->getDataPath(), "worlds");
+	}
+
+	/**
 	 * @return ArenasManager
 	 */
 	public function getArenasManager(): ArenasManager
@@ -262,14 +271,6 @@ final class GameLib
 	public function getArenasBackupPath(): string
 	{
 		return $this->arenasBackupPath;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getServerWorldsPath(): string
-	{
-		return Path::join(self::$plugin->getServer()->getDataPath(), "worlds");
 	}
 
 	/**
@@ -384,15 +385,10 @@ final class GameLib
 		$provider = $this->getProvider();
 
 		$provider?->getAllArenas(
-			resultClosure: function ($rows) use ($provider, $onSuccess, $onFail): void {
-				if (count($rows) < 1) {
-					if (!is_null($onFail)) $onFail("None", "no arenas to be loaded");
-					return;
-				}
-
+			onSuccess: function (array $rows) use ($provider, $onSuccess, $onFail): void {
 				foreach ($rows as $arenasData) {
 					$arenaID = $arenasData["arenaID"];
-					$provider?->isArenaNotInvalid(
+					$provider?->isArenaValid(
 						arenaID: $arenaID,
 						onSuccess: function () use ($arenaID, $arenasData, $onSuccess, $onFail): void {
 							if ($this->getArenasManager()->hasLoadedArena(arenaID: $arenaID)) {
@@ -414,7 +410,8 @@ final class GameLib
 						onFail: static fn () => !is_null($onFail) ? $onFail($arenaID, "Arena doesnt exists in db. this shouldnt happen") : null
 					);
 				}
-			}
+			},
+			onFail: static fn (string $arenaID, string $reason) => !is_null($onFail) ? $onFail($arenaID, $reason) : null
 		);
 	}
 
@@ -428,14 +425,19 @@ final class GameLib
 	{
 		$provider = $this->getProvider();
 
-		$provider?->isArenaNotInvalid(
+		$provider?->isArenaValid(
 			arenaID: $arenaID,
 			onSuccess: function () use ($provider, $arenaID, $onSuccess, $onFail): void {
 				$provider?->getArenaDataByID(
 					arenaID: $arenaID,
-					onSuccess: function ($rows) use ($onSuccess): void {
+					onSuccess: function ($rows) use ($arenaID, $onSuccess, $onFail): void {
+						if ($this->getArenasManager()->hasLoadedArena(arenaID: $arenaID)) {
+							if (!is_null($onFail)) $onFail($arenaID, "unable to load an already loaded arena");
+							return;
+						}
+
 						foreach ($rows as $arenaData) {
-							$arenaID = $arenaData["arenaID"];
+							$inArenaID = $arenaData["arenaID"];
 
 							if (!array_key_exists("lobbySettings", $arenaData)) $arenaData["lobbySettings"] = json_encode([]);
 							if (!array_key_exists("spawns", $arenaData)) $arenaData["spawns"] = json_encode([]);
@@ -443,7 +445,7 @@ final class GameLib
 							if (!array_key_exists("extraData", $arenaData)) $arenaData["extraData"] = json_encode([]);
 
 							$this->getArenasManager()->signAsLoaded(
-								arenaID: $arenaID,
+								arenaID: $inArenaID,
 								arena: new Arena(
 									gamelib: $this,
 									dataParser: new ArenaDataParser(
@@ -457,7 +459,7 @@ final class GameLib
 					onFail: $onFail
 				);
 			},
-			onFail: static fn () => !is_null($onFail) ? $onFail() : null
+			onFail: static fn (string $arenaID, string $reason) => !is_null($onFail) ? $onFail($arenaID, $reason) : null
 		);
 	}
 
@@ -468,25 +470,25 @@ final class GameLib
 	 * @param int $countdownTime
 	 * @param int $arenaTime
 	 * @param int $restartingTime
-	 * @param null|Closure $onSuccess
-	 * @param null|Closure $onFail
+	 * @param Closure|null $onSuccess
+	 * @param Closure|null $onFail
 	 * @return void
 	 */
-	public function createArena(string $arenaID, string $worldName, string $mode, int $countdownTime, int $arenaTime, int $restartingTime, ?Closure $onSuccess = null, ?Closure $onFail = null): void
+	public function createArena(string $arenaID, string $worldName, string $mode, int $countdownTime, int $arenaTime, int $restartTime, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
 		$provider = $this->getProvider();
 
-		$provider?->isArenaNotInvalid(
+		$provider?->isArenaValid(
 			arenaID: $arenaID,
 			onSuccess: static fn () => !is_null($onFail) ? $onFail($arenaID, "Arena already exists") : null,
-			onFail: function () use ($provider, $arenaID, $worldName, $mode, $countdownTime, $arenaTime, $restartingTime, $onSuccess, $onFail): void {
+			onFail: function () use ($provider, $arenaID, $worldName, $mode, $countdownTime, $arenaTime, $restartTime, $onSuccess, $onFail): void {
 				$data = [
 					"arenaID" => $arenaID,
 					"worldName" => $worldName,
 					"mode" => $mode,
 					"countdownTime" => $countdownTime,
 					"arenaTime" => $arenaTime,
-					"restartingTime" => $restartingTime
+					"restartTime" => $restartTime
 				];
 
 				$provider?->insertArenaData(
@@ -529,32 +531,36 @@ final class GameLib
 
 	/**
 	 * @param string $arenaID
-	 * @param null|Closure $onSuccess
-	 * @param null|Closure $onFail
+	 * @param Closure|null $onSuccess
+	 * @param Closure|null $onFail
 	 * @return void
 	 */
 	public function removeArena(string $arenaID, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
 		$provider = $this->getProvider();
 
-		$provider?->isArenaNotInvalid(
+		$provider?->isArenaValid(
 			arenaID: $arenaID,
 			onSuccess: function () use ($provider, $arenaID, $onSuccess, $onFail): void {
 				$arenasManager = $this->getArenasManager();
 
 				$provider?->removeArenaDataByID(
 					arenaID: $arenaID,
-					onSuccess: function (int $affectedRows) use ($arenasManager, $arenaID, $onSuccess): void {
+					onSuccess: function (int $affectedRows) use ($arenasManager, $arenaID, $onSuccess, $onFail): void {
 						if ($arenasManager->hasLoadedArena(arenaID: $arenaID)) {
 							$arenasManager->unsignFromBeingLoaded(
 								arenaID: $arenaID,
-								onSuccess: fn () => !is_null($onSuccess) ? $onSuccess($arenaID) : null
-							);
-						}
-						$zipFileFullPath = Path::join($this->getArenasBackupPath(), $arenaID) . ".zip";
+								onSuccess: function () use ($arenaID, $onSuccess): void {
+									$zipFileFullPath = Path::join($this->getArenasBackupPath(), $arenaID) . ".zip";
 
-						if (file_exists($zipFileFullPath)) {
-							unlink($zipFileFullPath);
+									if (file_exists($zipFileFullPath)) {
+										unlink($zipFileFullPath);
+									}
+
+									if (!is_null($onSuccess)) $onSuccess();
+								},
+								onFail: fn (string $arenaID) => !is_null($onFail) ? $onFail($arenaID, "Arena not found") : null
+							);
 						}
 					},
 					onFail: static fn (string $reason) => !is_null($onFail) ? $onFail($arenaID, $reason) : null
@@ -567,15 +573,15 @@ final class GameLib
 	/**
 	 * @param Player $player
 	 * @param string $arenaID
-	 * @param null|Closure $onSuccess
-	 * @param null|Closure $onFail
+	 * @param Closure|null $onSuccess
+	 * @param Closure|null $onFail
 	 * @return void
 	 */
 	public function addPlayerToSetupArena(Player $player, string $arenaID, ?Closure $onSuccess = null, ?Closure $onFail = null): void
 	{
 		$provider = $this->getProvider();
 
-		$provider?->isArenaNotInvalid(
+		$provider?->isArenaValid(
 			arenaID: $arenaID,
 			onSuccess: function () use ($player, $arenaID, $onSuccess, $onFail): void {
 				if ($this->getArenasManager()->hasLoadedArena(arenaID: $arenaID)) {
@@ -596,8 +602,8 @@ final class GameLib
 
 	/**
 	 * @param Player $player
-	 * @param null|Closure $onSuccess
-	 * @param null|Closure $onFail
+	 * @param Closure|null $onSuccess
+	 * @param Closure|null $onFail
 	 * @return void
 	 */
 	public function finishArenaSetup(Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null): void
@@ -609,7 +615,6 @@ final class GameLib
 			if (!is_null($onFail)) $onFail("The player is not inside the setup");
 			return;
 		}
-
 
 		$setupManager->get(
 			bytes: $player->getUniqueId()->getBytes(),
@@ -629,7 +634,7 @@ final class GameLib
 					onSuccess: null,
 					onFail: $onFail
 				);
-				$provider?->setArenaLobbySettingsDataByID(
+				$provider?->setArenaNonExtraDataByID(
 					arenaID: $arenaID,
 					data: $setupSettingsQueue->getArenaData(),
 					onSuccess: null,
@@ -660,22 +665,8 @@ final class GameLib
 
 	/**
 	 * @param Player $player
-	 * @return void
-	 */
-	public function isPlayerInsideAnArena(Player $player): bool
-	{
-		$arenasManager = $this->getArenasManager();
-		$allArenas = $arenasManager->getAll();
-
-		return !empty(array_filter($allArenas, static function (Arena $arena) use ($player): bool {
-			return array_key_exists($player->getUniqueId()->getBytes(), $arena->getMode()->getPlayers());
-		}));
-	}
-
-	/**
-	 * @param Player $player
 	 * @param Closure $onSuccess
-	 * @param null|Closure $onFail
+	 * @param Closure|null $onFail
 	 * @return void
 	 */
 	public function getPlayerArena(Player $player, Closure $onSuccess, ?Closure $onFail = null): void
@@ -703,8 +694,8 @@ final class GameLib
 	/**
 	 * @param Player $player
 	 * @param string $arenaID
-	 * @param null|Closure $onSuccess
-	 * @param null|Closure $onFail
+	 * @param Closure|null $onSuccess
+	 * @param Closure|null $onFail
 	 * @return void
 	 */
 	public function joinArena(Player $player, string $arenaID, ?Closure $onSuccess = null, ?Closure $onFail = null): void
@@ -720,16 +711,14 @@ final class GameLib
 					onFail: $onFail
 				);
 			},
-			onFail: static function ($arenaID) use ($onFail): void {
-				if (!is_null($onFail)) $onFail("Arena not found");
-			}
+			onFail: static fn (string $arenaID) => !is_null($onFail) ? $onFail("Arena not found") : null
 		);
 	}
 
 	/**
 	 * @param Player $player
-	 * @param null|Closure $onSuccess
-	 * @param null|Closure $onFail
+	 * @param Closure|null $onSuccess
+	 * @param Closure|null $onFail
 	 * @return void
 	 */
 	public function joinRandomArena(Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null): void
@@ -759,8 +748,8 @@ final class GameLib
 			return;
 		}
 
-		uksort($sortedArenas, static function ($rhs, $lhs) use ($allArenas): int {
-			return count($allArenas[$rhs]->getMode()->getPlayers()) <=> count($allArenas[$lhs]->getMode()->getPlayers());
+		uksort($sortedArenas, static function ($lhs, $rhs) use ($allArenas): int {
+			return count($allArenas[$lhs]->getMode()->getPlayers()) <=> count($allArenas[$rhs]->getMode()->getPlayers());
 		});
 
 		$openedArenas = [];
@@ -810,15 +799,15 @@ final class GameLib
 
 		$plannedArena->join(
 			player: $player,
-			onSuccess: fn () => !is_null($onSuccess) ? $onSuccess($plannedArena) : null,
+			onSuccess: static fn () => !is_null($onSuccess) ? $onSuccess($plannedArena) : null,
 			onFail: $onFail
 		);
 	}
 
 	/**
 	 * @param Player $player
-	 * @param null|Closure $onSuccess
-	 * @param null|Closure $onFail
+	 * @param Closure|null $onSuccess
+	 * @param Closure|null $onFail
 	 * @param bool $notifyPlayers
 	 * @param bool $force
 	 * @return void
@@ -827,14 +816,14 @@ final class GameLib
 	{
 		$this->getPlayerArena(
 			player: $player,
-			onSuccess: fn (Arena $arena) => $arena->quit(
+			onSuccess: static fn (Arena $arena) => $arena->quit(
 				player: $player,
-				onSuccess: fn () => !is_null($onSuccess) ? $onSuccess($arena->getID()) : null,
+				onSuccess: static fn () => !is_null($onSuccess) ? $onSuccess($arena->getID()) : null,
 				onFail: $onFail,
 				notifyPlayers: $notifyPlayers,
 				force: $force
 			),
-			onFail: fn () => !is_null($onFail) ? $onFail($this->getArenaMessagesClass()->NotInsideAnArenaToLeave()) : null
+			onFail: static fn () => !is_null($onFail) ? $onFail($this->getArenaMessagesClass()->NotInsideAnArenaToLeave()) : null
 		);
 	}
 }

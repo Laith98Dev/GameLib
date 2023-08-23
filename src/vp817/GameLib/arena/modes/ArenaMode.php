@@ -152,6 +152,6 @@ abstract class ArenaMode
 			(new PlayerArenaWinEvent($arena, $arena->getWinners()))->call();
 		}
 
-		if ($changeState) $arena->setState(ArenaStates::RESTARTING());
+		if ($changeState) $arena->setState(ArenaStates::RESTART());
 	}
 }

@@ -45,14 +45,18 @@ class ArenaTickTask extends Task
 	 * @param Arena $arena
 	 * @param int $countdownTime
 	 * @param int $arenaTime
-	 * @param int $restartingTime
+	 * @param int $restartTime
 	 */
-	public function __construct(private Arena $arena, private int $countdownTime, private int $arenaTime, private int $restartingTime)
-	{
+	public function __construct(
+		private Arena $arena,
+		private int $countdownTime,
+		private int $arenaTime,
+		private int $restartTime
+	) {
 		$this->timeCache = [
 			"countdownTime" => $countdownTime,
 			"arenaTime" => $arenaTime,
-			"restartingTime" => $restartingTime
+			"restartTime" => $restartTime
 		];
 	}
 
@@ -75,9 +79,9 @@ class ArenaTickTask extends Task
 	/**
 	 * @return int
 	 */
-	public function getRestartingTime(): int
+	public function getRestartTime(): int
 	{
-		return $this->restartingTime;
+		return $this->restartTime;
 	}
 
 	/**
@@ -99,9 +103,9 @@ class ArenaTickTask extends Task
 	/**
 	 * @return void
 	 */
-	public function decrementRestartingTime(): void
+	public function decrementRestartTime(): void
 	{
-		--$this->restartingTime;
+		--$this->restartTime;
 	}
 
 	/**
@@ -125,7 +129,7 @@ class ArenaTickTask extends Task
 	 */
 	public function resetRestartingTime(): void
 	{
-		$this->restartingTime = $this->timeCache["restartingTime"];
+		$this->restartTime = $this->timeCache["restartTime"];
 	}
 
 	/**

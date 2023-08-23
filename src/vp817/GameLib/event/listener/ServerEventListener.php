@@ -38,7 +38,7 @@ use vp817\GameLib\GameLib;
 use function strlen;
 use function trim;
 
-class ServerEventListener implements Listener 
+class ServerEventListener implements Listener
 {
 
 	/**
@@ -56,29 +56,29 @@ class ServerEventListener implements Listener
 	public function _E1298313(PlayerQuitEvent $event): void
 	{
 		$player = $event->getPlayer();
-		$allArenas = $this->gamelib->getArenasManager()->getAll();
 
-		if (empty($allArenas)) {
+		if (empty($this->gamelib->getArenasManager()->getAll())) {
 			return;
 		}
 
-		if (!$this->gamelib->isPlayerInsideAnArena(player: $player)) {
-			return;
-		}
-
-		$quitEvent = new PlayerQuitFromServerEvent(player: $player);
-		$quitEvent->call();
-
-		$notifyPlayers = strlen(trim($quitEvent->getGlobalMessage())) < 1;
-
-		$event->setQuitMessage(quitMessage: $event->getQuitMessage());
-
-		$this->gamelib->leaveArena(
+		$this->gamelib->getPlayerArena(
 			player: $player,
-			onSuccess: null,
-			onFail: null,
-			notifyPlayers: $notifyPlayers,
-			force: true
+			onSuccess: function () use ($event, $player): void {
+				$quitEvent = new PlayerQuitFromServerEvent(player: $player);
+				$quitEvent->call();
+
+				$notifyPlayers = strlen(trim($quitEvent->getGlobalMessage())) < 1;
+
+				$event->setQuitMessage(quitMessage: $event->getQuitMessage());
+
+				$this->gamelib->leaveArena(
+					player: $player,
+					onSuccess: null,
+					onFail: null,
+					notifyPlayers: $notifyPlayers,
+					force: true
+				);
+			}
 		);
 	}
 }

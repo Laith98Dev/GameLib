@@ -51,10 +51,11 @@ abstract class Provider
 	abstract public function init(mixed ...$arguments): void;
 
 	/**
-	 * @param Closure $resultClosure
+	 * @param Closure $onSuccess
+	 * @param Closure $onFail
 	 * @return void
 	 */
-	abstract public function getAllArenas(Closure $resultClosure): void;
+	abstract public function getAllArenas(Closure $onSuccess, Closure $onFail): void;
 
 	/**
 	 * @param string $arenaID
@@ -62,7 +63,7 @@ abstract class Provider
 	 * @param Closure $onFail
 	 * @return void
 	 */
-	abstract public function isArenaNotInvalid(string $arenaID, Closure $onSuccess, Closure $onFail): void;
+	abstract public function isArenaValid(string $arenaID, Closure $onSuccess, Closure $onFail): void;
 
 	/**
 	 * @param string $arenaID

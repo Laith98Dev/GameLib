@@ -36,7 +36,7 @@ use vp817\GameLib\arena\states\ArenaState;
 use vp817\GameLib\arena\states\ArenaStates;
 use vp817\GameLib\event\ArenaTickEvent;
 
-class RestartingState extends ArenaState
+class RestartState extends ArenaState
 {
 
 	/**
@@ -46,7 +46,7 @@ class RestartingState extends ArenaState
 	public function tick(Arena $arena): void
 	{
 		$tickTask = $arena->getTickTask();
-		$time = $tickTask->getRestartingTime();
+		$time = $tickTask->getRestartTime();
 
 		(new ArenaTickEvent(
 			arena: $arena,
@@ -60,10 +60,10 @@ class RestartingState extends ArenaState
 				arena: $arena,
 				changeState: false
 			);
-			$arena->setState(state: ArenaStates::RESETTING());
+			$arena->setState(state: ArenaStates::RESET());
 			return;
 		}
 
-		$tickTask->decrementRestartingTime();
+		$tickTask->decrementRestartTime();
 	}
 }

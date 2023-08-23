@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS arenas(
 	mode TEXT NOT NULL,
 	countdownTime INTEGER NOT NULL,
 	arenaTime INTEGER NOT NULL,
-	restartingTime INTEGER NOT NULL,
+	restartTime INTEGER NOT NULL,
 	lobbySettings TEXT,
 	spawns TEXT,
 	arenaData TEXT,
@@ -20,8 +20,8 @@ CREATE TABLE IF NOT EXISTS arenas(
 -- # 	:mode string
 -- #	:countdownTime int
 -- #	:arenaTime int
--- #	:restartingTime int
-INSERT INTO arenas(arenaID, worldName, mode, countdownTime, arenaTime, restartingTime) VALUES (:arenaID, :worldName, :mode, :countdownTime, :arenaTime, :restartingTime);
+-- #	:restartTime int
+INSERT INTO arenas(arenaID, worldName, mode, countdownTime, arenaTime, restartTime) VALUES (:arenaID, :worldName, :mode, :countdownTime, :arenaTime, :restartTime);
 -- # }
 -- # { update-arena-spawns
 -- #	:arenaID string

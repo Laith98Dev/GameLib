@@ -117,8 +117,8 @@ final class Utils
 	private static function getResource(string $path, string $filename)
 	{
 		$filename = self::removeLastSlashFromPath(path: $filename);
-		if (file_exists($path . $filename)) {
-			$resource = fopen($path . $filename, "rb");
+		if (file_exists($pth = Path::join($path, $filename))) {
+			$resource = fopen($pth, "rb");
 			if ($resource === false) throw new AssumptionFailedError(message: "fopen() should not fail on a file which exists");
 			return $resource;
 		}
