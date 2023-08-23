@@ -372,7 +372,7 @@ final class Utils
 		}
 
 		if (!is_dir($directoryFullPath)) {
-			return unlink($directoryFullPath);;
+			return unlink($directoryFullPath);
 		}
 
 		foreach (scandir($directoryFullPath) as $item) {

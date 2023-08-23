@@ -68,7 +68,6 @@ use function array_filter;
 use function array_key_exists;
 use function array_rand;
 use function array_shift;
-use function class_exists;
 use function count;
 use function file_exists;
 use function is_dir;
@@ -122,10 +121,6 @@ final class GameLib
 		}
 
 		require_once "GameLibDefinitions.php";
-
-		if (!class_exists("poggit\libasynql\libasynql")) {
-			throw new GameLibMissingLibException(message: "libasyql virion not found. unable to use gamelib");
-		}
 
 		if (!file_exists(GAMELIB_COMPOSER_AUTOLOAD_PATH)) {
 			throw new GameLibMissingComposerException(message: "Composer autoloader for gamelib not found.");
@@ -720,7 +715,7 @@ final class GameLib
 					onFail: $onFail
 				);
 			},
-			onFail: static function ($_) use ($onFail): void {
+			onFail: static function ($arenaID) use ($onFail): void {
 				if (!is_null($onFail)) $onFail("Arena not found");
 			}
 		);

@@ -282,21 +282,17 @@ class Arena
 	public function resetWorld(?Closure $onSuccess, ?Closure $onFail): void
 	{
 		$zipFileFullPath = Path::join($this->gamelib->getArenasBackupPath(), $this->getID() . ".zip");
-		$extractionFullPath = $this->gamelib->getServerWorldsPath();
-		$worldDirectoryFullPath = Path::join($extractionFullPath, $this->worldName);
+		$worldsFulPath = $this->gamelib->getServerWorldsPath();
+		$worldDirectoryFullPath = Path::join($worldsFulPath, $this->worldName);
 		$asyncPool = $this->gamelib->getAsyncPool();
 
 		if (!file_exists($zipFileFullPath)) {
-			$onFail();
+			if (!is_null($onFail)) $onFail();
 			return;
 		}
 
 		if (!is_file($zipFileFullPath)) {
-			$onFail();
-			return;
-		}
-
-		if (!is_dir($worldDirectoryFullPath)) {
+			if (!is_null($onFail)) $onFail();
 			return;
 		}
 
@@ -306,11 +302,16 @@ class Arena
 			$worldManager->unloadWorld(world: $worldManager->getWorldByName($this->worldName));
 		}
 
-		$asyncPool->submitTask(task: new DeleteDirectoryAsyncTask(directoryFullPath: $worldDirectoryFullPath));
-		$asyncPool->submitTask(task: new ExtractZipAsyncTask(
+		if (is_dir($worldDirectoryFullPath)) {
+			$asyncPool->submitTask(new DeleteDirectoryAsyncTask(directoryFullPath: $worldDirectoryFullPath));
+			return;
+		}
+
+		$asyncPool->submitTask(new ExtractZipAsyncTask(
 			zipFileFullPath: $zipFileFullPath,
-			extractionFullPath: $extractionFullPath
+			extractionFullPath: $worldDirectoryFullPath
 		));
+
 		$worldManager->loadWorld(name: $this->worldName);
 
 		if (!is_null($onSuccess)) $onSuccess();
