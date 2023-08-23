@@ -205,37 +205,6 @@ final class GameLib
 	}
 
 	/**
-	 * @param string $path
-	 * @return void
-	 */
-	public function setArenasBackupPath(string $path): void
-	{
-		if (!is_dir($path)) {
-			@mkdir($path);
-		}
-
-		$this->arenasBackupPath = $path;
-	}
-
-	/**
-	 * @param Provider $provider
-	 * @return void
-	 */
-	public function setProvider(Provider $provider): void
-	{
-		$this->provider = $provider;
-	}
-
-	/**
-	 * @param ArenaMessages $arenaMessages
-	 * @return void
-	 */
-	public function setArenaMessagesClass(ArenaMessages $arenaMessages): void
-	{
-		$this->arenaMessages = $arenaMessages;
-	}
-
-	/**
 	 * @return GameLibType
 	 */
 	public function getLibType(): GameLibType
@@ -277,15 +246,6 @@ final class GameLib
 	public function getLogger(): PluginLogger
 	{
 		return self::$plugin->getLogger();
-	}
-
-	/**
-	 * @param string $arenaListener
-	 * @return void
-	 */
-	public function setArenaListenerClass(string $arenaListener): void
-	{
-		$this->arenaListenerClass = $arenaListener;
 	}
 
 	/**
@@ -334,6 +294,46 @@ final class GameLib
 	public function getSetupManager(): SetupManager
 	{
 		return $this->setupManager;
+	}
+
+	/**
+	 * @param string $path
+	 * @return void
+	 */
+	public function setArenasBackupPath(string $path): void
+	{
+		if (!is_dir($path)) {
+			@mkdir($path);
+		}
+
+		$this->arenasBackupPath = $path;
+	}
+
+	/**
+	 * @param Provider $provider
+	 * @return void
+	 */
+	public function setProvider(Provider $provider): void
+	{
+		$this->provider = $provider;
+	}
+
+	/**
+	 * @param ArenaMessages $arenaMessages
+	 * @return void
+	 */
+	public function setArenaMessagesClass(ArenaMessages $arenaMessages): void
+	{
+		$this->arenaMessages = $arenaMessages;
+	}
+
+	/**
+	 * @param string $arenaListener
+	 * @return void
+	 */
+	public function setArenaListenerClass(string $arenaListener): void
+	{
+		$this->arenaListenerClass = $arenaListener;
 	}
 
 	/**
