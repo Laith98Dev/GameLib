@@ -48,6 +48,7 @@ use vp817\GameLib\utils\Team;
 use vp817\GameLib\utils\Utils;
 use function intval;
 use function is_array;
+use function is_null;
 use function is_object;
 use function strtolower;
 
@@ -89,7 +90,11 @@ abstract class TeamModeAbstract extends ArenaMode
 		}
 
 		$this->teamManager = new TeamManager(arena: $arena);
-		foreach ($teams as $team) {
+		foreach ($teams as $teamName) {
+			$team = Team::fromString(value: $teamName);
+			if (is_null($team)) {
+				throw new GameLibInvalidArgumentException(message: "The arena teams is invalid");
+			}
 			$this->teamManager->addTeam(team: $team);
 		}
 

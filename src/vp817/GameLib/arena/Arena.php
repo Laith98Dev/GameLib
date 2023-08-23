@@ -45,6 +45,7 @@ use vp817\GameLib\arena\parse\list\LobbySettings;
 use vp817\GameLib\arena\states\ArenaState;
 use vp817\GameLib\arena\states\ArenaStates;
 use vp817\GameLib\event\ArenaStateChangeEvent;
+use vp817\GameLib\exceptions\GameLibInvalidArgumentException;
 use vp817\GameLib\GameLib;
 use vp817\GameLib\player\ArenaPlayer;
 use vp817\GameLib\tasks\ArenaTickTask;
@@ -73,6 +74,7 @@ class Arena
 	/**
 	 * @param GameLib $gamelib
 	 * @param ArenaDataParser $arenaDataParser
+	 * @throws GameLibInvalidArgumentException
 	 */
 	public function __construct(
 		private GameLib $gamelib,
@@ -83,6 +85,9 @@ class Arena
 		$this->state = ArenaStates::WAITING();
 
 		$mode = ArenaModes::fromString(value: $dataParser->parse(key: "mode"));
+		if (is_null($mode)) {
+			throw new GameLibInvalidArgumentException(message: "The arena with the id of: $this->id mode is invalid");
+		}
 		$arenaData = json_decode($dataParser->parse(key: "arenaData"), true);
 		if ($mode->equals(ArenaModes::SOLO())) {
 			$mode->init(intval($arenaData["slots"]), $gamelib);

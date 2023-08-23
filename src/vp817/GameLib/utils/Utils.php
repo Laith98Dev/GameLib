@@ -33,11 +33,9 @@ namespace vp817\GameLib\utils;
 
 use InvalidArgumentException;
 use Phar;
-use pocketmine\block\utils\DyeColor;
 use pocketmine\plugin\PluginBase;
 use pocketmine\plugin\ResourceProvider;
 use pocketmine\utils\AssumptionFailedError;
-use pocketmine\utils\TextFormat;
 use pocketmine\utils\Utils as PMUtils;
 use pocketmine\world\World;
 use pocketmine\world\WorldManager;
@@ -469,33 +467,5 @@ final class Utils
 	public static function isPhar(): bool
 	{
 		return Phar::running() !== "";
-	}
-
-	/**
-	 * @param string $color
-	 * @return DyeColor
-	 */
-	public static function getDyeColorFromMinecraftColor(string $color): DyeColor
-	{
-		 return match ($color) {
-			TextFormat::BLACK => DyeColor::BLACK(),
-			TextFormat::DARK_BLUE => DyeColor::DARK_BLUE(),
-			TextFormat::DARK_GREEN => DyeColor::DARK_GREEN(),
-			TextFormat::DARK_AQUA => DyeColor::DARK_AQUA(),
-			TextFormat::DARK_RED => DyeColor::DARK_RED(),
-			TextFormat::DARK_PURPLE => DyeColor::DARK_PURPLE(),
-			TextFormat::GOLD => DyeColor::GOLD(),
-			TextFormat::GRAY => DyeColor::GRAY(),
-			TextFormat::DARK_GRAY => DyeColor::DARK_GRAY(),
-			TextFormat::BLUE => DyeColor::BLUE(),
-			TextFormat::GREEN => DyeColor::GREEN(),
-			TextFormat::AQUA => DyeColor::AQUA(),
-			TextFormat::RED => DyeColor::RED(),
-			TextFormat::LIGHT_PURPLE => DyeColor::LIGHT_PURPLE(),
-			TextFormat::YELLOW => DyeColor::YELLOW(),
-			TextFormat::WHITE => DyeColor::WHITE(),
-			TextFormat::MINECOIN_GOLD => DyeColor::MINECOIN_GOLD(),
-			default => DyeColor::BLACK()
-		};
 	}
 }

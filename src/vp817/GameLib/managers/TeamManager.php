@@ -59,8 +59,8 @@ final class TeamManager
 
 	/**
 	 * @param Team $team
-	 * @param null|Closure $onSuccess
-	 * @param null|Closure $onFail
+	 * @param Closure|null $onSuccess
+	 * @param Closure|null $onFail
 	 * @return void
 	 */
 	public function addTeam(Team $team, ?Closure $onSuccess = null, ?Closure $onFail = null): void
@@ -78,8 +78,8 @@ final class TeamManager
 
 	/**
 	 * @param string $name
-	 * @param null|Closure $onSuccess
-	 * @param null|Closure $onFail
+	 * @param Closure|null $onSuccess
+	 * @param Closure|null $onFail
 	 * @return void
 	 */
 	public function removeTeam(string $name, ?Closure $onSuccess = null, ?Closure $onFail = null): void
@@ -97,7 +97,7 @@ final class TeamManager
 	/**
 	 * @param string $name
 	 * @param Closure $onSuccess
-	 * @param null|Closure $onFail
+	 * @param Closure|null $onFail
 	 * @return void
 	 */
 	public function getTeam(string $name, Closure $onSuccess, ?Closure $onFail = null): void
@@ -144,8 +144,8 @@ final class TeamManager
 	/**
 	 * @param Player $player
 	 * @param string $teamName
-	 * @param null|Closure $onSuccess
-	 * @param null|Closure $onFail
+	 * @param Closure|null $onSuccess
+	 * @param Closure|null $onFail
 	 * @return void
 	 */
 	public function addPlayerToTeam(Player $player, string $teamName, ?Closure $onSuccess = null, ?Closure $onFail = null): void
@@ -165,8 +165,8 @@ final class TeamManager
 
 	/**
 	 * @param Player $player
-	 * @param null|Closure $onSuccess
-	 * @param null|Closure $onFail
+	 * @param Closure|null $onSuccess
+	 * @param Closure|null $onFail
 	 * @return void
 	 */
 	public function addPlayerToRandomTeam(Player $player, ?Closure $onSuccess = null, ?Closure $onFail = null): void
@@ -206,7 +206,7 @@ final class TeamManager
 	/**
 	 * @param string $bytes
 	 * @param Closure $onSuccess
-	 * @param null|Closure $onFail
+	 * @param Closure|null $onFail
 	 * @return void
 	 */
 	public function getTeamOfPlayerFromBytes(string $bytes, Closure $onSuccess, ?Closure $onFail = null): void

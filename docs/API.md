@@ -52,6 +52,7 @@
 |-----|----|---------|-----------|----|
 |ArenaModes|::registerCustomMode|mode: ArenaMode|register a custom or a new arena mode to the gamelib|the note can be found inside the ArenaModes class and it is important|
 |Providers|::registerCustomProvider|provider: Provider|register a custom or a new provider type to the gamelib|the note is the same as the registerCustomMode note|
+|Team|::registerCustomTeam|name: string, color: string, dyeColor: DyeColor|register a custom or new team|None|
 
 # Arena Setuping Notes
 
@@ -70,9 +71,15 @@
 > ]
 
 ### For TeamModes
+> gamelib supports all the known team color types.
+>
+> you can add your own too
+>
 > [
->	"teams" => The Max Player Count
+>	"teams" => The Teams You Want To Be In Your Game (string)
 > ]
+>
+> for more information look at the team file inside the utils directory
 
 ## For PracticeModes
 > [
