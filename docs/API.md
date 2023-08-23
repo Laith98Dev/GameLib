@@ -24,6 +24,8 @@
 |getArenasManager|None|get all arenas manager|None|
 |getArenasBackupPath|None|get the arenas map backup path|None|
 |getArenaMessagesClass|None|get the arena message class|None|
+|getArenaListenerClass|None|get the arena listener class|this will return string (class name)|
+|getSetupManager|None|get the setup manager class|None|
 |setArenasBackupPath|path: string|set all arenas map backup path|you don't need to create a directory for it as it will automatically create one. unless if you want to create a directory with custom permissions|
 |setProvider|provider: Provider|set the current provider|None|
 |setArenaMessagesClass|arenaMessages: ArenaMessages|set every arena of your type of game messages class|if you want to create custom arena messages then this is an option. the argument note: must be a class with no arguments. for example: new CustomClass()|
