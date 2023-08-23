@@ -176,7 +176,7 @@ final class GameLib
 		$this->arenaMessages = match (true){
 			$libType->equals(GameLibType::MINIGAME()) => new MiniGameMessages,
 			$libType->equals(GameLibType::PRACTICE()) => new PracticeMessages,
-			default => throw new GameLibInvalidArgumentException(message: "Invalid GameType provided. Please ensure you are using a valid game type and try again.")
+			default => throw new GameLibInvalidArgumentException(message: "Invalid GameType provided. Please ensure you are using a valid libType and try again.")
 		};
 		
 		$this->setupManager = new SetupManager;
