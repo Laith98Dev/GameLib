@@ -121,11 +121,11 @@ final class GameLib
 			throw new GameLibAlreadyInitException(message: "GameLib is already initialized for this plugin");
 		}
 
-		require_once "GameLibDefinitions.php";
-
 		if (!class_exists("poggit\libasynql\libasynql")) {
 			throw new GameLibMissingLibException(message: "libasyql virion not found. unable to use gamelib");
 		}
+
+		require_once "GameLibDefinitions.php";
 
 		if (!file_exists(GAMELIB_COMPOSER_AUTOLOAD_PATH)) {
 			throw new GameLibMissingComposerException(message: "Composer autoloader for gamelib not found.");

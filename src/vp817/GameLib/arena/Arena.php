@@ -282,8 +282,8 @@ class Arena
 	public function resetWorld(?Closure $onSuccess, ?Closure $onFail): void
 	{
 		$zipFileFullPath = Path::join($this->gamelib->getArenasBackupPath(), $this->getID() . ".zip");
-		$worldsFulPath = $this->gamelib->getServerWorldsPath();
-		$worldDirectoryFullPath = Path::join($worldsFulPath, $this->worldName);
+		$worldsFullPath = $this->gamelib->getServerWorldsPath();
+		$worldDirectoryFullPath = Path::join($worldsFullPath, $this->worldName);
 		$asyncPool = $this->gamelib->getAsyncPool();
 
 		if (!file_exists($zipFileFullPath)) {
