@@ -4,9 +4,6 @@ Welcome to the GameLib API Documentation! Please note that this documentation as
 
 ## General Notes
 
-- Functions and properties that contain "::" are static.
-- Arguments marked with "?" indicate that the value can be null.
-- Argument format: `propertyName: Type`.
 - Callback functions (`onSuccess` and `onFail`) always return void.
 - If you cannot find what you are looking for in this documentation, you may need to search the code directly.
 
