@@ -16,7 +16,8 @@ GameLib is a powerful and flexible virion designed to simplify and streamline ga
 
 To start using GameLib, make sure you have the **libasynql** virion installed. You can find installation instructions and the virion itself on the [libasynql GitHub repository](https://github.com/poggit/libasynql).
 
-To explore and contribute to GameLib, check out our [GitHub repository](https://github.com/ArtutoGamer777/gamelib). Feel free to raise issues, suggest enhancements, and submit pull requests to help us make GameLib even better.
+To explore and contribute to GameLib, check out our [GitHub repository](https://github.com/
+Laith98Dev/gamelib). Feel free to raise issues, suggest enhancements, and submit pull requests to help us make GameLib even better.
 
 ### Have Questions or Need Assistance?
 
